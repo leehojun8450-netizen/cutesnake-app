@@ -1087,7 +1087,7 @@ function enterDoor() {
   haptic([30, 40]);
   doorPhase = false; door = null;
   startRound(nextR, carry);
-  showCombo('🏁 ' + nextR + '라운드 시작!');
+  showCombo('🏁 ' + nextR + '라운드 · 🎨 ' + curTheme().name + '!');
 }
 
 function die(cause) {
