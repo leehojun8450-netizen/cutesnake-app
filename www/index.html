@@ -34,7 +34,8 @@
   .miniRankRow.silver { border-color: #C0C0C0; }
   .miniRankRow.bronze { border-color: #CD7F32; }
 
-  #dirPad { position: absolute; bottom: 18px; left: 50%; transform: translateX(-50%); z-index: 9; display: grid; grid-template-columns: 56px 56px 56px; grid-template-rows: 56px 56px; gap: 4px; opacity: 0.5; }
+  /* 방향버튼은 기본 숨김(스와이프가 주 조작). PC에선 키보드 사용 */
+  #dirPad { display: none; }
   .dirBtn { background: rgba(255,255,255,0.15); border: 2px solid rgba(255,255,255,0.4); border-radius: 14px; color: white; font-size: 26px; display: flex; justify-content: center; align-items: center; cursor: pointer; }
   .dirBtn:active { background: rgba(255,255,255,0.4); }
   #btnUp { grid-column: 2; grid-row: 1; }
@@ -232,7 +233,7 @@ window.addEventListener('resize', resize);
 // 놀이판 (벽 안쪽)
 let field = { x: 0, y: 0, w: 0, h: 0 };
 function computeField() {
-  const top = 138, bottom = 90, side = 14;
+  const top = 116, bottom = 26, side = 10;  // 여백 축소 → 놀이 공간 확대
   field.x = side; field.y = top;
   field.w = W - side * 2; field.h = H - top - bottom;
 }
@@ -253,9 +254,9 @@ try { selectedSkin = localStorage.getItem('snake_skin') || 'green'; } catch(e) {
 //=========================================
 // 게임 상태
 //=========================================
-const SEG_SPACING = 13;   // 몸통 마디 간격(px)
-const HEAD_R = 13;        // 머리 반지름
-const BODY_R = 11;        // 몸통 반지름
+const SEG_SPACING = 10;   // 몸통 마디 간격(px) - 작게(모바일 공간 확보)
+const HEAD_R = 10;        // 머리 반지름(충돌)
+const BODY_R = 8;         // 몸통 반지름
 const START_LEN = 4;
 
 let path = [];            // 머리가 지나온 경로 (newest first)
@@ -499,11 +500,12 @@ function drawSnakeHead(c, px, py, angle, skinKey, scale) {
   c.translate(px, py);
   c.rotate(angle);
   c.scale(scale, scale);
+  const R = 13; // 머리 그림 기준 크기 (충돌용 HEAD_R과 분리)
   // 머리 (둥근)
-  const g = c.createRadialGradient(-4, -5, 3, 0, 0, HEAD_R + 4);
+  const g = c.createRadialGradient(-4, -5, 3, 0, 0, R + 4);
   g.addColorStop(0, '#FFFFFF'); g.addColorStop(0.25, lighten(headColor, 30)); g.addColorStop(1, headColor);
   c.fillStyle = g;
-  c.beginPath(); c.arc(0, 0, HEAD_R + 3, 0, Math.PI*2); c.fill();
+  c.beginPath(); c.arc(0, 0, R + 3, 0, Math.PI*2); c.fill();
   // 볼터치
   c.fillStyle = 'rgba(255,105,180,0.5)';
   c.beginPath(); c.arc(-2, 9, 3.5, 0, Math.PI*2); c.arc(-2, -9, 3.5, 0, Math.PI*2); c.fill();
@@ -521,10 +523,10 @@ function drawSnakeHead(c, px, py, angle, skinKey, scale) {
   if (tongueOut > 0.01) {
     c.strokeStyle = '#FF3D6E'; c.lineWidth = 2; c.lineCap = 'round';
     const tl = 6 + tongueOut * 10;
-    c.beginPath(); c.moveTo(HEAD_R, 0); c.lineTo(HEAD_R + tl, 0); c.stroke();
+    c.beginPath(); c.moveTo(R, 0); c.lineTo(R + tl, 0); c.stroke();
     c.beginPath();
-    c.moveTo(HEAD_R + tl, 0); c.lineTo(HEAD_R + tl + 4, -3);
-    c.moveTo(HEAD_R + tl, 0); c.lineTo(HEAD_R + tl + 4, 3);
+    c.moveTo(R + tl, 0); c.lineTo(R + tl + 4, -3);
+    c.moveTo(R + tl, 0); c.lineTo(R + tl + 4, 3);
     c.stroke();
     c.lineCap = 'butt';
   }
@@ -1382,7 +1384,7 @@ function drawSnake() {
   }
   // 머리
   const angle = Math.atan2(dirY, dirX);
-  drawSnakeHead(ctx, headX, headY, angle, selectedSkin, powered ? 1.1 : 1);
+  drawSnakeHead(ctx, headX, headY, angle, selectedSkin, (powered ? 1.1 : 1) * (HEAD_R / 13));
 }
 
 function drawParticles() {
@@ -1829,7 +1831,7 @@ canvas.addEventListener('touchmove', function(e) {
   if (!touchStart) return;
   const dx = e.touches[0].clientX - touchStart.x;
   const dy = e.touches[0].clientY - touchStart.y;
-  if (Math.hypot(dx, dy) > 25) {
+  if (Math.hypot(dx, dy) > 16) {  // 더 민감하게(짧은 밀기에도 반응)
     if (Math.abs(dx) > Math.abs(dy)) setDir(dx > 0 ? 1 : -1, 0);
     else setDir(0, dy > 0 ? 1 : -1);
     touchStart = { x: e.touches[0].clientX, y: e.touches[0].clientY };
