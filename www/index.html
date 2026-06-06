@@ -366,6 +366,10 @@ function sfxTeleport() { // 🌀 순간이동 - 휘리릭
   tone(400,0.1,'sine',0.18,1600); tone(1600,0.12,'triangle',0.15,400,0.08);
   tone(800,0.15,'sine',0.12,2400,0.14);
 }
+function sfxDoorOpen() { // 🚪 문 열림 - 반짝 차임
+  tone(523,0.12,'sine',0.18,784); tone(784,0.14,'sine',0.16,1047,0.1);
+  tone(1047,0.3,'triangle',0.15,1568,0.2);
+}
 //=========================================
 // 🎵 배경음악 (BGM) - 경쾌한 칩튠 루프
 //=========================================
@@ -597,6 +601,8 @@ function startRound(R, startLen) {
   }
   apples = []; bees = []; obstacles = []; tunnels = []; particles = [];
   powerT = 0; teleCooldown = 0; smashCombo = 0;
+  doorPhase = false; door = null;            // 🚪 문 초기화
+  themeIndex = (R - 1) % THEMES.length;       // 🎨 라운드별 판 테마
   // 🎁 7일 연속 출석 보너스: 1라운드에 파워 고추로 시작
   if (R === 1 && pendingBonus > 0 && dailyStreak % 7 === 0) powerT = 6;
   // 바위 배치
@@ -771,6 +777,22 @@ let lowTimePulseT = 0;
 let powerT = 0;          // 🌶️ 파워 모드 남은 시간 (돌 부수기)
 let rocksSmashed = 0;    // 부순 돌 개수
 let smashCombo = 0;      // 파워 모드 중 연속 부수기 콤보
+let doorPhase = false;   // 🚪 라운드 클리어 후 문으로 들어가는 단계
+let door = null;         // 🚪 문 {x,y,r,t}
+let themeIndex = 0;      // 🎨 라운드별 판 테마
+
+// 🎨 라운드마다 바뀌는 판 테마 (배경/판/벽 색)
+const THEMES = [
+  { name:'잔디',   sky1:'#2E7D32', sky2:'#1B5E20', board:'#3D9140', wall1:'#8D6E63', wall2:'#A1887F' },
+  { name:'사막',   sky1:'#C9A86A', sky2:'#9C7A3C', board:'#D4B483', wall1:'#8B6F47', wall2:'#C9A86A' },
+  { name:'얼음',   sky1:'#4A90B8', sky2:'#2C5F7C', board:'#7EC8E3', wall1:'#B0E0E6', wall2:'#E0F7FF' },
+  { name:'사탕',   sky1:'#E91E8C', sky2:'#9C1458', board:'#FF8FC7', wall1:'#FF69B4', wall2:'#FFD1E8' },
+  { name:'밤하늘', sky1:'#1A1A3E', sky2:'#0D0D24', board:'#2A2A5C', wall1:'#6A6AAF', wall2:'#9C9CDF' },
+  { name:'용암',   sky1:'#4A1010', sky2:'#2A0808', board:'#6B2020', wall1:'#FF6B35', wall2:'#FFA500' },
+  { name:'바다',   sky1:'#006994', sky2:'#003D5C', board:'#2A9DC8', wall1:'#80DEEA', wall2:'#B2EBF2' },
+  { name:'숲',     sky1:'#1B4332', sky2:'#0D2818', board:'#2D6A4F', wall1:'#95D5B2', wall2:'#74C69D' }
+];
+function curTheme() { return THEMES[themeIndex % THEMES.length]; }
 
 // 📳 진동(햅틱) - 모바일 손맛
 function haptic(ms) {
@@ -788,6 +810,9 @@ function update(dt) {
   shake *= 0.9; if (shake < 0.1) shake = 0;
 
   if (!running || dead || paused) return;
+
+  // 🚪 문 단계: 문으로 들어가면 다음 라운드
+  if (doorPhase) { updateDoorPhase(dt); return; }
 
   // 파워 모드 타이머
   if (powerT > 0) {
@@ -882,6 +907,9 @@ function update(dt) {
     const er = a.type === 'golden' ? 16 : 13;
     if (Math.hypot(headX - a.x, headY - a.y) < HEAD_R + er - 4) { eatApple(a, i); break; }
   }
+
+  // 🚪 이번 프레임에 라운드 클리어로 문이 열렸다면, 나머지 위험 판정 건너뜀
+  if (doorPhase) return;
 
   // 장애물(돌) 충돌 — 파워 모드면 부숨!
   for (let i = obstacles.length - 1; i >= 0; i--) {
@@ -981,8 +1009,7 @@ function addScore(pts, popup) {
 
 let lastRoundBonus = 0;
 function roundClear() {
-  if (paused) return;
-  paused = true;
+  if (doorPhase) return; // 이미 클리어해서 문 대기 중
   // 🎁 라운드 클리어 보너스: 라운드×100 + 남은 시간×10
   const clearBonus = round * 100;
   const timeBonus = Math.floor(timeLeft * 10);
@@ -1005,17 +1032,62 @@ function roundClear() {
     setTimeout(() => { document.getElementById('gameClear').style.display = 'flex'; }, 600);
     return;
   }
-  // 🚀 화면 없이 바로 다음 라운드로 자동 진행
+  // 🚪 문 열기 (들어가면 다음 라운드)
+  openDoor();
+}
+
+function openDoor() {
+  doorPhase = true;
+  // 머리에서 적당히 떨어진, 뱀과 겹치지 않는 곳에 문 배치
+  let pos, tries = 0;
+  do { pos = randInField(48); tries++; }
+  while ((Math.hypot(pos.x - headX, pos.y - headY) < 140 || !farFromSnake(pos.x, pos.y, 50)) && tries < 50);
+  door = { x: pos.x, y: pos.y, r: 26, t: 0 };
+  sfxDoorOpen();
+  showCombo('🚪 문이 열렸어요! +' + lastRoundBonus + '점 · 들어가세요!');
+}
+
+function updateDoorPhase(dt) {
+  door.t += dt;
+  // 방향 전환
+  if (pendingDir) { dirX = pendingDir.x; dirY = pendingDir.y; pendingDir = null; sfxTurn(); }
+  // 머리 이동 (시간/죽음 없음 — 편하게 문으로)
+  headX += dirX * speed * dt;
+  headY += dirY * speed * dt;
+  // 벽 안으로 가둠 (죽지 않음)
+  headX = Math.max(field.x + HEAD_R, Math.min(field.x + field.w - HEAD_R, headX));
+  headY = Math.max(field.y + HEAD_R, Math.min(field.y + field.h - HEAD_R, headY));
+  // 경로 기록 (몸통 따라오기)
+  path.unshift({ x: headX, y: headY });
+  const needed = (snakeLen + 2) * SEG_SPACING;
+  let acc = 0, cut = path.length;
+  for (let i = 0; i < path.length - 1; i++) {
+    acc += Math.hypot(path[i].x - path[i+1].x, path[i].y - path[i+1].y);
+    if (acc > needed) { cut = i + 2; break; }
+  }
+  if (cut < path.length) path.length = cut;
+  // 문 주변 반짝임
+  if (Math.random() < 0.4) particles.push({ x: door.x + (Math.random()-0.5)*44, y: door.y + (Math.random()-0.5)*60, vx:(Math.random()-0.5)*2, vy:-Math.random()*2-0.5, life:24, max:24, color: Math.random()<0.5?'#FFD700':'#FFFFFF', size:Math.random()*2+1 });
+  // 파티클 갱신
+  for (let i = particles.length - 1; i >= 0; i--) {
+    const p = particles[i];
+    p.x += p.vx; p.y += p.vy; p.vy += 0.3; p.life--;
+    if (p.life <= 0) particles.splice(i, 1);
+  }
+  // 문 도착 → 다음 라운드
+  if (Math.hypot(headX - door.x, headY - door.y) < door.r) enterDoor();
+}
+
+function enterDoor() {
   const nextR = round + 1;
   const carry = Math.max(START_LEN, Math.floor(snakeLen * 0.5));
-  // 화면 중앙에 짧은 축하 메시지만 표시
-  showCombo('🎉 ' + round + '라운드 클리어! +' + lastRoundBonus + '점');
-  // 잠깐(0.9초) 멈췄다가 다음 라운드 자동 시작
-  setTimeout(() => {
-    startRound(nextR, carry);
-    paused = false;
-    showCombo('🏁 ' + nextR + '라운드 시작!');
-  }, 900);
+  // 입장 효과
+  for (let i = 0; i < 30; i++) particles.push({ x: door.x, y: door.y, vx:(Math.random()-0.5)*9, vy:-Math.random()*6-1, life:30, max:30, color: i%2?'#FFD700':'#8BC34A', size:Math.random()*3+2 });
+  sfxTeleport();
+  haptic([30, 40]);
+  doorPhase = false; door = null;
+  startRound(nextR, carry);
+  showCombo('🏁 ' + nextR + '라운드 시작!');
 }
 
 function die(cause) {
@@ -1031,15 +1103,16 @@ function die(cause) {
 // 렌더링
 //=========================================
 function drawField() {
-  // 잔디 배경
+  const th = curTheme();
+  // 배경 (테마별)
   const g = ctx.createLinearGradient(0, 0, 0, H);
-  g.addColorStop(0, '#2E7D32'); g.addColorStop(1, '#1B5E20');
+  g.addColorStop(0, th.sky1); g.addColorStop(1, th.sky2);
   ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
-  // 놀이판
-  ctx.fillStyle = '#3D9140';
+  // 놀이판 (테마별)
+  ctx.fillStyle = th.board;
   roundRect(field.x, field.y, field.w, field.h, 16); ctx.fill();
   // 체크 무늬
-  ctx.fillStyle = 'rgba(255,255,255,0.04)';
+  ctx.fillStyle = 'rgba(255,255,255,0.05)';
   const cell = 36;
   for (let yy = field.y; yy < field.y + field.h; yy += cell) {
     for (let xx = field.x; xx < field.x + field.w; xx += cell) {
@@ -1048,12 +1121,11 @@ function drawField() {
       }
     }
   }
-  // 벽 테두리
-  ctx.strokeStyle = '#8D6E63'; ctx.lineWidth = 6;
+  // 벽 테두리 (테마별)
+  ctx.strokeStyle = th.wall1; ctx.lineWidth = 6;
   roundRect(field.x, field.y, field.w, field.h, 16); ctx.stroke();
-  ctx.strokeStyle = '#A1887F'; ctx.lineWidth = 2;
+  ctx.strokeStyle = th.wall2; ctx.lineWidth = 2;
   roundRect(field.x+3, field.y+3, field.w-6, field.h-6, 13); ctx.stroke();
-  // 클리핑 후 내부만
 }
 function roundRect(x, y, w, h, r) {
   ctx.beginPath();
@@ -1328,6 +1400,36 @@ function drawBestMarker() {
   // 화면 상단에 "최고 기록까지 N칸" 표시는 HUD로, 여기선 생략
 }
 
+function drawDoor() {
+  const x = door.x, y = door.y, w = 46, h = 64;
+  const pulse = Math.sin(door.t * 5) * 3;
+  ctx.save();
+  ctx.translate(x, y);
+  // 후광
+  const gl = ctx.createRadialGradient(0, 0, 5, 0, 0, 52 + pulse);
+  gl.addColorStop(0, 'rgba(255,224,102,0.6)'); gl.addColorStop(1, 'rgba(255,224,102,0)');
+  ctx.fillStyle = gl; ctx.beginPath(); ctx.arc(0, 0, 52 + pulse, 0, Math.PI*2); ctx.fill();
+  // 문틀 (금색)
+  ctx.fillStyle = '#DAA520';
+  roundRect(-w/2, -h/2, w, h, 12); ctx.fill();
+  // 안쪽 빛나는 입구
+  const g = ctx.createLinearGradient(0, -h/2, 0, h/2);
+  g.addColorStop(0, '#FFFFFF'); g.addColorStop(0.5, '#FFF3B0'); g.addColorStop(1, '#FFD54F');
+  ctx.fillStyle = g;
+  roundRect(-w/2+6, -h/2+6, w-12, h-12, 8); ctx.fill();
+  // 다음 라운드 번호
+  ctx.fillStyle = '#FF8C00';
+  ctx.font = 'bold 22px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText((round + 1) + '', 0, -4);
+  ctx.font = 'bold 11px sans-serif';
+  ctx.fillText('라운드', 0, 16);
+  ctx.restore();
+  // 머리 위 안내
+  ctx.fillStyle = '#fff'; ctx.font = 'bold 12px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+  ctx.fillText('🚪 들어가기!', x, y - h/2 - 8);
+  ctx.textAlign = 'left';
+}
+
 function render() {
   ctx.save();
   if (shake > 0) ctx.translate((Math.random()-0.5)*shake, (Math.random()-0.5)*shake);
@@ -1339,6 +1441,7 @@ function render() {
   for (const a of apples) drawApple(a);
   for (const o of obstacles) drawObstacle(o);
   for (const b of bees) drawBee(b);
+  if (doorPhase && door) drawDoor();
   drawSnake();
   drawParticles();
   ctx.restore();
