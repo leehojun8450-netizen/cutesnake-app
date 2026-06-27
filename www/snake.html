@@ -1,0 +1,1878 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>🐍 꼬마 뱀의 사과 모험 🍎</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
+  html, body { width: 100%; height: 100%; overflow: hidden; }
+  body { background: #111; font-family: 'Comic Sans MS', '맑은 고딕', sans-serif;
+    display: flex; justify-content: center; align-items: center; touch-action: none; }
+  #gameContainer {
+    position: relative; width: 450px; height: 800px;
+    max-width: 100vw; max-height: 100vh;
+    background: #1a4d2e; overflow: hidden;
+    box-shadow: 0 0 50px rgba(76, 175, 80, 0.5);
+  }
+  #gameCanvas { display: block; width: 100%; height: 100%; position: absolute; top: 0; left: 0; }
+
+  #topUI { position: absolute; top: 0; left: 0; right: 0; padding: 10px 14px; z-index: 10; pointer-events: none; }
+  #timeBarWrap { width: 100%; height: 22px; background: rgba(0,0,0,0.6); border: 3px solid #fff; border-radius: 20px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.4); }
+  #timeBar { height: 100%; width: 100%; background: linear-gradient(90deg, #00FF7F, #00FFAA, #00FF7F); transition: width 0.1s linear, background 0.3s; border-radius: 20px 0 0 20px; }
+  #scoreRow { margin-top: 8px; display: flex; justify-content: space-between; align-items: flex-start; color: white; font-weight: bold; }
+  #scoreBig { font-size: 16px; color: #fff; text-shadow: 2px 2px 0 #000; line-height: 1; }
+  #scoreVal { font-size: 40px; color: #FFEB3B; text-shadow: 2px 2px 0 #000, 0 0 15px rgba(255,235,59,0.6); }
+  #bestBox { font-size: 14px; background: rgba(0,0,0,0.5); padding: 5px 12px; border-radius: 18px; border: 2px solid #FFD700; color: #FFD700; text-align: right; }
+  #subRow { margin-top: 4px; color: #fff; font-size: 15px; font-weight: bold; text-shadow: 1px 1px 0 #000; opacity: 0.95; }
+  #subRow b { color: #8BC34A; }
+  /* 점수 획득 팝업 */
+  #scorePop { position: absolute; top: 96px; right: 16px; color: #FFEB3B; font-size: 18px; font-weight: bold; text-shadow: 1px 1px 0 #000; opacity: 0; pointer-events: none; z-index: 11; transition: all 0.4s; }
+  #miniRank { position: absolute; top: 92px; left: 14px; display: flex; flex-direction: column; gap: 3px; z-index: 10; pointer-events: none; }
+  .miniRankRow { background: rgba(0,0,0,0.55); padding: 3px 10px; border-radius: 12px; color: white; font-size: 12px; font-weight: bold; border: 1px solid rgba(255,255,255,0.3); white-space: nowrap; }
+  .miniRankRow.gold { border-color: #FFD700; color: #FFD700; }
+  .miniRankRow.silver { border-color: #C0C0C0; }
+  .miniRankRow.bronze { border-color: #CD7F32; }
+
+  /* 방향버튼은 기본 숨김(스와이프가 주 조작). PC에선 키보드 사용 */
+  #dirPad { display: none; }
+  .dirBtn { background: rgba(255,255,255,0.15); border: 2px solid rgba(255,255,255,0.4); border-radius: 14px; color: white; font-size: 26px; display: flex; justify-content: center; align-items: center; cursor: pointer; }
+  .dirBtn:active { background: rgba(255,255,255,0.4); }
+  #btnUp { grid-column: 2; grid-row: 1; }
+  #btnLeft { grid-column: 1; grid-row: 2; }
+  #btnDown { grid-column: 2; grid-row: 2; }
+  #btnRight { grid-column: 3; grid-row: 2; }
+
+  #comboMsg { position: absolute; top: 150px; left: 50%; transform: translateX(-50%) scale(0.5); font-size: 30px; color: #FFEB3B; font-weight: bold; text-shadow: 2px 2px 0 #2E7D32, 0 0 15px #FFEB3B; pointer-events: none; opacity: 0; transition: all 0.3s; z-index: 12; white-space: nowrap; text-align: center; }
+
+  .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 30, 10, 0.9); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 30; text-align: center; padding: 20px; overflow-y: auto; }
+  .overlay h1 { font-size: 40px; color: #8BC34A; text-shadow: 3px 3px 0 #1B5E20, 0 0 25px #8BC34A; margin-bottom: 5px; letter-spacing: 1px; }
+  .overlay h2 { font-size: 19px; color: white; margin-bottom: 12px; opacity: 0.85; }
+  .info { background: rgba(255,255,255,0.1); border: 2px solid rgba(139,195,74,0.6); border-radius: 14px; padding: 12px 18px; margin: 8px 0; font-size: 14px; color: white; line-height: 1.7; }
+  .info b { color: #8BC34A; }
+  .btn { background: linear-gradient(135deg, #8BC34A, #4CAF50); color: #fff; border: none; padding: 16px 50px; font-size: 24px; font-weight: bold; border-radius: 50px; cursor: pointer; margin-top: 12px; box-shadow: 0 8px 25px rgba(76,175,80,0.5); font-family: inherit; transition: transform 0.1s; letter-spacing: 2px; position: relative; z-index: 100; text-shadow: 1px 1px 2px rgba(0,0,0,0.4); }
+  .btn:active { transform: scale(0.95); }
+  .btnAlt { background: linear-gradient(135deg, #FF69B4, #FF1493); color: white; border: none; padding: 12px 28px; font-size: 16px; font-weight: bold; border-radius: 30px; cursor: pointer; margin: 6px; box-shadow: 0 4px 15px rgba(255,20,147,0.4); font-family: inherit; }
+  .btnAlt:active { transform: scale(0.95); }
+  #gameOver { display: none; }
+  .deathLen { font-size: 64px; color: #FFEB3B; font-weight: bold; text-shadow: 3px 3px 0 #000, 0 0 25px #FFEB3B; line-height: 1; }
+  .rank { font-size: 19px; color: #fff; margin: 8px 0; }
+  .newBest { color: #FF1493; font-size: 22px; font-weight: bold; animation: pulse 0.6s infinite alternate; }
+  @keyframes pulse { from { transform: scale(1); } to { transform: scale(1.15); } }
+
+  .charLabel { color: #8BC34A; font-size: 14px; margin-top: 8px; letter-spacing: 1px; }
+  .skinSelect { display: flex; gap: 8px; justify-content: center; margin: 10px 0; flex-wrap: wrap; }
+  .skinOption { width: 54px; height: 54px; border-radius: 50%; background: rgba(255,255,255,0.1); border: 3px solid rgba(255,255,255,0.3); display: flex; justify-content: center; align-items: center; cursor: pointer; transition: all 0.2s; position: relative; }
+  .skinOption canvas { width: 44px; height: 44px; }
+  .skinOption.selected { border-color: #FFD700; background: rgba(255,215,0,0.3); box-shadow: 0 0 18px rgba(255,215,0,0.7); transform: scale(1.12); }
+  .skinName { position: absolute; bottom: -19px; left: 50%; transform: translateX(-50%); font-size: 11px; color: white; white-space: nowrap; opacity: 0; }
+  .skinOption.selected .skinName { opacity: 1; color: #FFD700; font-weight: bold; }
+
+  .startRankRow { display: flex; align-items: center; gap: 12px; padding: 7px 14px; background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.25); border-radius: 14px; color: white; font-size: 15px; }
+  .startRankRow.gold { border-color: #FFD700; background: linear-gradient(135deg, rgba(255,215,0,0.3), rgba(0,0,0,0.4)); }
+  .startRankRow.silver { border-color: #C0C0C0; background: linear-gradient(135deg, rgba(220,220,220,0.25), rgba(0,0,0,0.4)); }
+  .startRankRow.bronze { border-color: #CD7F32; background: linear-gradient(135deg, rgba(205,127,50,0.25), rgba(0,0,0,0.4)); }
+  .startRankRow .rMedal { font-size: 19px; }
+  .startRankRow .rName { flex: 1; font-weight: bold; text-align: left; }
+  .startRankRow .rScore { color: #FFD700; font-weight: bold; font-size: 19px; }
+  .startRankRow .empty { opacity: 0.4; }
+  #startTopRankings { display: flex; flex-direction: column; gap: 5px; margin: 10px 0; width: 280px; max-width: 90%; }
+  /* 게임오버 랭킹 리스트 */
+  #goRankList { display: flex; flex-direction: column; gap: 4px; width: 300px; max-width: 92%; margin: 8px 0; max-height: 38vh; overflow-y: auto; }
+  #goRankList::-webkit-scrollbar { width: 5px; }
+  #goRankList::-webkit-scrollbar-thumb { background: #8BC34A; border-radius: 3px; }
+  .goRankRow { display: flex; align-items: center; gap: 8px; padding: 6px 12px; background: rgba(255,255,255,0.08); border: 2px solid rgba(255,255,255,0.2); border-radius: 12px; color: white; font-size: 14px; }
+  .goRankRow.gold { border-color: #FFD700; background: linear-gradient(135deg, rgba(255,215,0,0.3), rgba(0,0,0,0.3)); }
+  .goRankRow.silver { border-color: #C0C0C0; background: linear-gradient(135deg, rgba(220,220,220,0.25), rgba(0,0,0,0.3)); }
+  .goRankRow.bronze { border-color: #CD7F32; background: linear-gradient(135deg, rgba(205,127,50,0.25), rgba(0,0,0,0.3)); }
+  .goRankRow.me { border-color: #FF1493; background: linear-gradient(135deg, rgba(255,20,147,0.4), rgba(255,105,180,0.2)); animation: mePulse 1s infinite alternate; }
+  @keyframes mePulse { from { box-shadow: 0 0 8px #FF1493; } to { box-shadow: 0 0 22px #FF1493; } }
+  .goRankRow .gMedal { width: 32px; font-size: 16px; font-weight: bold; text-align: center; flex-shrink: 0; }
+  .goRankRow .gName { flex: 1; font-weight: bold; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .goRankRow .gRound { font-size: 11px; color: rgba(255,255,255,0.6); }
+  .goRankRow .gScore { color: #FFEB3B; font-weight: bold; font-size: 17px; text-shadow: 1px 1px 0 #000; }
+  #myRankMsg { font-size: 17px; font-weight: bold; color: #FFD700; margin: 6px 0; text-shadow: 1px 1px 0 #000; }
+
+  #nameInput { background: rgba(255,255,255,0.95); border: 3px solid #8BC34A; border-radius: 30px; padding: 12px 20px; font-size: 20px; font-weight: bold; color: #333; text-align: center; width: 240px; outline: none; font-family: inherit; }
+  #nameInputSection { margin: 10px 0; display: none; flex-direction: column; align-items: center; gap: 8px; }
+  #top10Banner { display: none; font-size: 22px; color: #FFD700; font-weight: bold; text-shadow: 0 0 15px #FFD700; margin: 8px 0; animation: pulse 0.7s infinite alternate; }
+
+  #muteBtn { position: absolute; top: 72px; right: 12px; width: 38px; height: 38px; border-radius: 50%; background: rgba(0,0,0,0.5); border: 2px solid rgba(255,255,255,0.6); color: white; font-size: 18px; cursor: pointer; z-index: 12; display: flex; justify-content: center; align-items: center; }
+  #streakBox { font-size: 15px; color: #FFA726; font-weight: bold; margin: 4px 0 10px; text-shadow: 1px 1px 0 #000; }
+  #dailyStreakBig { font-size: 36px; color: #FF6D00; font-weight: bold; text-shadow: 2px 2px 0 #000, 0 0 20px #FFA726; margin: 10px 0; animation: pulse 0.7s infinite alternate; }
+  #dailyRewardInfo { font-size: 17px; }
+</style>
+</head>
+<body>
+<div id="gameContainer">
+  <canvas id="gameCanvas"></canvas>
+
+  <div id="topUI">
+    <div id="timeBarWrap"><div id="timeBar"></div></div>
+    <div id="scoreRow">
+      <div id="scoreBig">⭐ 점수<br><span id="scoreVal">0</span></div>
+      <div id="bestBox">🏆 BEST<br><span id="bestVal">0</span></div>
+    </div>
+    <div id="subRow">🏁 <b><span id="roundVal">1</span></b>라운드 · 🐍 <span id="lengthVal">4</span>/<span id="goalVal">20</span>칸</div>
+  </div>
+  <div id="scorePop"></div>
+  <div id="miniRank"></div>
+  <div id="comboMsg"></div>
+
+  <button id="muteBtn">🔊</button>
+
+  <div id="dirPad">
+    <div class="dirBtn" id="btnUp">▲</div>
+    <div class="dirBtn" id="btnLeft">◀</div>
+    <div class="dirBtn" id="btnDown">▼</div>
+    <div class="dirBtn" id="btnRight">▶</div>
+  </div>
+
+  <div id="startScreen" class="overlay">
+    <h1>🐍 꼬마 뱀 🍎</h1>
+    <h2>100라운드 사과 대모험!</h2>
+
+    <div class="charLabel">🎨 뱀 색 고르기 🎨</div>
+    <div class="skinSelect" id="skinSelect">
+      <div class="skinOption" data-skin="green"><canvas width="44" height="44"></canvas><div class="skinName">초록이</div></div>
+      <div class="skinOption" data-skin="blue"><canvas width="44" height="44"></canvas><div class="skinName">파랑이</div></div>
+      <div class="skinOption" data-skin="pink"><canvas width="44" height="44"></canvas><div class="skinName">분홍이</div></div>
+      <div class="skinOption" data-skin="orange"><canvas width="44" height="44"></canvas><div class="skinName">주황이</div></div>
+      <div class="skinOption" data-skin="rainbow"><canvas width="44" height="44"></canvas><div class="skinName">무지개</div></div>
+    </div>
+    <div style="height: 22px"></div>
+
+    <div id="streakBox">🔥 <span id="streakDays">0</span>일 연속 출석 중!</div>
+
+    <div class="charLabel">🏆 명예의 전당 (최고 점수) 🏆</div>
+    <div id="startTopRankings"></div>
+
+    <button id="startBtn" class="btn">시작! 🐍</button>
+    <button id="howToBtn" class="btnAlt">❓ 게임 방법</button>
+  </div>
+
+  <div id="roundClear" class="overlay" style="display:none">
+    <h1 id="rcTitle">🎉 1라운드 클리어! 🎉</h1>
+    <div class="deathLen" id="rcRound" style="font-size:48px">2</div>
+    <div style="color:#FFEB3B;font-size:18px;margin:4px 0">라운드 도전!</div>
+    <div class="info" id="rcInfo">다음 라운드는 더 어려워요!</div>
+    <button id="nextRoundBtn" class="btn">다음 라운드 →</button>
+  </div>
+
+  <div id="gameClear" class="overlay" style="display:none">
+    <h1>👑 100라운드 완주! 👑</h1>
+    <h2>당신은 전설의 뱀 마스터!</h2>
+    <div class="info">🐍 100개의 라운드를 모두 클리어했어요!<br>정말 대단해요! 🎉🎉🎉</div>
+    <button id="clearRestartBtn" class="btn">처음부터 🔄</button>
+  </div>
+
+  <div id="gameOver" class="overlay">
+    <h1 id="goTitle">게임 오버 🐍</h1>
+    <div style="color:#fff;font-size:16px;margin-top:2px">⭐ 내 점수</div>
+    <div class="deathLen" id="finalLen">0</div>
+    <div class="rank" id="rankText"></div>
+    <div id="newBestText" class="newBest" style="display:none">🎉 신기록! 🎉</div>
+    <div id="top10Banner">🏆 TOP 10 진입! 이름을 남겨요! 🏆</div>
+    <div id="nameInputSection">
+      <input type="text" id="nameInput" maxlength="8" placeholder="이름 입력 (8자 이내)">
+      <button id="saveNameBtn" class="btnAlt">기록 저장 💾</button>
+    </div>
+    <div id="myRankMsg"></div>
+    <div class="charLabel">🏆 랭킹 TOP 10 🏆</div>
+    <div id="goRankList"></div>
+    <div class="info" style="font-size:13px">
+      🏁 <b><span id="finalRound">1</span>라운드</b> 도달 ·
+      🍎 사과 <b><span id="applesEaten">0</span></b> · 💥 돌 <b><span id="rocksSmashedShow">0</span></b>
+    </div>
+    <button id="shareBtn" class="btnAlt">📤 점수 자랑하기</button>
+    <button id="restartBtn" class="btn">다시 도전! 🔄</button>
+  </div>
+
+  <!-- 📖 튜토리얼 (첫 1회) -->
+  <div id="tutorial" class="overlay" style="display:none">
+    <h1>🐍 게임 방법 🍎</h1>
+    <div class="info" style="font-size:16px; line-height:2.1">
+      ① ⌨️ <b>방향키 / WASD</b>로 뱀의 방향을 바꿔요<br>
+      &nbsp;&nbsp;&nbsp;📱 폰에서는 <b>화면을 스와이프</b>!<br>
+      ② 🍎 <b>사과를 먹으면</b> 꼬리가 길어지고 시간이 차요<br>
+      ③ 🎯 <b>목표 길이</b>까지 키우면 <b>라운드 클리어!</b><br>
+      ④ ⏱️ 시간이 다 되면 끝! 사과를 계속 먹어요<br>
+      ⑤ 🌶️ 고추 = 파워 / 🌀 터널 = 순간이동<br>
+      ⑥ ⚠️ 벽 · 자기 꼬리 · 바위 · 벌은 피해요!
+    </div>
+    <button id="tutorialOkBtn" class="btn">알겠어요! 🐍</button>
+  </div>
+
+  <!-- 🎁 일일 출석 보상 -->
+  <div id="dailyReward" class="overlay" style="display:none">
+    <h1>🎁 오늘의 출석 보상! 🎁</h1>
+    <div id="dailyStreakBig">🔥 <span id="dailyStreakNum">1</span>일 연속!</div>
+    <div class="info" id="dailyRewardInfo">오늘의 보너스를 받았어요!</div>
+    <button id="dailyOkBtn" class="btn">받기! 🎉</button>
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const DPR = window.devicePixelRatio || 1;
+let W = 450, H = 800;
+function resize() {
+  const r = document.getElementById('gameContainer').getBoundingClientRect();
+  W = r.width; H = r.height;
+  canvas.width = Math.floor(W * DPR); canvas.height = Math.floor(H * DPR);
+  canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  computeField();
+}
+window.addEventListener('resize', resize);
+
+// 놀이판 (벽 안쪽)
+let field = { x: 0, y: 0, w: 0, h: 0 };
+function computeField() {
+  const top = 116, bottom = 26, side = 10;  // 여백 축소 → 놀이 공간 확대
+  field.x = side; field.y = top;
+  field.w = W - side * 2; field.h = H - top - bottom;
+}
+
+//=========================================
+// 스킨
+//=========================================
+const SKINS = {
+  green:  { head: '#66BB6A', body1: '#81C784', body2: '#4CAF50', belly: '#C5E1A5' },
+  blue:   { head: '#42A5F5', body1: '#64B5F6', body2: '#1E88E5', belly: '#BBDEFB' },
+  pink:   { head: '#F06292', body1: '#F48FB1', body2: '#EC407A', belly: '#F8BBD0' },
+  orange: { head: '#FFA726', body1: '#FFB74D', body2: '#FB8C00', belly: '#FFE0B2' },
+  rainbow:{ rainbow: true, head: '#66BB6A', belly: '#FFFFFF' }
+};
+let selectedSkin = 'green';
+try { selectedSkin = localStorage.getItem('snake_skin') || 'green'; } catch(e) {}
+
+//=========================================
+// 게임 상태
+//=========================================
+const SEG_SPACING = 10;   // 몸통 마디 간격(px) - 작게(모바일 공간 확보)
+const HEAD_R = 10;        // 머리 반지름(충돌)
+const BODY_R = 8;         // 몸통 반지름
+const START_LEN = 4;
+
+let path = [];            // 머리가 지나온 경로 (newest first)
+let headX, headY, dirX, dirY;
+let pendingDir = null;
+let snakeLen = START_LEN; // 마디 수
+let speed = 130;          // px/초
+let timeLeft = 8, maxTime = 10;
+let apples = [];
+let obstacles = [];
+let bees = [];            // 움직이는 장애물
+let tunnels = [];         // 🌀 텔레포트 터널 [{a:{x,y}, b:{x,y}, color, t}]
+let teleCooldown = 0;     // 순간이동 직후 재진입 방지
+let particles = [];
+
+// 🎯 라운드 시스템
+let round = 1;
+let roundGoalLen = 7;
+let paused = false;
+let roundApplesGoal = 3;   // 이번 라운드 먹어야 할 사과 수
+// 라운드별 난이도 파라미터
+let rdSpeed = 130, rdDrain = 0.9, rdRefill = 3.0, rdRotBase = 12, rdBeeSpeed = 60;
+let running = false, dead = false;
+let applesEaten = 0;
+let score = 0;            // 💯 누적 점수 (라운드 넘어가도 계속 쌓임)
+let tongueT = 0, tongueOut = 0;
+let shake = 0;
+
+let best = 0; // 최고 점수
+try { best = parseInt(localStorage.getItem('snake_bestscore') || '0') || 0; } catch(e) {}
+document.getElementById('bestVal').textContent = best;
+
+// 🎁 일일 출석 / 시작 보너스
+let dailyStreak = 0;
+let pendingBonus = 0; // 다음 게임 시작 시 추가 시간(초)
+try { dailyStreak = parseInt(localStorage.getItem('snake_streak') || '0') || 0; } catch(e) {}
+
+// 리더보드
+let leaderboard = [], lastSavedName = '';
+try { leaderboard = JSON.parse(localStorage.getItem('snake_leaderboard') || '[]'); } catch(e) {}
+try { lastSavedName = localStorage.getItem('snake_lastname') || localStorage.getItem('stairs_lastname') || ''; } catch(e) {}
+
+// 칭호
+function getTitle(len) {
+  if (len >= 100) return '👑 뱀의 왕';
+  if (len >= 50) return '🐲 큰뱀';
+  if (len >= 25) return '🐍 새끼뱀';
+  if (len >= 10) return '🐛 애벌레';
+  return '🥚 아기뱀';
+}
+
+//=========================================
+// 🔊 사운드
+//=========================================
+let audioCtx = null, muted = false;
+try { muted = localStorage.getItem('snake_mute') === '1'; } catch(e) {}
+function getAudio() {
+  if (muted) return null;
+  if (!audioCtx) { try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) { return null; } }
+  if (audioCtx.state === 'suspended') { try { audioCtx.resume(); } catch(e) {} }
+  return audioCtx;
+}
+function tone(freq, dur, type, vol, freqEnd, delay) {
+  const c2 = getAudio(); if (!c2) return;
+  delay = delay || 0; type = type || 'sine'; vol = vol == null ? 0.2 : vol;
+  const t0 = c2.currentTime + delay;
+  const osc = c2.createOscillator(), gain = c2.createGain();
+  osc.type = type; osc.frequency.setValueAtTime(freq, t0);
+  if (freqEnd) osc.frequency.exponentialRampToValueAtTime(Math.max(1, freqEnd), t0 + dur);
+  gain.gain.setValueAtTime(0.0001, t0);
+  gain.gain.exponentialRampToValueAtTime(vol, t0 + 0.005);
+  gain.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+  osc.connect(gain); gain.connect(c2.destination);
+  osc.start(t0); osc.stop(t0 + dur + 0.02);
+}
+function noise(dur, vol, freq) {
+  const c2 = getAudio(); if (!c2) return;
+  vol = vol == null ? 0.15 : vol; freq = freq || 1000;
+  const bs = Math.floor(c2.sampleRate * dur);
+  const buf = c2.createBuffer(1, bs, c2.sampleRate);
+  const data = buf.getChannelData(0);
+  for (let i = 0; i < bs; i++) data[i] = (Math.random()*2 - 1) * (1 - i/bs);
+  const src = c2.createBufferSource(); src.buffer = buf;
+  const filt = c2.createBiquadFilter(); filt.type = 'lowpass'; filt.frequency.setValueAtTime(freq, c2.currentTime);
+  const g = c2.createGain(); g.gain.setValueAtTime(vol, c2.currentTime); g.gain.exponentialRampToValueAtTime(0.001, c2.currentTime + dur);
+  src.connect(filt); filt.connect(g); g.connect(c2.destination);
+  src.start(); src.stop(c2.currentTime + dur + 0.02);
+}
+function sfxEat() { tone(523, 0.06, 'square', 0.16); tone(784, 0.1, 'square', 0.16, 784, 0.05); tone(1047, 0.12, 'triangle', 0.12, 1047, 0.1); }
+function sfxGolden() { [523,659,784,1047,1318].forEach((n,i)=>tone(n,0.1,'square',0.18,n,i*0.05)); }
+function sfxTurn() { tone(300, 0.04, 'sine', 0.06); }
+function sfxLowTime() { tone(180, 0.08, 'sine', 0.22); tone(180, 0.08, 'sine', 0.18, 180, 0.12); }
+function sfxCrash() { tone(200, 0.35, 'sawtooth', 0.25, 50); noise(0.4, 0.2, 700); }
+function sfxStart() { [392,523,659,784].forEach((n,i)=>tone(n,0.13,'triangle',0.2,n,i*0.07)); }
+function sfxGameOver() { [659,587,523,440].forEach((n,i)=>tone(n,0.24,'triangle',0.2,n,i*0.16)); }
+function sfxNewBest() { [523,659,784,1047,1318].forEach((n,i)=>tone(n,0.16,'square',0.2,n,i*0.1)); }
+function sfxLevelUp() { tone(659,0.1,'square',0.16); tone(988,0.18,'square',0.16,988,0.08); }
+function sfxPower() { // 🌶️ 파워 획득 - 강렬한 상승
+  tone(330,0.1,'sawtooth',0.22,660); tone(440,0.1,'sawtooth',0.22,880,0.06);
+  tone(660,0.12,'square',0.2,1320,0.12); tone(880,0.3,'sawtooth',0.18,1760,0.2);
+  noise(0.25,0.12,1800);
+}
+function sfxSmash() { // 💥 돌 부수기
+  tone(150,0.18,'sawtooth',0.25,40); noise(0.25,0.22,500);
+  tone(400,0.08,'square',0.15,200,0.02);
+}
+function sfxTeleport() { // 🌀 순간이동 - 휘리릭
+  tone(400,0.1,'sine',0.18,1600); tone(1600,0.12,'triangle',0.15,400,0.08);
+  tone(800,0.15,'sine',0.12,2400,0.14);
+}
+function sfxDoorOpen() { // 🚪 문 열림 - 반짝 차임
+  tone(523,0.12,'sine',0.18,784); tone(784,0.14,'sine',0.16,1047,0.1);
+  tone(1047,0.3,'triangle',0.15,1568,0.2);
+}
+//=========================================
+// 🎵 배경음악 (BGM) - 경쾌한 칩튠 루프
+//=========================================
+let bgmPlaying = false;
+let bgmTimer = null;
+let bgmStep = 0;
+let bgmGain = null;
+
+// 음 이름 → 주파수
+const NOTE = {
+  'C4':261.63,'D4':293.66,'E4':329.63,'F4':349.23,'G4':392.00,'A4':440.00,'B4':493.88,
+  'C5':523.25,'D5':587.33,'E5':659.25,'F5':698.46,'G5':783.99,'A5':880.00,'B5':987.77,
+  'C6':1046.50,'D6':1174.66,'E6':1318.51, 0:0
+};
+// 경쾌한 멜로디 (16스텝 × 4마디 = 64스텝 루프) — 밝은 장조
+const BGM_MELODY = [
+  // 마디 1
+  'C5','E5','G5','E5', 'C5','E5','G5','C6', 'B5','G5','E5','G5', 'A5','G5','E5','C5',
+  // 마디 2
+  'D5','F5','A5','F5', 'D5','F5','A5','D6', 'C6','A5','F5','A5', 'G5','F5','E5','D5',
+  // 마디 3
+  'E5','G5','C6','G5', 'E5','G5','C6','E6', 'D6','C6','G5','E5', 'F5','E5','D5','C5',
+  // 마디 4
+  'G4','C5','E5','G5', 'A5','G5','E5','C5', 'D5','E5','F5','G5', 'C5',0,'G4',0
+];
+// 베이스 라인 (코드 루트, 8스텝마다 변경)
+const BGM_BASS = [
+  'C4','C4','C4','C4','C4','C4','C4','C4',
+  'F4','F4','F4','F4','D4','D4','D4','D4',
+  'C4','C4','C4','C4','G4','G4','G4','G4',
+  'F4','F4','G4','G4','C4','C4','G4','G4',
+  'C4','C4','C4','C4','C4','C4','C4','C4',
+  'A4','A4','A4','A4','F4','F4','F4','F4',
+  'E4','E4','E4','E4','C4','C4','C4','C4',
+  'F4','F4','G4','G4','C4','C4','C4','C4'
+];
+
+function bgmNote(freq, dur, type, vol, attack) {
+  if (!audioCtx || muted) return;
+  const t0 = audioCtx.currentTime;
+  const osc = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  osc.type = type;
+  osc.frequency.setValueAtTime(freq, t0);
+  g.gain.setValueAtTime(0.0001, t0);
+  g.gain.exponentialRampToValueAtTime(vol, t0 + (attack || 0.01));
+  g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+  osc.connect(g); g.connect(bgmGain);
+  osc.start(t0); osc.stop(t0 + dur + 0.02);
+}
+function bgmDrum(kind) {
+  if (!audioCtx || muted) return;
+  const t0 = audioCtx.currentTime;
+  if (kind === 'kick') {
+    const osc = audioCtx.createOscillator(), g = audioCtx.createGain();
+    osc.type = 'sine'; osc.frequency.setValueAtTime(140, t0);
+    osc.frequency.exponentialRampToValueAtTime(45, t0 + 0.12);
+    g.gain.setValueAtTime(0.32, t0); g.gain.exponentialRampToValueAtTime(0.001, t0 + 0.14);
+    osc.connect(g); g.connect(bgmGain); osc.start(t0); osc.stop(t0 + 0.16);
+  } else { // hihat (노이즈)
+    const bs = Math.floor(audioCtx.sampleRate * 0.04);
+    const buf = audioCtx.createBuffer(1, bs, audioCtx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < bs; i++) d[i] = (Math.random()*2-1) * (1 - i/bs);
+    const src = audioCtx.createBufferSource(); src.buffer = buf;
+    const hp = audioCtx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 7000;
+    const g = audioCtx.createGain(); g.gain.setValueAtTime(0.08, t0); g.gain.exponentialRampToValueAtTime(0.001, t0 + 0.04);
+    src.connect(hp); hp.connect(g); g.connect(bgmGain); src.start(t0); src.stop(t0 + 0.05);
+  }
+}
+
+const BGM_TEMPO = 145; // BPM (경쾌하게)
+function bgmTick() {
+  const len = BGM_MELODY.length;
+  const m = BGM_MELODY[bgmStep % len];
+  const b = BGM_BASS[bgmStep % BGM_BASS.length];
+  // 멜로디
+  if (m && NOTE[m]) bgmNote(NOTE[m], 0.16, 'square', 0.08, 0.008);
+  // 멜로디 옥타브 살짝 (반짝임)
+  if (m && NOTE[m]) bgmNote(NOTE[m] * 2, 0.10, 'triangle', 0.025, 0.008);
+  // 베이스
+  if (b && NOTE[b]) bgmNote(NOTE[b] / 2, 0.22, 'triangle', 0.10, 0.01);
+  // 드럼: 4스텝마다 킥, 매 스텝 하이햇 (엇박 강조)
+  if (bgmStep % 4 === 0) bgmDrum('kick');
+  if (bgmStep % 2 === 1) bgmDrum('hihat');
+  bgmStep++;
+}
+function startBGM() {
+  if (bgmPlaying || muted) return;
+  getAudio(); // 오디오 컨텍스트 보장
+  if (!audioCtx) return;
+  if (!bgmGain) { bgmGain = audioCtx.createGain(); bgmGain.gain.value = 0.5; bgmGain.connect(audioCtx.destination); }
+  bgmPlaying = true;
+  bgmStep = 0;
+  const interval = (60 / BGM_TEMPO / 4) * 1000; // 16분음표 간격(ms)
+  bgmTick();
+  bgmTimer = setInterval(bgmTick, interval);
+}
+function stopBGM() {
+  bgmPlaying = false;
+  if (bgmTimer) { clearInterval(bgmTimer); bgmTimer = null; }
+}
+
+function updateMuteUI() { document.getElementById('muteBtn').textContent = muted ? '🔇' : '🔊'; }
+updateMuteUI();
+document.getElementById('muteBtn').addEventListener('click', function(e) {
+  e.preventDefault(); e.stopPropagation();
+  muted = !muted;
+  try { localStorage.setItem('snake_mute', muted ? '1' : '0'); } catch(e) {}
+  updateMuteUI();
+  if (muted) {
+    stopBGM();
+  } else {
+    tone(800, 0.1, 'sine', 0.15);
+    if (running) startBGM();
+  }
+});
+
+//=========================================
+// 🐍 뱀 머리 그리기 (귀여운, 미리보기/게임 공용)
+//=========================================
+function drawSnakeHead(c, px, py, angle, skinKey, scale) {
+  scale = scale || 1;
+  const skin = SKINS[skinKey] || SKINS.green;
+  const headColor = skin.rainbow ? '#66BB6A' : skin.head;
+  c.save();
+  c.translate(px, py);
+  c.rotate(angle);
+  c.scale(scale, scale);
+  const R = 13; // 머리 그림 기준 크기 (충돌용 HEAD_R과 분리)
+  // 머리 (둥근)
+  const g = c.createRadialGradient(-4, -5, 3, 0, 0, R + 4);
+  g.addColorStop(0, '#FFFFFF'); g.addColorStop(0.25, lighten(headColor, 30)); g.addColorStop(1, headColor);
+  c.fillStyle = g;
+  c.beginPath(); c.arc(0, 0, R + 3, 0, Math.PI*2); c.fill();
+  // 볼터치
+  c.fillStyle = 'rgba(255,105,180,0.5)';
+  c.beginPath(); c.arc(-2, 9, 3.5, 0, Math.PI*2); c.arc(-2, -9, 3.5, 0, Math.PI*2); c.fill();
+  // 눈 (앞쪽 좌우)
+  c.fillStyle = 'white';
+  c.beginPath(); c.arc(6, -6, 5.5, 0, Math.PI*2); c.arc(6, 6, 5.5, 0, Math.PI*2); c.fill();
+  c.fillStyle = '#1A1A1A';
+  c.beginPath(); c.arc(8, -6, 3, 0, Math.PI*2); c.arc(8, 6, 3, 0, Math.PI*2); c.fill();
+  c.fillStyle = 'white';
+  c.beginPath(); c.arc(9, -7, 1.2, 0, Math.PI*2); c.arc(9, 5, 1.2, 0, Math.PI*2); c.fill();
+  // 콧구멍
+  c.fillStyle = 'rgba(0,0,0,0.3)';
+  c.beginPath(); c.arc(13, -2.5, 1, 0, Math.PI*2); c.arc(13, 2.5, 1, 0, Math.PI*2); c.fill();
+  // 혀 (날름)
+  if (tongueOut > 0.01) {
+    c.strokeStyle = '#FF3D6E'; c.lineWidth = 2; c.lineCap = 'round';
+    const tl = 6 + tongueOut * 10;
+    c.beginPath(); c.moveTo(R, 0); c.lineTo(R + tl, 0); c.stroke();
+    c.beginPath();
+    c.moveTo(R + tl, 0); c.lineTo(R + tl + 4, -3);
+    c.moveTo(R + tl, 0); c.lineTo(R + tl + 4, 3);
+    c.stroke();
+    c.lineCap = 'butt';
+  }
+  c.restore();
+}
+function lighten(hex, amt) {
+  const h = parseInt(hex.slice(1), 16);
+  let r = (h>>16)&255, g = (h>>8)&255, b = h&255;
+  r = Math.min(255, r+amt); g = Math.min(255, g+amt); b = Math.min(255, b+amt);
+  return 'rgb('+r+','+g+','+b+')';
+}
+function hslColor(i, total) {
+  const hue = (i / Math.max(8,total) * 360 + i * 12) % 360;
+  return 'hsl(' + hue + ', 75%, 60%)';
+}
+
+//=========================================
+// 경로/세그먼트 계산
+//=========================================
+function getPointAtDist(d) {
+  // path를 따라 거리 d 떨어진 점 반환
+  let acc = 0;
+  for (let i = 0; i < path.length - 1; i++) {
+    const a = path[i], b = path[i+1];
+    const segLen = Math.hypot(b.x - a.x, b.y - a.y);
+    if (acc + segLen >= d) {
+      const t = segLen > 0 ? (d - acc) / segLen : 0;
+      return { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t };
+    }
+    acc += segLen;
+  }
+  return path.length ? path[path.length - 1] : { x: headX, y: headY };
+}
+
+//=========================================
+// 게임 로직
+//=========================================
+//=========================================
+// 🎯 라운드별 난이도 계산
+//=========================================
+function roundGoalLength(R) { return Math.min(60, 20 + (R - 1) * 2); } // 목표 길이 (1R=20칸 시작)
+function roundStartTime(R) { return Math.max(5.5, 9 - R * 0.03); }    // 시작 시간(초)
+function roundRockCount(R) { return Math.min(9, 2 + Math.floor(R / 5)); } // 바위 수 (1R부터 2개, 5R마다 +1, 최대 9개)
+function roundBeeCount(R) { return R < 8 ? 0 : Math.min(5, Math.floor((R - 8) / 10) + 1); }
+
+function applyRoundDifficulty(R) {
+  rdSpeed = Math.min(330, 125 + R * 2);          // 속도
+  rdDrain = Math.min(2.0, 0.85 + R * 0.012);     // 시간 감소
+  rdRefill = Math.max(1.3, 3.0 - R * 0.018);     // 회복량
+  rdRotBase = Math.max(4, 12 - R * 0.09);        // 사과 썩는 시간
+  rdBeeSpeed = 55 + R * 1.5;                     // 벌 속도
+}
+
+function startRound(R, startLen) {
+  round = R;
+  applyRoundDifficulty(R);
+  roundGoalLen = roundGoalLength(R);
+  computeField();
+  headX = field.x + field.w * 0.5;
+  headY = field.y + field.h * 0.5;
+  dirX = 1; dirY = 0; pendingDir = null;
+  // 시작 길이 (다음 라운드는 이전 꼬리 50% 이어받음)
+  snakeLen = Math.max(START_LEN, Math.min(roundGoalLen - 1, startLen || START_LEN));
+  // 꼬리 길이에 맞게 경로를 머리 왼쪽으로 충분히 깔아둠
+  path = [];
+  const initN = Math.ceil((snakeLen + 4) * SEG_SPACING / 4) + 6;
+  for (let i = 0; i < initN; i++) path.push({ x: headX - i * 4, y: headY });
+  speed = rdSpeed;
+  maxTime = 10;
+  timeLeft = roundStartTime(R);
+  // 🎁 1라운드 시작 시 출석 보너스 적용
+  if (R === 1 && pendingBonus > 0) {
+    timeLeft = Math.min(maxTime, timeLeft + pendingBonus);
+  }
+  apples = []; bees = []; obstacles = []; tunnels = []; particles = [];
+  powerT = 0; teleCooldown = 0; smashCombo = 0;
+  doorPhase = false; door = null;            // 🚪 문 초기화
+  themeIndex = (R - 1) % THEMES.length;       // 🎨 라운드별 판 테마
+  // 🎁 7일 연속 출석 보너스: 1라운드에 파워 고추로 시작
+  if (R === 1 && pendingBonus > 0 && dailyStreak % 7 === 0) powerT = 6;
+  // 바위 배치
+  const rocks = roundRockCount(R);
+  for (let i = 0; i < rocks; i++) spawnObstacle();
+  // 벌 배치
+  const beeN = roundBeeCount(R);
+  for (let i = 0; i < beeN; i++) spawnBee();
+  // 터널 1쌍 (라운드 3부터)
+  if (R >= 3) spawnTunnel();
+  ensureApples();
+  updateHUD();
+  document.getElementById('timeBar').style.width = '100%';
+}
+
+function reset() {
+  computeField();
+  running = false; dead = false; paused = false;
+  applesEaten = 0; rocksSmashed = 0; score = 0;
+  tongueT = 0; tongueOut = 0; shake = 0;
+  startRound(1);
+}
+
+function randInField(margin) {
+  return {
+    x: field.x + margin + Math.random() * (field.w - margin * 2),
+    y: field.y + margin + Math.random() * (field.h - margin * 2)
+  };
+}
+function farFromSnake(x, y, minD) {
+  // 머리 + 몸통 일부와의 거리 확인
+  if (Math.hypot(x - headX, y - headY) < minD) return false;
+  const totalLen = snakeLen * SEG_SPACING;
+  for (let d = 0; d < totalLen; d += SEG_SPACING) {
+    const p = getPointAtDist(d);
+    if (Math.hypot(x - p.x, y - p.y) < minD) return false;
+  }
+  for (const o of obstacles) if (Math.hypot(x - o.x, y - o.y) < minD) return false;
+  return true;
+}
+
+function spawnApple() {
+  let pos, tries = 0;
+  do { pos = randInField(30); tries++; } while (!farFromSnake(pos.x, pos.y, 50) && tries < 40);
+  // 사과 종류 (확률)
+  const r = Math.random();
+  let type;
+  if (r < 0.07) type = 'power';       // 🌶️ 파워 고추 (돌 부수기!) - 희귀
+  else if (r < 0.14) type = 'golden'; // 황금 (+3칸, 시간 많이)
+  else if (r < 0.24) type = 'blue';   // 파랑 (잠깐 느리게)
+  else if (r < 0.34) type = 'green';  // 초록 (시간만 회복)
+  else type = 'red';                  // 빨강 (기본)
+  // 🌶️ 파워 고추는 부술 바위가 있을 때만 등장 (없으면 일반 사과로)
+  if (type === 'power' && obstacles.length === 0) type = 'red';
+  // 썩는 시간: 라운드 난이도(rdRotBase) 기준, 파워/황금은 더 빨리 사라짐
+  let rotTime;
+  if (type === 'power') rotTime = Math.max(3.5, rdRotBase * 0.6);
+  else if (type === 'golden') rotTime = Math.max(4, rdRotBase * 0.7);
+  else rotTime = rdRotBase + Math.random() * 4;
+  apples.push({ x: pos.x, y: pos.y, type: type, t: 0, rotTime: rotTime });
+}
+
+// 목표 사과 개수 (길이에 따라 살짝 증가)
+function targetAppleCount() {
+  return Math.min(6, 3 + Math.floor(snakeLen / 18));
+}
+function ensureApples() {
+  let guard = 0;
+  while (apples.length < targetAppleCount() && guard < 10) {
+    spawnApple();
+    guard++;
+  }
+}
+
+function spawnObstacle() {
+  let pos, tries = 0;
+  do { pos = randInField(40); tries++; } while (!farFromSnake(pos.x, pos.y, 80) && tries < 40);
+  obstacles.push({ x: pos.x, y: pos.y, r: 16 });
+}
+function spawnBee() {
+  const edge = Math.floor(Math.random() * 2);
+  const pos = randInField(30);
+  bees.push({
+    x: pos.x, y: pos.y,
+    vx: (Math.random() < 0.5 ? -1 : 1) * (40 + Math.random() * 30),
+    vy: (Math.random() < 0.5 ? -1 : 1) * (40 + Math.random() * 30),
+    r: 12, wing: 0
+  });
+}
+
+// 🌀 터널 한 쌍 생성 (입구 A ↔ 출구 B, 서로 멀리) — 다양한 모양/색깔
+const TUNNEL_COLORS = [
+  { ring: '#9C27B0', glow: '#E040FB' }, // 보라
+  { ring: '#00BCD4', glow: '#18FFFF' }, // 청록
+  { ring: '#FF9800', glow: '#FFD740' }, // 주황
+  { ring: '#E91E63', glow: '#FF80AB' }, // 핑크
+  { ring: '#3F51B5', glow: '#8C9EFF' }, // 인디고
+  { ring: '#4CAF50', glow: '#B9F6CA' }, // 초록
+  { ring: '#F44336', glow: '#FF8A80' }, // 빨강
+];
+const TUNNEL_SHAPES = ['swirl', 'star', 'diamond', 'hexagon', 'flower'];
+function spawnTunnel() {
+  let a, b, tries = 0;
+  do { a = randInField(45); tries++; } while (!farFromSnake(a.x, a.y, 70) && tries < 30);
+  tries = 0;
+  do { b = randInField(45); tries++; }
+  while ((!farFromSnake(b.x, b.y, 70) || Math.hypot(a.x - b.x, a.y - b.y) < field.w * 0.45) && tries < 40);
+  const c = TUNNEL_COLORS[Math.floor(Math.random() * TUNNEL_COLORS.length)];
+  const shape = TUNNEL_SHAPES[Math.floor(Math.random() * TUNNEL_SHAPES.length)];
+  tunnels.push({ a: a, b: b, ring: c.ring, glow: c.glow, shape: shape, t: 0, r: 19, spin: 0 });
+}
+
+function setDir(nx, ny) {
+  if (!running || dead) return;
+  // 180도 반대 금지
+  if (nx === -dirX && ny === -dirY) return;
+  if (nx === dirX && ny === dirY) return;
+  pendingDir = { x: nx, y: ny };
+}
+
+function eatApple(a, idx) {
+  applesEaten++;
+  haptic(12); // 📳 먹을 때 짧은 진동
+  if (a.type === 'power') {
+    // 🌶️ 파워 고추! 돌 부수기 모드
+    snakeLen += 1; timeLeft = Math.min(maxTime, timeLeft + getRefill());
+    powerT = 6; smashCombo = 0; // 6초간 무적 + 돌 부수기
+    addScore(30, true);
+    haptic([30, 40, 30]); // 강한 진동
+    sfxPower(); showCombo('🌶️ 파워 모드! 돌을 부숴요! 💥');
+    spawnParticles(a.x, a.y, '#FF3D00', 30);
+    spawnParticles(a.x, a.y, '#FFD700', 20);
+  } else if (a.type === 'golden') {
+    snakeLen += 3; timeLeft = Math.min(maxTime, timeLeft + 3.5);
+    addScore(50, true);
+    sfxGolden(); showCombo('🌟 황금 사과! +50점!');
+    spawnParticles(a.x, a.y, '#FFD700', 25);
+  } else if (a.type === 'blue') {
+    snakeLen += 1; timeLeft = Math.min(maxTime, timeLeft + getRefill());
+    speedBoostT = 2.5; // 잠깐 느려짐
+    addScore(15, true);
+    sfxEat(); showCombo('🔵 슬로우!');
+    spawnParticles(a.x, a.y, '#42A5F5', 18);
+  } else if (a.type === 'green') {
+    timeLeft = Math.min(maxTime, timeLeft + getRefill() + 2);
+    addScore(10, true);
+    sfxEat(); showCombo('🍏 시간 회복!');
+    spawnParticles(a.x, a.y, '#8BC34A', 18);
+  } else {
+    snakeLen += 1; timeLeft = Math.min(maxTime, timeLeft + getRefill());
+    addScore(10, true);
+    sfxEat();
+    spawnParticles(a.x, a.y, '#FF5252', 16);
+  }
+  // 혀 날름
+  tongueOut = 1;
+  apples.splice(idx, 1);
+  ensureApples();
+  // 속도: 라운드 기본 + 길이에 따라 약간
+  speed = rdSpeed + Math.min(40, snakeLen * 1.2);
+  updateHUD();
+  // 🎯 목표 길이 도달 → 라운드 클리어
+  if (snakeLen >= roundGoalLen) roundClear();
+}
+function getRefill() {
+  // 라운드 회복량 기준, 길수록 살짝 줄어듦
+  return Math.max(1.2, rdRefill - snakeLen * 0.015);
+}
+
+let speedBoostT = 0;
+let lowTimePulseT = 0;
+let powerT = 0;          // 🌶️ 파워 모드 남은 시간 (돌 부수기)
+let rocksSmashed = 0;    // 부순 돌 개수
+let smashCombo = 0;      // 파워 모드 중 연속 부수기 콤보
+let doorPhase = false;   // 🚪 라운드 클리어 후 문으로 들어가는 단계
+let door = null;         // 🚪 문 {x,y,r,t}
+let themeIndex = 0;      // 🎨 라운드별 판 테마
+
+// 🎨 라운드마다 바뀌는 판 테마 (배경/판/벽 색)
+const THEMES = [
+  { name:'잔디',   sky1:'#2E7D32', sky2:'#1B5E20', board:'#3D9140', wall1:'#8D6E63', wall2:'#A1887F' },
+  { name:'사막',   sky1:'#C9A86A', sky2:'#9C7A3C', board:'#D4B483', wall1:'#8B6F47', wall2:'#C9A86A' },
+  { name:'얼음',   sky1:'#4A90B8', sky2:'#2C5F7C', board:'#7EC8E3', wall1:'#B0E0E6', wall2:'#E0F7FF' },
+  { name:'사탕',   sky1:'#E91E8C', sky2:'#9C1458', board:'#FF8FC7', wall1:'#FF69B4', wall2:'#FFD1E8' },
+  { name:'밤하늘', sky1:'#1A1A3E', sky2:'#0D0D24', board:'#2A2A5C', wall1:'#6A6AAF', wall2:'#9C9CDF' },
+  { name:'용암',   sky1:'#4A1010', sky2:'#2A0808', board:'#6B2020', wall1:'#FF6B35', wall2:'#FFA500' },
+  { name:'바다',   sky1:'#006994', sky2:'#003D5C', board:'#2A9DC8', wall1:'#80DEEA', wall2:'#B2EBF2' },
+  { name:'숲',     sky1:'#1B4332', sky2:'#0D2818', board:'#2D6A4F', wall1:'#95D5B2', wall2:'#74C69D' }
+];
+function curTheme() { return THEMES[themeIndex % THEMES.length]; }
+
+// 📳 진동(햅틱) - 모바일 손맛
+function haptic(ms) {
+  if (navigator.vibrate) { try { navigator.vibrate(ms); } catch(e) {} }
+}
+
+function update(dt) {
+  tongueT += dt;
+  if (tongueOut > 0) tongueOut = Math.max(0, tongueOut - dt * 2.5);
+  // 가끔 혀 날름
+  if (tongueOut <= 0 && Math.sin(tongueT * 2) > 0.99) tongueOut = 0.6;
+
+  for (const b of bees) b.wing += dt * 20;
+  for (const tn of tunnels) tn.t += dt;
+  shake *= 0.9; if (shake < 0.1) shake = 0;
+
+  if (!running || dead || paused) return;
+
+  // 🚪 문 단계: 문으로 들어가면 다음 라운드
+  if (doorPhase) { updateDoorPhase(dt); return; }
+
+  // 파워 모드 타이머
+  if (powerT > 0) {
+    powerT -= dt;
+    if (powerT <= 0) {
+      powerT = 0; smashCombo = 0;
+      showCombo('파워 끝!'); tone(330, 0.2, 'sine', 0.15, 165);
+    }
+  }
+
+  // 🍎 사과 썩음 처리
+  for (let i = apples.length - 1; i >= 0; i--) {
+    const a = apples[i];
+    a.t += dt;
+    if (a.t >= a.rotTime) {
+      // 썩어서 사라짐 (연기 파티클)
+      spawnParticles(a.x, a.y, '#6D4C41', 10);
+      apples.splice(i, 1);
+    }
+  }
+  ensureApples();
+
+  // 방향 전환 적용
+  if (pendingDir) { dirX = pendingDir.x; dirY = pendingDir.y; pendingDir = null; sfxTurn(); }
+
+  // 속도 (파랑사과 슬로우)
+  let curSpeed = speed;
+  if (speedBoostT > 0) { speedBoostT -= dt; curSpeed *= 0.55; }
+
+  // 머리 이동
+  headX += dirX * curSpeed * dt;
+  headY += dirY * curSpeed * dt;
+
+  // 🌀 터널 순간이동 (한 번 쓰면 사라지고 새 터널 생성)
+  if (teleCooldown > 0) teleCooldown -= dt;
+  if (teleCooldown <= 0) {
+    for (let ti = 0; ti < tunnels.length; ti++) {
+      const tn = tunnels[ti];
+      let exit = null;
+      if (Math.hypot(headX - tn.a.x, headY - tn.a.y) < tn.r) exit = tn.b;
+      else if (Math.hypot(headX - tn.b.x, headY - tn.b.y) < tn.r) exit = tn.a;
+      if (exit) {
+        spawnParticles(headX, headY, tn.glow, 16);
+        headX = exit.x; headY = exit.y;
+        headX += dirX * (tn.r + 6); headY += dirY * (tn.r + 6);
+        path = [];
+        const n = Math.ceil((snakeLen + 3) * SEG_SPACING / 4) + 2;
+        for (let i = 0; i < n; i++) path.push({ x: headX - dirX * i * 4, y: headY - dirY * i * 4 });
+        teleCooldown = 0.6;
+        sfxTeleport();
+        spawnParticles(headX, headY, tn.glow, 20);
+        shake = 6;
+        // 사용한 터널 제거 + 새 터널 생성
+        tunnels.splice(ti, 1);
+        spawnTunnel();
+        break;
+      }
+    }
+  }
+
+  // 경로 기록
+  path.unshift({ x: headX, y: headY });
+  const needed = (snakeLen + 2) * SEG_SPACING;
+  // path 길이 제한
+  let acc = 0, cut = path.length;
+  for (let i = 0; i < path.length - 1; i++) {
+    acc += Math.hypot(path[i].x - path[i+1].x, path[i].y - path[i+1].y);
+    if (acc > needed) { cut = i + 2; break; }
+  }
+  if (cut < path.length) path.length = cut;
+
+  // 시간 감소
+  const drain = 1.0 + Math.min(0.6, snakeLen * 0.008);
+  timeLeft -= drain * dt;
+  if (timeLeft <= 0) { timeLeft = 0; die('time'); return; }
+
+  // 시간 경고음
+  if (timeLeft < 2.5) {
+    lowTimePulseT -= dt;
+    if (lowTimePulseT <= 0) { sfxLowTime(); lowTimePulseT = 0.3 + (timeLeft / 2.5) * 0.5; }
+  } else lowTimePulseT = 0;
+
+  // 벽 충돌
+  if (headX < field.x + HEAD_R || headX > field.x + field.w - HEAD_R ||
+      headY < field.y + HEAD_R || headY > field.y + field.h - HEAD_R) {
+    die('wall'); return;
+  }
+
+  // 사과 먹기
+  for (let i = apples.length - 1; i >= 0; i--) {
+    const a = apples[i];
+    const er = a.type === 'golden' ? 16 : 13;
+    if (Math.hypot(headX - a.x, headY - a.y) < HEAD_R + er - 4) { eatApple(a, i); break; }
+  }
+
+  // 🚪 이번 프레임에 라운드 클리어로 문이 열렸다면, 나머지 위험 판정 건너뜀
+  if (doorPhase) return;
+
+  // 장애물(돌) 충돌 — 파워 모드면 부숨!
+  for (let i = obstacles.length - 1; i >= 0; i--) {
+    const o = obstacles[i];
+    if (Math.hypot(headX - o.x, headY - o.y) < HEAD_R + o.r - 4) {
+      if (powerT > 0) {
+        // 💥 돌 부수기! (연속 콤보 = 점수 증가)
+        obstacles.splice(i, 1);
+        rocksSmashed++;
+        smashCombo++;
+        const smashPts = 20 + (smashCombo - 1) * 10; // 연속일수록 점수 ↑
+        addScore(smashPts, true);
+        shake = 12 + Math.min(8, smashCombo * 2);
+        sfxSmash();
+        haptic(smashCombo > 1 ? [20, 30, 20] : 30);
+        if (smashCombo >= 2) showCombo('💥 ' + smashCombo + '연속! +' + smashPts);
+        else showCombo('💥 돌 부쉈다! +' + smashPts);
+        spawnParticles(o.x, o.y, '#9E9E9E', 22);
+        spawnParticles(o.x, o.y, '#FFD700', 10);
+        timeLeft = Math.min(maxTime, timeLeft + 0.5);
+      } else { die('obstacle'); return; }
+    }
+  }
+
+  // 벌 이동 + 충돌 (파워 모드면 부숨)
+  for (let i = bees.length - 1; i >= 0; i--) {
+    const b = bees[i];
+    b.x += b.vx * dt; b.y += b.vy * dt;
+    if (b.x < field.x + b.r || b.x > field.x + field.w - b.r) b.vx *= -1;
+    if (b.y < field.y + b.r || b.y > field.y + field.h - b.r) b.vy *= -1;
+    if (Math.hypot(headX - b.x, headY - b.y) < HEAD_R + b.r - 3) {
+      if (powerT > 0) {
+        bees.splice(i, 1);
+        sfxSmash();
+        spawnParticles(b.x, b.y, '#FFC107', 18);
+      } else { die('bee'); return; }
+    }
+  }
+
+  // 자기 꼬리 충돌 (머리 근처 마디는 제외) — 파워 모드면 통과
+  if (powerT <= 0) {
+    const skip = 4; // 머리 바로 뒤 4마디는 무시
+    for (let s = skip; s < snakeLen; s++) {
+      const p = getPointAtDist(s * SEG_SPACING);
+      if (Math.hypot(headX - p.x, headY - p.y) < HEAD_R + BODY_R - 8) { die('self'); return; }
+    }
+  }
+
+  // 파티클
+  for (let i = particles.length - 1; i >= 0; i--) {
+    const p = particles[i];
+    p.x += p.vx; p.y += p.vy; p.vy += 0.3; p.life--;
+    if (p.life <= 0) particles.splice(i, 1);
+  }
+
+  // 시간바
+  const tb = document.getElementById('timeBar');
+  tb.style.width = (timeLeft / maxTime * 100) + '%';
+  if (timeLeft < 2.5) tb.style.background = 'linear-gradient(90deg, #FF0000, #FF6347, #FF0000)';
+  else if (timeLeft < 5) tb.style.background = 'linear-gradient(90deg, #FFA500, #FFD700, #FFA500)';
+  else tb.style.background = 'linear-gradient(90deg, #00FF7F, #00FFAA, #00FF7F)';
+}
+
+function spawnParticles(x, y, color, n) {
+  for (let i = 0; i < n; i++) particles.push({ x: x, y: y, vx: (Math.random()-0.5)*7, vy: -Math.random()*5-1, life: 26, max: 26, color: color, size: Math.random()*3+2 });
+}
+
+let comboTimer = null;
+function showCombo(text) {
+  const el = document.getElementById('comboMsg');
+  el.textContent = text;
+  el.style.opacity = '1';
+  el.style.transform = 'translateX(-50%) scale(1.25)';
+  if (comboTimer) clearTimeout(comboTimer);
+  comboTimer = setTimeout(() => { el.style.opacity = '0'; el.style.transform = 'translateX(-50%) scale(0.5)'; }, 750);
+}
+
+function updateHUD() {
+  document.getElementById('roundVal').textContent = round;
+  document.getElementById('lengthVal').textContent = snakeLen;
+  document.getElementById('goalVal').textContent = roundGoalLen;
+  document.getElementById('scoreVal').textContent = score;
+}
+let scorePopTimer = null;
+function addScore(pts, popup) {
+  score += pts;
+  document.getElementById('scoreVal').textContent = score;
+  if (popup) {
+    const el = document.getElementById('scorePop');
+    el.textContent = '+' + pts;
+    el.style.opacity = '1';
+    el.style.transform = 'translateY(0)';
+    if (scorePopTimer) clearTimeout(scorePopTimer);
+    scorePopTimer = setTimeout(() => { el.style.opacity = '0'; el.style.transform = 'translateY(-15px)'; }, 500);
+  }
+}
+
+let lastRoundBonus = 0;
+function roundClear() {
+  if (doorPhase) return; // 이미 클리어해서 문 대기 중
+  // 🎁 라운드 클리어 보너스: 라운드×100 + 남은 시간×10
+  const clearBonus = round * 100;
+  const timeBonus = Math.floor(timeLeft * 10);
+  lastRoundBonus = clearBonus + timeBonus;
+  addScore(lastRoundBonus, false);
+  // 폭죽
+  for (let i = 0; i < 40; i++) particles.push({ x: headX, y: headY, vx:(Math.random()-0.5)*10, vy:-Math.random()*8-2, life:40, max:40, color: i%2?'#FFD700':'#8BC34A', size:Math.random()*4+2 });
+  sfxNewBest();
+  haptic([40, 30, 40, 30, 80]); // 📳 라운드 클리어 진동
+  // 최고 점수 갱신
+  if (score > best) {
+    best = score;
+    try { localStorage.setItem('snake_bestscore', best); } catch(e) {}
+    document.getElementById('bestVal').textContent = best;
+  }
+  if (round >= 100) {
+    // 게임 클리어!
+    running = false;
+    stopBGM();
+    setTimeout(() => { document.getElementById('gameClear').style.display = 'flex'; }, 600);
+    return;
+  }
+  // 🚪 문 열기 (들어가면 다음 라운드)
+  openDoor();
+}
+
+function openDoor() {
+  doorPhase = true;
+  // 머리에서 적당히 떨어진, 뱀과 겹치지 않는 곳에 문 배치
+  let pos, tries = 0;
+  do { pos = randInField(48); tries++; }
+  while ((Math.hypot(pos.x - headX, pos.y - headY) < 140 || !farFromSnake(pos.x, pos.y, 50)) && tries < 50);
+  door = { x: pos.x, y: pos.y, r: 26, t: 0 };
+  sfxDoorOpen();
+  showCombo('🚪 문이 열렸어요! +' + lastRoundBonus + '점 · 들어가세요!');
+}
+
+function updateDoorPhase(dt) {
+  door.t += dt;
+  // 방향 전환
+  if (pendingDir) { dirX = pendingDir.x; dirY = pendingDir.y; pendingDir = null; sfxTurn(); }
+  // 머리 이동 (시간/죽음 없음 — 편하게 문으로)
+  headX += dirX * speed * dt;
+  headY += dirY * speed * dt;
+  // 벽 안으로 가둠 (죽지 않음)
+  headX = Math.max(field.x + HEAD_R, Math.min(field.x + field.w - HEAD_R, headX));
+  headY = Math.max(field.y + HEAD_R, Math.min(field.y + field.h - HEAD_R, headY));
+  // 경로 기록 (몸통 따라오기)
+  path.unshift({ x: headX, y: headY });
+  const needed = (snakeLen + 2) * SEG_SPACING;
+  let acc = 0, cut = path.length;
+  for (let i = 0; i < path.length - 1; i++) {
+    acc += Math.hypot(path[i].x - path[i+1].x, path[i].y - path[i+1].y);
+    if (acc > needed) { cut = i + 2; break; }
+  }
+  if (cut < path.length) path.length = cut;
+  // 문 주변 반짝임
+  if (Math.random() < 0.4) particles.push({ x: door.x + (Math.random()-0.5)*44, y: door.y + (Math.random()-0.5)*60, vx:(Math.random()-0.5)*2, vy:-Math.random()*2-0.5, life:24, max:24, color: Math.random()<0.5?'#FFD700':'#FFFFFF', size:Math.random()*2+1 });
+  // 파티클 갱신
+  for (let i = particles.length - 1; i >= 0; i--) {
+    const p = particles[i];
+    p.x += p.vx; p.y += p.vy; p.vy += 0.3; p.life--;
+    if (p.life <= 0) particles.splice(i, 1);
+  }
+  // 문 도착 → 다음 라운드
+  if (Math.hypot(headX - door.x, headY - door.y) < door.r) enterDoor();
+}
+
+function enterDoor() {
+  const nextR = round + 1;
+  const carry = Math.max(START_LEN, Math.floor(snakeLen * 0.5));
+  // 입장 효과
+  for (let i = 0; i < 30; i++) particles.push({ x: door.x, y: door.y, vx:(Math.random()-0.5)*9, vy:-Math.random()*6-1, life:30, max:30, color: i%2?'#FFD700':'#8BC34A', size:Math.random()*3+2 });
+  sfxTeleport();
+  haptic([30, 40]);
+  doorPhase = false; door = null;
+  startRound(nextR, carry);
+  showCombo('🏁 ' + nextR + '라운드 · 🎨 ' + curTheme().name + '!');
+}
+
+function die(cause) {
+  if (dead) return;
+  dead = true; shake = 16;
+  sfxCrash();
+  haptic([60, 50, 120]); // 📳 충돌 진동
+  spawnParticles(headX, headY, '#FF4500', 30);
+  setTimeout(gameOver, 1000);
+}
+
+//=========================================
+// 렌더링
+//=========================================
+function drawField() {
+  const th = curTheme();
+  // 배경 (테마별)
+  const g = ctx.createLinearGradient(0, 0, 0, H);
+  g.addColorStop(0, th.sky1); g.addColorStop(1, th.sky2);
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  // 놀이판 (테마별)
+  ctx.fillStyle = th.board;
+  roundRect(field.x, field.y, field.w, field.h, 16); ctx.fill();
+  // 체크 무늬
+  ctx.fillStyle = 'rgba(255,255,255,0.05)';
+  const cell = 36;
+  for (let yy = field.y; yy < field.y + field.h; yy += cell) {
+    for (let xx = field.x; xx < field.x + field.w; xx += cell) {
+      if ((Math.floor((xx-field.x)/cell) + Math.floor((yy-field.y)/cell)) % 2 === 0) {
+        ctx.fillRect(xx, yy, cell, cell);
+      }
+    }
+  }
+  // 벽 테두리 (테마별)
+  ctx.strokeStyle = th.wall1; ctx.lineWidth = 6;
+  roundRect(field.x, field.y, field.w, field.h, 16); ctx.stroke();
+  ctx.strokeStyle = th.wall2; ctx.lineWidth = 2;
+  roundRect(field.x+3, field.y+3, field.w-6, field.h-6, 13); ctx.stroke();
+}
+function roundRect(x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x+r, y);
+  ctx.arcTo(x+w, y, x+w, y+h, r);
+  ctx.arcTo(x+w, y+h, x, y+h, r);
+  ctx.arcTo(x, y+h, x, y, r);
+  ctx.arcTo(x, y, x+w, y, r);
+  ctx.closePath();
+}
+
+function drawApple(a) {
+  ctx.save();
+  ctx.translate(a.x, a.y);
+  const bob = Math.sin(a.t * 3) * 2;
+  ctx.translate(0, bob);
+
+  // 🌶️ 파워 고추는 별도 그리기
+  if (a.type === 'power') {
+    drawPepper(a);
+    ctx.restore();
+    return;
+  }
+
+  // 썩음 진행도 (0~1) — 마지막 35%부터 갈색/흔들림
+  const rotProg = Math.max(0, (a.t - a.rotTime * 0.65) / (a.rotTime * 0.35));
+  // 곧 썩으면 흔들림 + 깜빡임
+  if (rotProg > 0) {
+    ctx.rotate(Math.sin(a.t * 25) * 0.12 * rotProg);
+    if (rotProg > 0.5 && Math.floor(a.t * 8) % 2 === 0) ctx.globalAlpha = 0.55;
+  }
+
+  let color, hl;
+  if (a.type === 'golden') { color = '#FFC107'; hl = '#FFF59D'; }
+  else if (a.type === 'blue') { color = '#42A5F5'; hl = '#BBDEFB'; }
+  else if (a.type === 'green') { color = '#66BB6A'; hl = '#C5E1A5'; }
+  else { color = '#F44336'; hl = '#FF8A80'; }
+  // 썩으면 갈색으로 변함
+  if (rotProg > 0) { color = mixColor(color, '#5D4037', rotProg * 0.7); hl = mixColor(hl, '#795548', rotProg * 0.7); }
+  const r = a.type === 'golden' ? 14 : 12;
+  if (a.type === 'golden' && rotProg < 0.3) { ctx.shadowBlur = 18; ctx.shadowColor = '#FFD700'; }
+  // 사과 몸
+  const g = ctx.createRadialGradient(-4, -4, 2, 0, 0, r);
+  g.addColorStop(0, hl); g.addColorStop(1, color);
+  ctx.fillStyle = g;
+  ctx.beginPath();
+  ctx.arc(-r*0.35, 0, r*0.7, 0, Math.PI*2);
+  ctx.arc(r*0.35, 0, r*0.7, 0, Math.PI*2);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+  // 줄기
+  ctx.strokeStyle = '#5D4037'; ctx.lineWidth = 2; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(0, -r*0.6); ctx.quadraticCurveTo(2, -r-3, 5, -r-2); ctx.stroke();
+  ctx.lineCap = 'butt';
+  // 잎 (썩으면 시들)
+  ctx.fillStyle = rotProg > 0.4 ? '#827717' : '#4CAF50';
+  ctx.beginPath(); ctx.ellipse(6, -r-1, 4, 2.2, -0.5, 0, Math.PI*2); ctx.fill();
+  // 하이라이트
+  ctx.fillStyle = 'rgba(255,255,255,0.6)';
+  ctx.beginPath(); ctx.ellipse(-r*0.4, -r*0.3, 2.5, 3.5, -0.4, 0, Math.PI*2); ctx.fill();
+  // 썩음 반점
+  if (rotProg > 0.3) {
+    ctx.fillStyle = 'rgba(62,39,35,0.6)';
+    ctx.beginPath(); ctx.arc(r*0.2, r*0.2, 2.5, 0, Math.PI*2); ctx.arc(-r*0.3, r*0.3, 2, 0, Math.PI*2); ctx.fill();
+  }
+  ctx.restore();
+}
+
+function drawPepper(a) {
+  // 🌶️ 빨간 고추 - 반짝이는 파워 음식
+  const pulse = 1 + Math.sin(a.t * 8) * 0.1;
+  ctx.scale(pulse, pulse);
+  ctx.shadowBlur = 20; ctx.shadowColor = '#FF1744';
+  // 후광
+  ctx.fillStyle = 'rgba(255,61,0,0.25)';
+  ctx.beginPath(); ctx.arc(0, 0, 20, 0, Math.PI*2); ctx.fill();
+  // 고추 몸 (곡선)
+  const g = ctx.createLinearGradient(-8, -8, 8, 12);
+  g.addColorStop(0, '#FF5252'); g.addColorStop(1, '#C62828');
+  ctx.fillStyle = g;
+  ctx.beginPath();
+  ctx.moveTo(-3, -10);
+  ctx.quadraticCurveTo(10, -8, 9, 4);
+  ctx.quadraticCurveTo(7, 14, -1, 13);
+  ctx.quadraticCurveTo(-7, 10, -6, 2);
+  ctx.quadraticCurveTo(-6, -6, -3, -10);
+  ctx.closePath(); ctx.fill();
+  ctx.shadowBlur = 0;
+  // 하이라이트
+  ctx.fillStyle = 'rgba(255,255,255,0.5)';
+  ctx.beginPath(); ctx.ellipse(-1, 0, 1.5, 5, 0.2, 0, Math.PI*2); ctx.fill();
+  // 꼭지 (초록)
+  ctx.fillStyle = '#43A047';
+  ctx.beginPath(); ctx.moveTo(-3, -10); ctx.quadraticCurveTo(-2, -16, 3, -15); ctx.quadraticCurveTo(0, -11, -3, -10); ctx.closePath(); ctx.fill();
+  ctx.strokeStyle = '#2E7D32'; ctx.lineWidth = 1.5; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(0, -13); ctx.lineTo(2, -18); ctx.stroke();
+  ctx.lineCap = 'butt';
+  // 반짝 별
+  ctx.fillStyle = '#FFD700';
+  ctx.font = 'bold 10px serif'; ctx.textAlign = 'center';
+  ctx.fillText('✨', 11 * Math.cos(a.t*3), -11);
+}
+
+function mixColor(a, b, t) {
+  const ah = parseInt(a.slice(1),16), bh = parseInt(b.slice(1),16);
+  const ar=(ah>>16)&255,ag=(ah>>8)&255,ab=ah&255, br=(bh>>16)&255,bg=(bh>>8)&255,bb=bh&255;
+  return 'rgb('+Math.round(ar+(br-ar)*t)+','+Math.round(ag+(bg-ag)*t)+','+Math.round(ab+(bb-ab)*t)+')';
+}
+
+function drawObstacle(o) {
+  ctx.save();
+  ctx.translate(o.x, o.y);
+  // 바위
+  const g = ctx.createRadialGradient(-4, -5, 3, 0, 0, o.r);
+  g.addColorStop(0, '#9E9E9E'); g.addColorStop(1, '#5D5D5D');
+  ctx.fillStyle = g;
+  ctx.beginPath();
+  ctx.moveTo(-o.r, 4);
+  ctx.lineTo(-o.r*0.6, -o.r*0.8);
+  ctx.lineTo(o.r*0.3, -o.r);
+  ctx.lineTo(o.r, -o.r*0.2);
+  ctx.lineTo(o.r*0.7, o.r*0.7);
+  ctx.lineTo(-o.r*0.4, o.r*0.6);
+  ctx.closePath(); ctx.fill();
+  ctx.strokeStyle = '#424242'; ctx.lineWidth = 1.5; ctx.stroke();
+  // 금
+  ctx.strokeStyle = 'rgba(0,0,0,0.3)'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(-4, -o.r*0.5); ctx.lineTo(2, 4); ctx.lineTo(-3, o.r*0.5); ctx.stroke();
+  ctx.restore();
+}
+
+function polyPath(c, sides, r, rot, inner) {
+  c.beginPath();
+  for (let i = 0; i <= sides * (inner ? 2 : 1); i++) {
+    const ang = rot + (i * Math.PI * 2) / (sides * (inner ? 2 : 1));
+    const rr = inner ? (i % 2 === 0 ? r : r * inner) : r;
+    const x = Math.cos(ang) * rr, y = Math.sin(ang) * rr;
+    if (i === 0) c.moveTo(x, y); else c.lineTo(x, y);
+  }
+  c.closePath();
+}
+function drawTunnel(pos, tn) {
+  ctx.save();
+  ctx.translate(pos.x, pos.y);
+  const r = tn.r;
+  const spin = tn.t * 1.8;
+
+  // 바깥 글로우 링
+  ctx.shadowBlur = 18; ctx.shadowColor = tn.glow;
+  ctx.fillStyle = tn.ring;
+  ctx.save(); ctx.rotate(spin * 0.5);
+  if (tn.shape === 'star') polyPath(ctx, 5, r + 5, -Math.PI/2, 0.5);
+  else if (tn.shape === 'diamond') polyPath(ctx, 4, r + 5, spin * 0.3);
+  else if (tn.shape === 'hexagon') polyPath(ctx, 6, r + 5, spin * 0.2);
+  else if (tn.shape === 'flower') polyPath(ctx, 8, r + 5, spin * 0.2, 0.75);
+  else { ctx.beginPath(); ctx.arc(0, 0, r + 4, 0, Math.PI*2); }
+  ctx.fill();
+  ctx.restore();
+  ctx.shadowBlur = 0;
+
+  // 안쪽 어두운 구멍 (모양 따라)
+  const g = ctx.createRadialGradient(0, 0, 2, 0, 0, r);
+  g.addColorStop(0, '#000012'); g.addColorStop(0.55, tn.ring); g.addColorStop(1, tn.glow);
+  ctx.fillStyle = g;
+  ctx.save(); ctx.rotate(spin * 0.5);
+  if (tn.shape === 'star') polyPath(ctx, 5, r, -Math.PI/2, 0.5);
+  else if (tn.shape === 'diamond') polyPath(ctx, 4, r, spin * 0.3);
+  else if (tn.shape === 'hexagon') polyPath(ctx, 6, r, spin * 0.2);
+  else if (tn.shape === 'flower') polyPath(ctx, 8, r, spin * 0.2, 0.75);
+  else { ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI*2); }
+  ctx.fill();
+  ctx.restore();
+
+  // 소용돌이 나선 (공통, 빨려드는 느낌)
+  ctx.save();
+  ctx.rotate(spin);
+  ctx.strokeStyle = tn.glow; ctx.lineWidth = 2.2; ctx.lineCap = 'round';
+  ctx.beginPath();
+  for (let a = 0; a < Math.PI * 4; a += 0.2) {
+    const rr = (a / (Math.PI * 4)) * (r - 2);
+    const x = Math.cos(a) * rr, y = Math.sin(a) * rr;
+    if (a === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+  ctx.lineCap = 'butt';
+  ctx.restore();
+
+  // 중앙 반짝
+  ctx.fillStyle = 'rgba(255,255,255,0.85)';
+  ctx.beginPath(); ctx.arc(0, 0, 2.5 + Math.sin(tn.t*5)*1, 0, Math.PI*2); ctx.fill();
+  ctx.restore();
+}
+
+function drawBee(b) {
+  ctx.save();
+  ctx.translate(b.x, b.y);
+  // 날개
+  const wf = Math.sin(b.wing) * 0.4;
+  ctx.fillStyle = 'rgba(255,255,255,0.7)';
+  ctx.save(); ctx.rotate(-0.5 + wf); ctx.beginPath(); ctx.ellipse(-2, -8, 5, 9, 0, 0, Math.PI*2); ctx.fill(); ctx.restore();
+  ctx.save(); ctx.rotate(0.5 - wf); ctx.beginPath(); ctx.ellipse(-2, 8, 5, 9, 0, 0, Math.PI*2); ctx.fill(); ctx.restore();
+  // 몸
+  ctx.fillStyle = '#FFC107';
+  ctx.beginPath(); ctx.ellipse(0, 0, 12, 9, 0, 0, Math.PI*2); ctx.fill();
+  // 줄무늬
+  ctx.fillStyle = '#3E2723';
+  ctx.fillRect(-2, -8, 3, 16); ctx.fillRect(4, -6, 3, 12);
+  // 얼굴
+  ctx.fillStyle = 'white';
+  ctx.beginPath(); ctx.arc(-7, -3, 3, 0, Math.PI*2); ctx.arc(-7, 3, 3, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = 'black';
+  ctx.beginPath(); ctx.arc(-8, -3, 1.5, 0, Math.PI*2); ctx.arc(-8, 3, 1.5, 0, Math.PI*2); ctx.fill();
+  ctx.restore();
+}
+
+function drawSnake() {
+  const skin = SKINS[selectedSkin] || SKINS.green;
+  const powered = powerT > 0;
+  // 몸통: 꼬리부터 머리쪽으로 그림 (머리가 위)
+  for (let s = snakeLen - 1; s >= 1; s--) {
+    const p = getPointAtDist(s * SEG_SPACING);
+    const taper = 1 - (s / snakeLen) * 0.35; // 꼬리로 갈수록 살짝 가늘게
+    const r = BODY_R * taper;
+    let col;
+    if (powered) {
+      // 파워 모드: 불꽃 색 (빨강~노랑 깜빡)
+      const f = (Math.sin(performance.now()/80 + s * 0.5) + 1) / 2;
+      col = mixColor('#FF3D00', '#FFD700', f);
+    } else if (skin.rainbow) col = hslColor(s, snakeLen);
+    else col = (s % 2 === 0) ? skin.body1 : skin.body2;
+    // 파워 오라
+    if (powered) {
+      ctx.shadowBlur = 12; ctx.shadowColor = '#FF6D00';
+    }
+    const g = ctx.createRadialGradient(p.x - 3, p.y - 3, 1, p.x, p.y, r);
+    g.addColorStop(0, lighten(col, 25)); g.addColorStop(1, col);
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, Math.PI*2); ctx.fill();
+    ctx.shadowBlur = 0;
+    if (s % 2 === 0 && !powered) {
+      ctx.fillStyle = 'rgba(255,255,255,0.25)';
+      ctx.beginPath(); ctx.arc(p.x, p.y, r*0.5, 0, Math.PI*2); ctx.fill();
+    }
+  }
+  // 파워 모드 머리 후광
+  if (powered) {
+    const glow = 22 + Math.sin(performance.now()/100) * 5;
+    const gg = ctx.createRadialGradient(headX, headY, 5, headX, headY, glow);
+    gg.addColorStop(0, 'rgba(255,109,0,0.5)'); gg.addColorStop(1, 'rgba(255,109,0,0)');
+    ctx.fillStyle = gg;
+    ctx.beginPath(); ctx.arc(headX, headY, glow, 0, Math.PI*2); ctx.fill();
+    // 불꽃 파티클
+    if (Math.random() < 0.5) particles.push({ x: headX + (Math.random()-0.5)*20, y: headY + (Math.random()-0.5)*20, vx:(Math.random()-0.5)*2, vy:-Math.random()*2-1, life:18, max:18, color: Math.random()<0.5?'#FF6D00':'#FFD700', size:Math.random()*2+1.5 });
+  }
+  // 머리
+  const angle = Math.atan2(dirY, dirX);
+  drawSnakeHead(ctx, headX, headY, angle, selectedSkin, (powered ? 1.1 : 1) * (HEAD_R / 13));
+}
+
+function drawParticles() {
+  for (const p of particles) {
+    ctx.globalAlpha = p.life / p.max;
+    ctx.fillStyle = p.color;
+    ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI*2); ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+}
+
+// 최고기록 라인 (목표)
+function drawBestMarker() {
+  if (best <= 0 || snakeLen >= best) return;
+  // 화면 상단에 "최고 기록까지 N칸" 표시는 HUD로, 여기선 생략
+}
+
+function drawDoor() {
+  const x = door.x, y = door.y, w = 46, h = 64;
+  const pulse = Math.sin(door.t * 5) * 3;
+  ctx.save();
+  ctx.translate(x, y);
+  // 후광
+  const gl = ctx.createRadialGradient(0, 0, 5, 0, 0, 52 + pulse);
+  gl.addColorStop(0, 'rgba(255,224,102,0.6)'); gl.addColorStop(1, 'rgba(255,224,102,0)');
+  ctx.fillStyle = gl; ctx.beginPath(); ctx.arc(0, 0, 52 + pulse, 0, Math.PI*2); ctx.fill();
+  // 문틀 (금색)
+  ctx.fillStyle = '#DAA520';
+  roundRect(-w/2, -h/2, w, h, 12); ctx.fill();
+  // 안쪽 빛나는 입구
+  const g = ctx.createLinearGradient(0, -h/2, 0, h/2);
+  g.addColorStop(0, '#FFFFFF'); g.addColorStop(0.5, '#FFF3B0'); g.addColorStop(1, '#FFD54F');
+  ctx.fillStyle = g;
+  roundRect(-w/2+6, -h/2+6, w-12, h-12, 8); ctx.fill();
+  // 다음 라운드 번호
+  ctx.fillStyle = '#FF8C00';
+  ctx.font = 'bold 22px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText((round + 1) + '', 0, -4);
+  ctx.font = 'bold 11px sans-serif';
+  ctx.fillText('라운드', 0, 16);
+  ctx.restore();
+  // 머리 위 안내
+  ctx.fillStyle = '#fff'; ctx.font = 'bold 12px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+  ctx.fillText('🚪 들어가기!', x, y - h/2 - 8);
+  ctx.textAlign = 'left';
+}
+
+function render() {
+  ctx.save();
+  if (shake > 0) ctx.translate((Math.random()-0.5)*shake, (Math.random()-0.5)*shake);
+  drawField();
+  // 클리핑 (놀이판 안에만 그림)
+  ctx.save();
+  roundRect(field.x, field.y, field.w, field.h, 16); ctx.clip();
+  for (const tn of tunnels) { drawTunnel(tn.a, tn); drawTunnel(tn.b, tn); }
+  for (const a of apples) drawApple(a);
+  for (const o of obstacles) drawObstacle(o);
+  for (const b of bees) drawBee(b);
+  if (doorPhase && door) drawDoor();
+  drawSnake();
+  drawParticles();
+  ctx.restore();
+  // 파워 모드 타이머 (놀이판 위, 클립 밖)
+  if (powerT > 0) {
+    const txt = '🌶️ 파워 ' + powerT.toFixed(1) + '초 💥';
+    ctx.font = 'bold 20px sans-serif';
+    ctx.textAlign = 'center';
+    const tw = ctx.measureText(txt).width + 24;
+    ctx.fillStyle = 'rgba(198,40,40,0.92)';
+    roundRect(W/2 - tw/2, field.y + field.h - 44, tw, 30, 15); ctx.fill();
+    ctx.strokeStyle = '#FFD700'; ctx.lineWidth = 2;
+    roundRect(W/2 - tw/2, field.y + field.h - 44, tw, 30, 15); ctx.stroke();
+    ctx.fillStyle = '#fff';
+    ctx.fillText(txt, W/2, field.y + field.h - 23);
+    ctx.textAlign = 'left';
+  }
+  ctx.restore();
+}
+
+let lastT = performance.now();
+function loop(t) {
+  const dt = Math.min(0.04, (t - lastT) / 1000);
+  lastT = t;
+  try { update(dt); render(); } catch(e) { console.error(e); }
+  requestAnimationFrame(loop);
+}
+
+//=========================================
+// 게임 시작/종료
+//=========================================
+function startGame() {
+  reset();
+  document.getElementById('startScreen').style.display = 'none';
+  document.getElementById('gameOver').style.display = 'none';
+  document.getElementById('roundClear').style.display = 'none';
+  document.getElementById('gameClear').style.display = 'none';
+  running = true;
+  sfxStart();
+  startBGM(); // 🎵 배경음악 시작
+}
+
+let goMyEntry = null; // 게임오버 시 내 엔트리 (미리보기/저장 후)
+function gameOver() {
+  running = false;
+  stopBGM(); // 🎵 배경음악 정지
+  const finalScore = score;       // 💯 누적 점수
+  const finalRound = round;
+  const newBest = finalScore > best;
+  if (newBest) {
+    best = finalScore;
+    try { localStorage.setItem('snake_bestscore', best); } catch(e) {}
+    document.getElementById('bestVal').textContent = best;
+    setTimeout(sfxNewBest, 300);
+  } else setTimeout(sfxGameOver, 300);
+  document.getElementById('finalLen').textContent = finalScore;
+  document.getElementById('finalRound').textContent = finalRound;
+  document.getElementById('applesEaten').textContent = applesEaten;
+  document.getElementById('rocksSmashedShow').textContent = rocksSmashed;
+  document.getElementById('newBestText').style.display = newBest ? 'block' : 'none';
+
+  // 등급 메시지
+  let tier = '';
+  if (finalScore >= 5000) tier = '👑 뱀의 왕! 전설의 점수!';
+  else if (finalScore >= 2500) tier = '🐲 마스터! 대단해요!';
+  else if (finalScore >= 1000) tier = '🐍 베테랑! 잘했어요!';
+  else if (finalScore >= 300) tier = '🐛 중급자! 좋아요!';
+  else tier = '🥚 다시 도전!';
+  document.getElementById('rankText').textContent = tier;
+
+  const qualifies = qualifiesForLeaderboard(finalScore);
+  // 내 엔트리(미저장) 미리보기
+  goMyEntry = { name: (lastSavedName || '나'), score: finalScore, round: finalRound, skin: selectedSkin, me: true, pending: qualifies };
+  document.getElementById('top10Banner').style.display = qualifies ? 'block' : 'none';
+  document.getElementById('nameInputSection').style.display = qualifies ? 'flex' : 'none';
+  if (qualifies) {
+    const ni = document.getElementById('nameInput');
+    ni.value = lastSavedName || '';
+    setTimeout(() => { try { ni.focus(); ni.select(); } catch(e) {} }, 450);
+  }
+  renderGoRankList();
+  renderStartTopRankings();
+  document.getElementById('gameOver').style.display = 'flex';
+}
+
+//=========================================
+// 리더보드 (점수 기준)
+//=========================================
+function qualifiesForLeaderboard(s) {
+  if (s <= 0) return false;
+  if (leaderboard.length < 10) return true;
+  return s > leaderboard[leaderboard.length - 1].score;
+}
+function escapeHtml(s) { return String(s).replace(/[<>&"']/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&#39;'}[c])); }
+
+// 🏆 게임오버 화면 - 전체 TOP 10 + 내 순위 강조
+function renderGoRankList() {
+  const list = document.getElementById('goRankList');
+  if (!list) return;
+  list.innerHTML = '';
+  // 표시용 목록 (저장 전이면 내 엔트리 미리 삽입)
+  let entries = leaderboard.slice();
+  if (goMyEntry && goMyEntry.pending) entries.push(goMyEntry);
+  entries.sort((a, b) => b.score - a.score);
+  entries = entries.slice(0, 10);
+  const medals = ['🥇','🥈','🥉'];
+  let myIndex = -1;
+  entries.forEach((e, i) => {
+    const row = document.createElement('div');
+    let cls = 'goRankRow ' + (i===0?'gold':i===1?'silver':i===2?'bronze':'');
+    if (e === goMyEntry) { cls += ' me'; myIndex = i; }
+    row.className = cls;
+    const medal = i < 3 ? medals[i] : ('#' + (i + 1));
+    const nameTxt = (e === goMyEntry) ? (escapeHtml(e.name) + ' (나)') : escapeHtml(e.name);
+    row.innerHTML = '<span class="gMedal">' + medal + '</span>' +
+      '<span class="gName">' + nameTxt + '<br><span class="gRound">🏁 ' + (e.round || '-') + '라운드</span></span>' +
+      '<span class="gScore">' + e.score + '</span>';
+    list.appendChild(row);
+  });
+  // 내 순위 안내 메시지 (동기 부여)
+  const msg = document.getElementById('myRankMsg');
+  if (myIndex >= 0) {
+    msg.textContent = '🎉 현재 ' + (myIndex + 1) + '위!';
+    if (myIndex === 0) msg.textContent = '🏆 1위 등극! 최고예요!';
+  } else {
+    // TOP 10 밖
+    const last = leaderboard[leaderboard.length - 1];
+    if (last) {
+      const need = last.score - score + 1;
+      msg.textContent = '🔥 TOP 10까지 ' + need + '점 더!';
+    } else msg.textContent = '';
+  }
+}
+
+function renderRankingPanel(id) {
+  const container = document.getElementById(id);
+  if (!container) return;
+  container.innerHTML = '';
+  const medals = ['🥇','🥈','🥉','4️⃣','5️⃣'];
+  const classes = ['gold','silver','bronze','',''];
+  for (let i = 0; i < 5; i++) {
+    const entry = leaderboard[i];
+    const row = document.createElement('div');
+    row.className = 'startRankRow ' + classes[i];
+    if (entry) row.innerHTML = '<span class="rMedal">'+medals[i]+'</span><span class="rName">'+escapeHtml(entry.name)+'</span><span class="rScore">'+entry.score+'</span>';
+    else row.innerHTML = '<span class="rMedal">'+medals[i]+'</span><span class="rName empty">- - -</span><span class="rScore empty">0</span>';
+    container.appendChild(row);
+  }
+}
+function renderMiniRank() {
+  const c = document.getElementById('miniRank');
+  c.innerHTML = '';
+  const top3 = leaderboard.slice(0, 3);
+  if (!top3.length) { c.style.display = 'none'; return; }
+  c.style.display = 'flex';
+  const medals = ['🥇','🥈','🥉'], cls = ['gold','silver','bronze'];
+  top3.forEach((e, i) => {
+    const row = document.createElement('div');
+    row.className = 'miniRankRow ' + cls[i];
+    row.textContent = medals[i] + ' ' + e.name + ' ' + e.score;
+    c.appendChild(row);
+  });
+}
+function renderStartTopRankings() { renderRankingPanel('startTopRankings'); renderMiniRank(); }
+function saveLbEntry(name, sc, rnd) {
+  name = (name || '').trim().slice(0, 8) || '익명';
+  const entry = { name, score: sc, round: rnd, skin: selectedSkin, date: new Date().toISOString().slice(0,10) };
+  leaderboard.push(entry);
+  leaderboard.sort((a, b) => b.score - a.score);
+  leaderboard = leaderboard.slice(0, 10);
+  try { localStorage.setItem('snake_leaderboard', JSON.stringify(leaderboard)); } catch(e) {}
+  try { localStorage.setItem('snake_lastname', name); } catch(e) {}
+  lastSavedName = name;
+  return entry;
+}
+function saveAndContinue() {
+  const entry = saveLbEntry(document.getElementById('nameInput').value, score, round);
+  goMyEntry = entry; goMyEntry.me = true; goMyEntry.pending = false;
+  document.getElementById('top10Banner').style.display = 'none';
+  document.getElementById('nameInputSection').style.display = 'none';
+  renderGoRankList();
+  renderStartTopRankings();
+  tone(523, 0.1, 'square', 0.2); tone(1318, 0.2, 'square', 0.2, 1318, 0.18);
+}
+
+//=========================================
+// 스킨 미리보기 + 입력
+//=========================================
+function renderSkinPreviews() {
+  document.querySelectorAll('.skinOption').forEach(opt => {
+    const id = opt.dataset.skin;
+    const c = opt.querySelector('canvas').getContext('2d');
+    c.clearRect(0, 0, 44, 44);
+    c.save();
+    // 작은 몸통 + 머리
+    const skin = SKINS[id];
+    for (let i = 3; i >= 1; i--) {
+      let col = skin.rainbow ? hslColor(i, 4) : (i % 2 ? skin.body1 : skin.body2);
+      c.fillStyle = col;
+      c.beginPath(); c.arc(14 - i*7, 30, 6, 0, Math.PI*2); c.fill();
+    }
+    drawSnakeHead(c, 30, 22, -0.3, id, 0.7);
+    c.restore();
+  });
+}
+function selectSkin(id) {
+  selectedSkin = id;
+  try { localStorage.setItem('snake_skin', id); } catch(e) {}
+  document.querySelectorAll('.skinOption').forEach(o => o.classList.toggle('selected', o.dataset.skin === id));
+  tone(880, 0.08, 'square', 0.12);
+}
+document.querySelectorAll('.skinOption').forEach(opt => {
+  opt.addEventListener('click', function(e) { e.preventDefault(); selectSkin(opt.dataset.skin); });
+  opt.addEventListener('touchstart', function(e) { e.preventDefault(); selectSkin(opt.dataset.skin); }, {passive:false});
+});
+document.querySelector(`.skinOption[data-skin="${selectedSkin}"]`)?.classList.add('selected');
+
+function bindBtn(id, fn) {
+  const b = document.getElementById(id);
+  if (!b) return;
+  b.addEventListener('click', function(e){ e.preventDefault(); fn(); });
+  b.addEventListener('touchstart', function(e){ e.preventDefault(); fn(); }, {passive:false});
+}
+// 시작 버튼: 첫 플레이면 튜토리얼 먼저
+function onStartPressed() {
+  let done = false;
+  try { done = localStorage.getItem('snake_tutorial_done') === '1'; } catch(e) {}
+  if (!done) {
+    document.getElementById('tutorial').style.display = 'flex';
+  } else {
+    startGame();
+  }
+}
+bindBtn('startBtn', onStartPressed);
+bindBtn('restartBtn', startGame);
+bindBtn('saveNameBtn', saveAndContinue);
+bindBtn('clearRestartBtn', startGame);
+bindBtn('howToBtn', function() { document.getElementById('tutorial').style.display = 'flex'; });
+bindBtn('tutorialOkBtn', function() {
+  try { localStorage.setItem('snake_tutorial_done', '1'); } catch(e) {}
+  document.getElementById('tutorial').style.display = 'none';
+  startGame();
+});
+bindBtn('shareBtn', shareScore);
+bindBtn('dailyOkBtn', function() {
+  document.getElementById('dailyReward').style.display = 'none';
+  tone(523,0.1,'square',0.2); tone(784,0.12,'square',0.2,784,0.06); tone(1318,0.2,'square',0.2,1318,0.12);
+});
+bindBtn('nextRoundBtn', function() {
+  document.getElementById('roundClear').style.display = 'none';
+  // 이전 꼬리의 50%를 이어받아 시작
+  const carry = Math.max(START_LEN, Math.floor(snakeLen * 0.5));
+  startRound(round + 1, carry);
+  paused = false;
+});
+
+//=========================================
+// 🎁 일일 출석 보상
+//=========================================
+function todayStr() { return new Date().toISOString().slice(0, 10); }
+function checkDailyReward() {
+  let last = '';
+  try { last = localStorage.getItem('snake_lastclaim') || ''; } catch(e) {}
+  const today = todayStr();
+  if (last === today) {
+    // 이미 오늘 받음
+    document.getElementById('streakDays').textContent = dailyStreak;
+    return;
+  }
+  // 연속 여부 판단 (어제면 +1, 아니면 리셋)
+  const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+  if (last === yesterday) dailyStreak += 1;
+  else dailyStreak = 1;
+  try {
+    localStorage.setItem('snake_streak', dailyStreak);
+    localStorage.setItem('snake_lastclaim', today);
+  } catch(e) {}
+  // 보상: 연속일에 따라 시작 시간 보너스 (최대 +5초)
+  pendingBonus = Math.min(5, 1 + dailyStreak * 0.5);
+  document.getElementById('streakDays').textContent = dailyStreak;
+  document.getElementById('dailyStreakNum').textContent = dailyStreak;
+  let info = '⏱️ 다음 게임 <b>시작 시간 +' + pendingBonus.toFixed(1) + '초</b>!';
+  if (dailyStreak % 7 === 0) info += '<br>🌶️ 7일 보너스: 파워 고추로 시작!';
+  document.getElementById('dailyRewardInfo').innerHTML = info;
+  document.getElementById('dailyReward').style.display = 'flex';
+}
+
+//=========================================
+// 📤 점수 자랑하기 (공유)
+//=========================================
+function makeShareCard() {
+  // 점수 카드 이미지 생성
+  const cw = 600, ch = 600;
+  const cvs = document.createElement('canvas');
+  cvs.width = cw; cvs.height = ch;
+  const c = cvs.getContext('2d');
+  // 배경
+  const g = c.createLinearGradient(0, 0, 0, ch);
+  g.addColorStop(0, '#2E7D32'); g.addColorStop(1, '#1B5E20');
+  c.fillStyle = g; c.fillRect(0, 0, cw, ch);
+  // 카드
+  c.fillStyle = 'rgba(0,0,0,0.35)';
+  c.fillRect(40, 40, cw - 80, ch - 80);
+  c.strokeStyle = '#8BC34A'; c.lineWidth = 6; c.strokeRect(40, 40, cw - 80, ch - 80);
+  // 뱀 머리 (스킨)
+  c.save(); c.translate(cw/2, 175); c.scale(2.4, 2.4);
+  drawSnakeHead(c, 0, 0, 0, selectedSkin, 1);
+  c.restore();
+  // 텍스트
+  c.fillStyle = '#fff'; c.textAlign = 'center';
+  c.font = 'bold 36px sans-serif';
+  c.fillText('🐍 꼬마 뱀의 사과 모험', cw/2, 285);
+  c.fillStyle = '#FFEB3B';
+  c.font = 'bold 110px sans-serif';
+  c.fillText(score + '점', cw/2, 410);
+  c.fillStyle = '#fff';
+  c.font = 'bold 30px sans-serif';
+  c.fillText('🏁 ' + round + '라운드 · 🍎 사과 ' + applesEaten + '개', cw/2, 465);
+  c.fillStyle = '#8BC34A';
+  c.font = 'bold 26px sans-serif';
+  c.fillText('너도 도전해봐! #꼬마뱀', cw/2, 530);
+  return cvs;
+}
+function shareScore() {
+  const text = '나는 🐍꼬마 뱀의 사과 모험에서 ' + score + '점 (' + round + '라운드)! 너도 도전해봐 🍎 #꼬마뱀';
+  const cvs = makeShareCard();
+  tone(880, 0.1, 'square', 0.16); tone(1318, 0.15, 'square', 0.16, 1318, 0.08);
+  cvs.toBlob(function(blob) {
+    const file = blob ? new File([blob], 'snake_score.png', { type: 'image/png' }) : null;
+    // 1) 파일 공유 가능하면 이미지 공유
+    if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
+      navigator.share({ files: [file], text: text, title: '내 점수 자랑!' }).catch(()=>{});
+      return;
+    }
+    // 2) 텍스트 공유 가능하면 텍스트
+    if (navigator.share) {
+      navigator.share({ text: text, title: '내 점수 자랑!' }).catch(()=>{ fallbackShare(text, blob); });
+      return;
+    }
+    // 3) 폴백: 이미지 다운로드 + 텍스트 클립보드
+    fallbackShare(text, blob);
+  }, 'image/png');
+}
+function fallbackShare(text, blob) {
+  try { if (navigator.clipboard) navigator.clipboard.writeText(text); } catch(e) {}
+  if (blob) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'snake_score.png';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 100);
+  }
+  showCombo('📋 복사됨! 이미지 저장됨!');
+}
+document.getElementById('nameInput').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') { e.preventDefault(); saveAndContinue(); }
+});
+
+// 키보드
+document.addEventListener('keydown', function(e) {
+  if (e.target && e.target.tagName === 'INPUT') return;
+  const k = e.key;
+  if (k === 'ArrowUp' || k === 'w' || k === 'W') { e.preventDefault(); setDir(0, -1); }
+  else if (k === 'ArrowDown' || k === 's' || k === 'S') { e.preventDefault(); setDir(0, 1); }
+  else if (k === 'ArrowLeft' || k === 'a' || k === 'A') { e.preventDefault(); setDir(-1, 0); }
+  else if (k === 'ArrowRight' || k === 'd' || k === 'D') { e.preventDefault(); setDir(1, 0); }
+});
+
+// 방향 버튼
+function bindDir(id, nx, ny) {
+  const b = document.getElementById(id);
+  const fn = function(e) { e.preventDefault(); setDir(nx, ny); };
+  b.addEventListener('touchstart', fn, {passive:false});
+  b.addEventListener('mousedown', fn);
+}
+bindDir('btnUp', 0, -1); bindDir('btnDown', 0, 1);
+bindDir('btnLeft', -1, 0); bindDir('btnRight', 1, 0);
+
+// 스와이프
+let touchStart = null;
+canvas.addEventListener('touchstart', function(e) {
+  touchStart = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+}, {passive:true});
+canvas.addEventListener('touchmove', function(e) {
+  if (!touchStart) return;
+  const dx = e.touches[0].clientX - touchStart.x;
+  const dy = e.touches[0].clientY - touchStart.y;
+  if (Math.hypot(dx, dy) > 16) {  // 더 민감하게(짧은 밀기에도 반응)
+    if (Math.abs(dx) > Math.abs(dy)) setDir(dx > 0 ? 1 : -1, 0);
+    else setDir(0, dy > 0 ? 1 : -1);
+    touchStart = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+  }
+}, {passive:true});
+// 마우스 드래그(데스크탑 보조)
+let mouseDown = false, mouseStart = null;
+canvas.addEventListener('mousedown', function(e) { mouseDown = true; mouseStart = {x:e.clientX, y:e.clientY}; });
+canvas.addEventListener('mousemove', function(e) {
+  if (!mouseDown || !mouseStart) return;
+  const dx = e.clientX - mouseStart.x, dy = e.clientY - mouseStart.y;
+  if (Math.hypot(dx, dy) > 30) {
+    if (Math.abs(dx) > Math.abs(dy)) setDir(dx > 0 ? 1 : -1, 0);
+    else setDir(0, dy > 0 ? 1 : -1);
+    mouseStart = {x:e.clientX, y:e.clientY};
+  }
+});
+canvas.addEventListener('mouseup', function() { mouseDown = false; });
+
+resize();
+reset();
+renderSkinPreviews();
+renderStartTopRankings();
+checkDailyReward(); // 🎁 일일 출석 보상 체크
+lastT = performance.now();
+requestAnimationFrame(loop);
+
+})();
+</script>
+<!-- 메뉴로 돌아가기 버튼 -->
+<a href="index.html" id="homeNavBtn" aria-label="메뉴로 돌아가기">🏠</a>
+<style>
+  #homeNavBtn {
+    position: fixed; top: 10px; left: 10px; z-index: 9999;
+    width: 40px; height: 40px; border-radius: 50%;
+    background: rgba(0,0,0,0.5); border: 2px solid rgba(255,255,255,0.6);
+    color: #fff; font-size: 20px; text-decoration: none;
+    display: flex; justify-content: center; align-items: center;
+    -webkit-tap-highlight-color: transparent;
+  }
+  #homeNavBtn:active { transform: scale(0.9); }
+</style>
+</body>
+</html>
