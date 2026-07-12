@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>🐍 꼬마 뱀의 사과 모험 🍎</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
@@ -10,14 +10,15 @@
   body { background: #111; font-family: 'Comic Sans MS', '맑은 고딕', sans-serif;
     display: flex; justify-content: center; align-items: center; touch-action: none; }
   #gameContainer {
-    position: relative; width: 450px; height: 800px;
-    max-width: 100vw; max-height: 100vh;
+    position: relative;
+    width: 100vw; max-width: 520px;   /* 가로 꽉 채우되 데스크탑은 적당히 */
+    height: 100vh; height: 100dvh;    /* 세로 화면 전체 사용 → 넓은 마당 */
     background: #1a4d2e; overflow: hidden;
     box-shadow: 0 0 50px rgba(76, 175, 80, 0.5);
   }
   #gameCanvas { display: block; width: 100%; height: 100%; position: absolute; top: 0; left: 0; }
 
-  #topUI { position: absolute; top: 0; left: 0; right: 0; padding: 10px 14px; z-index: 10; pointer-events: none; }
+  #topUI { position: absolute; top: 0; left: 0; right: 0; padding: calc(10px + env(safe-area-inset-top)) calc(14px + env(safe-area-inset-right)) 10px calc(14px + env(safe-area-inset-left)); z-index: 10; pointer-events: none; }
   #timeBarWrap { width: 100%; height: 22px; background: rgba(0,0,0,0.6); border: 3px solid #fff; border-radius: 20px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.4); }
   #timeBar { height: 100%; width: 100%; background: linear-gradient(90deg, #00FF7F, #00FFAA, #00FF7F); transition: width 0.1s linear, background 0.3s; border-radius: 20px 0 0 20px; }
   #scoreRow { margin-top: 8px; display: flex; justify-content: space-between; align-items: flex-start; color: white; font-weight: bold; }
@@ -97,10 +98,31 @@
   #nameInputSection { margin: 10px 0; display: none; flex-direction: column; align-items: center; gap: 8px; }
   #top10Banner { display: none; font-size: 22px; color: #FFD700; font-weight: bold; text-shadow: 0 0 15px #FFD700; margin: 8px 0; animation: pulse 0.7s infinite alternate; }
 
-  #muteBtn { position: absolute; top: 72px; right: 12px; width: 38px; height: 38px; border-radius: 50%; background: rgba(0,0,0,0.5); border: 2px solid rgba(255,255,255,0.6); color: white; font-size: 18px; cursor: pointer; z-index: 12; display: flex; justify-content: center; align-items: center; }
+  #muteBtn { position: absolute; top: calc(72px + env(safe-area-inset-top)); right: calc(12px + env(safe-area-inset-right)); width: 38px; height: 38px; border-radius: 50%; background: rgba(0,0,0,0.5); border: 2px solid rgba(255,255,255,0.6); color: white; font-size: 18px; cursor: pointer; z-index: 12; display: flex; justify-content: center; align-items: center; }
+  #pauseBtn { position: absolute; top: calc(72px + env(safe-area-inset-top)); right: calc(58px + env(safe-area-inset-right)); width: 38px; height: 38px; border-radius: 50%; background: rgba(0,0,0,0.5); border: 2px solid rgba(255,255,255,0.6); color: white; font-size: 18px; cursor: pointer; z-index: 12; display: flex; justify-content: center; align-items: center; }
+  /* 🎚️ 설정 토글 */
+  .setRow { display: flex; align-items: center; justify-content: space-between; width: 260px; max-width: 84%; font-size: 18px; color: #fff; font-weight: bold; background: rgba(255,255,255,0.08); border-radius: 14px; padding: 12px 18px; margin: 7px 0; }
+  .tg { min-width: 64px; padding: 8px 14px; border-radius: 20px; border: none; font-size: 15px; font-weight: bold; cursor: pointer; }
+  .tg.on { background: #4CAF50; color: #fff; }
+  .tg.off { background: #777; color: #ddd; }
   #streakBox { font-size: 15px; color: #FFA726; font-weight: bold; margin: 4px 0 10px; text-shadow: 1px 1px 0 #000; }
   #dailyStreakBig { font-size: 36px; color: #FF6D00; font-weight: bold; text-shadow: 2px 2px 0 #000, 0 0 20px #FFA726; margin: 10px 0; animation: pulse 0.7s infinite alternate; }
   #dailyRewardInfo { font-size: 17px; }
+  /* 💰 코인 / 🛒 잠금 / 🏅 업적 */
+  #coinBoxStart { font-size: 20px; color: #FFD700; font-weight: bold; margin: 6px 0 10px; text-shadow: 1px 1px 0 #000; }
+  .skinOption { position: relative; }
+  .lockTag { position: absolute; inset: 0; border-radius: 50%; background: rgba(0,0,0,0.55); color: #FFD700;
+    display: none; flex-direction: column; justify-content: center; align-items: center; font-size: 11px; font-weight: bold; }
+  .skinOption.locked .lockTag { display: flex; }
+  .skinOption.locked canvas { opacity: 0.35; }
+  #achList { display: flex; flex-direction: column; gap: 6px; width: 320px; max-width: 92%; max-height: 56vh; overflow-y: auto; margin: 12px 0; }
+  .achRow { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 12px; background: rgba(255,255,255,0.08); border: 2px solid rgba(255,255,255,0.2); color: #fff; text-align: left; }
+  .achRow.done { border-color: #FFD700; background: linear-gradient(135deg, rgba(255,215,0,0.25), rgba(0,0,0,0.3)); }
+  .achRow .aIcon { font-size: 24px; filter: grayscale(1) opacity(0.5); }
+  .achRow.done .aIcon { filter: none; }
+  .achRow .aName { flex: 1; font-weight: bold; font-size: 14px; }
+  .achRow .aName small { display: block; font-weight: normal; opacity: 0.8; font-size: 12px; }
+  .achRow .aRew { color: #FFD700; font-size: 13px; font-weight: bold; }
 </style>
 </head>
 <body>
@@ -113,13 +135,14 @@
       <div id="scoreBig">⭐ 점수<br><span id="scoreVal">0</span></div>
       <div id="bestBox">🏆 BEST<br><span id="bestVal">0</span></div>
     </div>
-    <div id="subRow">🏁 <b><span id="roundVal">1</span></b>라운드 · 🐍 <span id="lengthVal">4</span>/<span id="goalVal">20</span>칸</div>
+    <div id="subRow">🏁 <b><span id="roundVal">1</span></b>R · 🏯 <b><span id="buildVal">0</span>/<span id="buildGoalVal">8</span></b> · 🐍 <b><span id="lenVal">4</span></b> · ⚡ <span id="powerVal">0/5</span> · 💰 <span id="coinVal">0</span></div>
   </div>
   <div id="scorePop"></div>
   <div id="miniRank"></div>
   <div id="comboMsg"></div>
 
-  <button id="muteBtn">🔊</button>
+  <button id="muteBtn">⚙️</button>
+  <button id="pauseBtn" style="display:none">⏸️</button>
 
   <div id="dirPad">
     <div class="dirBtn" id="btnUp">▲</div>
@@ -132,15 +155,17 @@
     <h1>🐍 꼬마 뱀 🍎</h1>
     <h2>100라운드 사과 대모험!</h2>
 
-    <div class="charLabel">🎨 뱀 색 고르기 🎨</div>
+    <div id="coinBoxStart">💰 <span id="coinValStart">0</span></div>
+
+    <div class="charLabel">🎨 뱀 색 고르기 (🔒 코인으로 해제) 🎨</div>
     <div class="skinSelect" id="skinSelect">
-      <div class="skinOption" data-skin="green"><canvas width="44" height="44"></canvas><div class="skinName">초록이</div></div>
-      <div class="skinOption" data-skin="blue"><canvas width="44" height="44"></canvas><div class="skinName">파랑이</div></div>
-      <div class="skinOption" data-skin="pink"><canvas width="44" height="44"></canvas><div class="skinName">분홍이</div></div>
-      <div class="skinOption" data-skin="orange"><canvas width="44" height="44"></canvas><div class="skinName">주황이</div></div>
-      <div class="skinOption" data-skin="rainbow"><canvas width="44" height="44"></canvas><div class="skinName">무지개</div></div>
+      <div class="skinOption" data-skin="green"><canvas width="44" height="44"></canvas><div class="skinName">초록이</div><div class="lockTag"></div></div>
+      <div class="skinOption" data-skin="blue"><canvas width="44" height="44"></canvas><div class="skinName">파랑이</div><div class="lockTag"></div></div>
+      <div class="skinOption" data-skin="pink"><canvas width="44" height="44"></canvas><div class="skinName">분홍이</div><div class="lockTag"></div></div>
+      <div class="skinOption" data-skin="orange"><canvas width="44" height="44"></canvas><div class="skinName">주황이</div><div class="lockTag"></div></div>
+      <div class="skinOption" data-skin="rainbow"><canvas width="44" height="44"></canvas><div class="skinName">무지개</div><div class="lockTag"></div></div>
     </div>
-    <div style="height: 22px"></div>
+    <div style="height: 24px"></div>
 
     <div id="streakBox">🔥 <span id="streakDays">0</span>일 연속 출석 중!</div>
 
@@ -148,7 +173,17 @@
     <div id="startTopRankings"></div>
 
     <button id="startBtn" class="btn">시작! 🐍</button>
-    <button id="howToBtn" class="btnAlt">❓ 게임 방법</button>
+    <div>
+      <button id="achBtn" class="btnAlt">🏅 업적</button>
+      <button id="howToBtn" class="btnAlt">❓ 방법</button>
+    </div>
+  </div>
+
+  <!-- 🏅 업적 화면 -->
+  <div id="achScreen" class="overlay" style="display:none">
+    <h1>🏅 업적</h1>
+    <div id="achList"></div>
+    <button id="achCloseBtn" class="btn">닫기 ✖</button>
   </div>
 
   <div id="roundClear" class="overlay" style="display:none">
@@ -184,21 +219,23 @@
       🏁 <b><span id="finalRound">1</span>라운드</b> 도달 ·
       🍎 사과 <b><span id="applesEaten">0</span></b> · 💥 돌 <b><span id="rocksSmashedShow">0</span></b>
     </div>
+    <div id="goCoinMsg" style="color:#FFD700;font-size:15px;font-weight:bold;margin:4px 0">💰 이번 판 +0 · 보유 0</div>
+    <div id="goAchMsg" style="color:#FFD700;font-size:14px;font-weight:bold;margin:4px 0"></div>
+    <button id="reviveBtn" class="btnAlt" style="display:none;background:linear-gradient(135deg,#FF6FA5,#FF1493)">💖 한 번 더!</button>
     <button id="shareBtn" class="btnAlt">📤 점수 자랑하기</button>
     <button id="restartBtn" class="btn">다시 도전! 🔄</button>
   </div>
 
   <!-- 📖 튜토리얼 (첫 1회) -->
   <div id="tutorial" class="overlay" style="display:none">
-    <h1>🐍 게임 방법 🍎</h1>
-    <div class="info" style="font-size:16px; line-height:2.1">
-      ① ⌨️ <b>방향키 / WASD</b>로 뱀의 방향을 바꿔요<br>
-      &nbsp;&nbsp;&nbsp;📱 폰에서는 <b>화면을 스와이프</b>!<br>
-      ② 🍎 <b>사과를 먹으면</b> 꼬리가 길어지고 시간이 차요<br>
-      ③ 🎯 <b>목표 길이</b>까지 키우면 <b>라운드 클리어!</b><br>
-      ④ ⏱️ 시간이 다 되면 끝! 사과를 계속 먹어요<br>
-      ⑤ 🌶️ 고추 = 파워 / 🌀 터널 = 순간이동<br>
-      ⑥ ⚠️ 벽 · 자기 꼬리 · 바위 · 벌은 피해요!
+    <h1>🐍 게임 방법 🏯</h1>
+    <div class="info" style="font-size:15px; line-height:2.0">
+      🎯 <b>목표: 돌을 깨서 광화문을 짓자!</b><br>
+      ① 🍎 <b>사과 먹기</b> → ⚡ <b>파워 충전</b> (5개)<br>
+      ② ⚡ 파워일 때 🪨 <b>돌에 부딪혀 부수기</b><br>
+      ③ 🧱 깬 돌이 쌓여 <b>🏯 광화문 완성!</b> → 문으로 다음 라운드<br>
+      ④ 📱 <b>가고 싶은 쪽을 누르거나 끌기</b> / ⌨️ PC는 방향키<br>
+      ⑤ ⏱️ 시간 다 되면 끝! · ⚠️ 벽·자기 꼬리·파워 없을 때 돌은 위험!
     </div>
     <button id="tutorialOkBtn" class="btn">알겠어요! 🐍</button>
   </div>
@@ -210,6 +247,30 @@
     <div class="info" id="dailyRewardInfo">오늘의 보너스를 받았어요!</div>
     <button id="dailyOkBtn" class="btn">받기! 🎉</button>
   </div>
+
+  <!-- ⚙️ 설정 -->
+  <div id="settingsScreen" class="overlay" style="display:none">
+    <h1>⚙️ 설정</h1>
+    <div class="setRow">🎵 배경음악 <button id="tgBgm" class="tg">ON</button></div>
+    <div class="setRow">🔊 효과음 <button id="tgSfx" class="tg">ON</button></div>
+    <div class="setRow">📳 진동 <button id="tgVibe" class="tg">ON</button></div>
+    <div style="margin-top:14px;font-size:13px;color:#bbb;font-weight:bold">🎬 크리에이터 (트레일러 소재)</div>
+    <div style="font-size:11px;color:#999;margin:2px 0 8px">📸 스크린샷=P · 🎬 녹화=R</div>
+    <button id="shotBtn" class="btnAlt">📸 스크린샷 저장</button>
+    <button id="recBtn" class="btnAlt">🎬 녹화 시작</button>
+    <button id="settingsCloseBtn" class="btn">닫기 ✖</button>
+  </div>
+
+  <!-- 🔴 녹화 표시 -->
+  <div id="recDot" style="display:none;position:absolute;top:calc(12px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);background:rgba(200,0,0,0.85);color:#fff;font-weight:bold;font-size:13px;padding:4px 12px;border-radius:14px;z-index:30;">🔴 REC</div>
+
+  <!-- ⏸️ 일시정지 -->
+  <div id="pauseScreen" class="overlay" style="display:none">
+    <h1>⏸️ 일시정지</h1>
+    <div class="info">잠깐 쉬어가요!</div>
+    <button id="resumeBtn" class="btn">▶️ 계속하기</button>
+    <button id="pauseQuitBtn" class="btnAlt">🏠 처음으로</button>
+  </div>
 </div>
 
 <script>
@@ -218,24 +279,52 @@
 
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
-const DPR = window.devicePixelRatio || 1;
+let DPR = window.devicePixelRatio || 1;
 let W = 450, H = 800;
 function resize() {
+  DPR = window.devicePixelRatio || 1;            // 매번 최신 배율 반영(선명도)
   const r = document.getElementById('gameContainer').getBoundingClientRect();
-  W = r.width; H = r.height;
-  canvas.width = Math.floor(W * DPR); canvas.height = Math.floor(H * DPR);
+  W = Math.round(r.width); H = Math.round(r.height);
+  canvas.width = Math.round(W * DPR); canvas.height = Math.round(H * DPR);
   canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
   computeField();
 }
 window.addEventListener('resize', resize);
+window.addEventListener('orientationchange', function(){ setTimeout(resize, 300); });
+window.addEventListener('load', function(){ setTimeout(resize, 60); });
 
-// 놀이판 (벽 안쪽)
-let field = { x: 0, y: 0, w: 0, h: 0 };
+// 🗺️ 큰 마당(월드) + 카메라
+let field = { x: 0, y: 0, w: 0, h: 0 };  // 월드 놀이판(벽 안쪽, 월드 좌표)
+let WORLD_W = 0, WORLD_H = 0;            // 월드 전체 크기
+let cam = { x: 0, y: 0 };                // 카메라(화면 좌상단의 월드 좌표)
+const WORLD_SCALE = 1;                   // 한 화면(스크롤 없음)
+// 📱 노치/제스처바 안전영역 읽기
+function readSafeInsets() {
+  const p = document.createElement('div');
+  p.style.cssText = 'position:fixed;visibility:hidden;top:0;left:0;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom);padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right);';
+  document.body.appendChild(p);
+  const cs = getComputedStyle(p);
+  const r = { top: parseFloat(cs.paddingTop)||0, bottom: parseFloat(cs.paddingBottom)||0, left: parseFloat(cs.paddingLeft)||0, right: parseFloat(cs.paddingRight)||0 };
+  document.body.removeChild(p);
+  return r;
+}
+let safeIn = { top: 0, bottom: 0, left: 0, right: 0 };
 function computeField() {
-  const top = 116, bottom = 26, side = 10;  // 여백 축소 → 놀이 공간 확대
-  field.x = side; field.y = top;
-  field.w = W - side * 2; field.h = H - top - bottom;
+  safeIn = readSafeInsets();
+  const top = 116 + safeIn.top, bottom = 26 + safeIn.bottom, side = 10;
+  WORLD_W = W; WORLD_H = H;             // 월드 = 화면
+  field.x = side + safeIn.left; field.y = top;
+  field.w = W - side * 2 - safeIn.left - safeIn.right; field.h = H - top - bottom;
+}
+// 카메라를 뱀 머리에 맞춰 이동(가장자리에선 멈춤)
+function clampCam() {
+  cam.x = Math.max(0, Math.min(WORLD_W - W, cam.x));
+  cam.y = Math.max(0, Math.min(WORLD_H - H, cam.y));
+}
+function snapCam() { // 즉시 중앙
+  cam.x = headX - W / 2; cam.y = headY - H / 2; clampCam();
 }
 
 //=========================================
@@ -294,6 +383,54 @@ let dailyStreak = 0;
 let pendingBonus = 0; // 다음 게임 시작 시 추가 시간(초)
 try { dailyStreak = parseInt(localStorage.getItem('snake_streak') || '0') || 0; } catch(e) {}
 
+const REVIVE_COST = 50;  // 💖 부활 코인 비용
+let graceT = 0;          // 부활/시작 직후 무적 시간
+let countdownT = 0;      // 🔢 시작 카운트다운
+let lastCountInt = -1;   // 카운트다운 소리용
+let runStartCoins = 0;   // 💰 이번 판 시작 시 코인
+// ✨ 연출(juice)
+let slowmoT = 0;         // 슬로우모션
+let flashT = 0;          // 화면 번쩍
+const PRAISE = { 2:'좋아! 👍', 3:'멋져! 🌟', 4:'대단해! 💯', 5:'끝내주는데! 🔥🔥' };
+// 💰 코인 + 🛒 스킨 해제 + 🏅 업적/통계
+let coins = 0;
+try { coins = parseInt(localStorage.getItem('snake_coins') || '0') || 0; } catch(e) {}
+function saveCoins() { try { localStorage.setItem('snake_coins', coins); } catch(e) {} updateCoinUI(); }
+function addCoins(n) { coins += n; updateCoinUI(); }  // 표시만, 저장은 안전한 시점에
+function updateCoinUI() {
+  const a = document.getElementById('coinVal'); if (a) a.textContent = coins;
+  const b = document.getElementById('coinValStart'); if (b) b.textContent = coins;
+}
+// 스킨 가격(0=기본 무료). 해제하면 unlocked에 저장
+const SKIN_COST = { green:0, blue:0, pink:150, orange:250, rainbow:600 };
+let unlocked = ['green','blue'];
+try { const u = JSON.parse(localStorage.getItem('snake_unlocked') || 'null'); if (Array.isArray(u)) unlocked = u; } catch(e) {}
+function isUnlocked(id) { return SKIN_COST[id] === 0 || unlocked.indexOf(id) !== -1; }
+function saveUnlocked() { try { localStorage.setItem('snake_unlocked', JSON.stringify(unlocked)); } catch(e) {} }
+// 🏅 누적 통계 + 업적
+let stats = { apples: 0, plays: 0, bestRound: 0, bestCombo: 0, gates: 0, rocks: 0 };
+try { const s = JSON.parse(localStorage.getItem('snake_stats') || 'null'); if (s) stats = Object.assign(stats, s); } catch(e) {}
+function saveStats() { try { localStorage.setItem('snake_stats', JSON.stringify(stats)); } catch(e) {} }
+let achDone = [];
+try { const a = JSON.parse(localStorage.getItem('snake_ach') || 'null'); if (Array.isArray(a)) achDone = a; } catch(e) {}
+const ACHIEVEMENTS = [
+  { id:'apple50',  icon:'🍎', name:'사과 사냥꾼',  desc:'사과 50개 먹기',  reward:50,  check:()=>stats.apples>=50 },
+  { id:'apple300', icon:'🍏', name:'사과 대장',    desc:'사과 300개 먹기', reward:150, check:()=>stats.apples>=300 },
+  { id:'combo8',   icon:'🔥', name:'콤보 마스터',  desc:'8연속 콤보',      reward:80,  check:()=>stats.bestCombo>=8 },
+  { id:'round5',   icon:'🏯', name:'광화문 건축가', desc:'5라운드 도달',    reward:100, check:()=>stats.bestRound>=5 },
+  { id:'round15',  icon:'👑', name:'궁궐의 주인',  desc:'15라운드 도달',   reward:300, check:()=>stats.bestRound>=15 },
+  { id:'rock100',  icon:'💥', name:'돌 파괴자',    desc:'돌 100개 부수기', reward:120, check:()=>stats.rocks>=100 },
+  { id:'gate10',   icon:'🎉', name:'광화문 10채',  desc:'광화문 10개 완성', reward:200, check:()=>stats.gates>=10 }
+];
+function checkAchievements() {
+  let newly = [];
+  for (const a of ACHIEVEMENTS) {
+    if (achDone.indexOf(a.id) === -1 && a.check()) { achDone.push(a.id); addCoins(a.reward); newly.push(a); }
+  }
+  if (newly.length) { try { localStorage.setItem('snake_ach', JSON.stringify(achDone)); } catch(e) {} }
+  return newly;
+}
+
 // 리더보드
 let leaderboard = [], lastSavedName = '';
 try { leaderboard = JSON.parse(localStorage.getItem('snake_leaderboard') || '[]'); } catch(e) {}
@@ -311,15 +448,29 @@ function getTitle(len) {
 //=========================================
 // 🔊 사운드
 //=========================================
-let audioCtx = null, muted = false;
-try { muted = localStorage.getItem('snake_mute') === '1'; } catch(e) {}
+// 🎚️ 사운드/진동 설정 (개별 토글)
+let audioCtx = null;
+let sfxOn = true, bgmOn = true, vibeOn = true;
+try {
+  const oldMute = localStorage.getItem('snake_mute') === '1';   // 이전 전체 음소거 호환
+  sfxOn = localStorage.getItem('snake_sfx') !== '0' && !oldMute;
+  bgmOn = localStorage.getItem('snake_bgm') !== '0' && !oldMute;
+  vibeOn = localStorage.getItem('snake_vibe') !== '0';
+} catch(e) {}
+function saveAudioPrefs() {
+  try {
+    localStorage.setItem('snake_sfx', sfxOn ? '1' : '0');
+    localStorage.setItem('snake_bgm', bgmOn ? '1' : '0');
+    localStorage.setItem('snake_vibe', vibeOn ? '1' : '0');
+  } catch(e) {}
+}
 function getAudio() {
-  if (muted) return null;
   if (!audioCtx) { try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) { return null; } }
   if (audioCtx.state === 'suspended') { try { audioCtx.resume(); } catch(e) {} }
   return audioCtx;
 }
 function tone(freq, dur, type, vol, freqEnd, delay) {
+  if (!sfxOn) return;
   const c2 = getAudio(); if (!c2) return;
   delay = delay || 0; type = type || 'sine'; vol = vol == null ? 0.2 : vol;
   const t0 = c2.currentTime + delay;
@@ -371,6 +522,13 @@ function sfxDoorOpen() { // 🚪 문 열림 - 반짝 차임
   tone(523,0.12,'sine',0.18,784); tone(784,0.14,'sine',0.16,1047,0.1);
   tone(1047,0.3,'triangle',0.15,1568,0.2);
 }
+function sfxGateComplete() { // 🏯 광화문 완성 - 웅장한 팡파레
+  const m = [523, 659, 784, 1047, 1047, 1319, 1047, 1568];
+  m.forEach((n, i) => { tone(n, 0.2, 'square', 0.2, n, i * 0.13); tone(n/2, 0.2, 'triangle', 0.12, n/2, i * 0.13); });
+  // 끝에 화음
+  [784, 1047, 1319].forEach(n => tone(n, 0.7, 'sawtooth', 0.14, n, m.length * 0.13));
+  noise(0.2, 0.08, 1500);
+}
 //=========================================
 // 🎵 배경음악 (BGM) - 경쾌한 칩튠 루프
 //=========================================
@@ -409,7 +567,7 @@ const BGM_BASS = [
 ];
 
 function bgmNote(freq, dur, type, vol, attack) {
-  if (!audioCtx || muted) return;
+  if (!audioCtx || !bgmOn) return;
   const t0 = audioCtx.currentTime;
   const osc = audioCtx.createOscillator();
   const g = audioCtx.createGain();
@@ -422,7 +580,7 @@ function bgmNote(freq, dur, type, vol, attack) {
   osc.start(t0); osc.stop(t0 + dur + 0.02);
 }
 function bgmDrum(kind) {
-  if (!audioCtx || muted) return;
+  if (!audioCtx || !bgmOn) return;
   const t0 = audioCtx.currentTime;
   if (kind === 'kick') {
     const osc = audioCtx.createOscillator(), g = audioCtx.createGain();
@@ -459,7 +617,7 @@ function bgmTick() {
   bgmStep++;
 }
 function startBGM() {
-  if (bgmPlaying || muted) return;
+  if (bgmPlaying || !bgmOn) return;
   getAudio(); // 오디오 컨텍스트 보장
   if (!audioCtx) return;
   if (!bgmGain) { bgmGain = audioCtx.createGain(); bgmGain.gain.value = 0.5; bgmGain.connect(audioCtx.destination); }
@@ -474,19 +632,20 @@ function stopBGM() {
   if (bgmTimer) { clearInterval(bgmTimer); bgmTimer = null; }
 }
 
-function updateMuteUI() { document.getElementById('muteBtn').textContent = muted ? '🔇' : '🔊'; }
+// ⚙️ 설정 버튼 → 설정 패널 열기
+function updateMuteUI() {
+  const anyOn = sfxOn || bgmOn;
+  document.getElementById('muteBtn').textContent = anyOn ? '⚙️' : '🔇';
+}
+function refreshSettingsUI() {
+  const set = (id, on) => { const el = document.getElementById(id); if (el) { el.textContent = on ? 'ON' : 'OFF'; el.classList.toggle('on', on); el.classList.toggle('off', !on); } };
+  set('tgBgm', bgmOn); set('tgSfx', sfxOn); set('tgVibe', vibeOn);
+}
 updateMuteUI();
 document.getElementById('muteBtn').addEventListener('click', function(e) {
   e.preventDefault(); e.stopPropagation();
-  muted = !muted;
-  try { localStorage.setItem('snake_mute', muted ? '1' : '0'); } catch(e) {}
-  updateMuteUI();
-  if (muted) {
-    stopBGM();
-  } else {
-    tone(800, 0.1, 'sine', 0.15);
-    if (running) startBGM();
-  }
+  refreshSettingsUI();
+  document.getElementById('settingsScreen').style.display = 'flex';
 });
 
 //=========================================
@@ -572,8 +731,11 @@ function roundStartTime(R) { return Math.max(5.5, 9 - R * 0.03); }    // 시작 
 function roundRockCount(R) { return Math.min(9, 2 + Math.floor(R / 5)); } // 바위 수 (1R부터 2개, 5R마다 +1, 최대 9개)
 function roundBeeCount(R) { return R < 8 ? 0 : Math.min(5, Math.floor((R - 8) / 10) + 1); }
 
+// 🐍 속도 규칙: 항상 140 고정 (파워뱀일 때만 1.2배는 이동 계산에서 적용)
+const SPEED_BASE = 140;
+function computeSpeed() { return SPEED_BASE; }
 function applyRoundDifficulty(R) {
-  rdSpeed = Math.min(330, 125 + R * 2);          // 속도
+  rdSpeed = Math.min(300, 150 + R * 2);          // 라운드당 +2 (R1=152, 천천히 시작)
   rdDrain = Math.min(2.0, 0.85 + R * 0.012);     // 시간 감소
   rdRefill = Math.max(1.3, 3.0 - R * 0.018);     // 회복량
   rdRotBase = Math.max(4, 12 - R * 0.09);        // 사과 썩는 시간
@@ -594,7 +756,7 @@ function startRound(R, startLen) {
   path = [];
   const initN = Math.ceil((snakeLen + 4) * SEG_SPACING / 4) + 6;
   for (let i = 0; i < initN; i++) path.push({ x: headX - i * 4, y: headY });
-  speed = rdSpeed;
+  speed = computeSpeed();   // 시작부터 동일한 규칙 적용(첫 사과에 갑자기 안 빨라짐)
   maxTime = 10;
   timeLeft = roundStartTime(R);
   // 🎁 1라운드 시작 시 출석 보너스 적용
@@ -603,14 +765,19 @@ function startRound(R, startLen) {
   }
   apples = []; bees = []; obstacles = []; tunnels = []; particles = [];
   powerT = 0; teleCooldown = 0; smashCombo = 0;
-  doorPhase = false; door = null;            // 🚪 문 초기화
+  eatCombo = 0; eatComboT = 0;                // 🔥 콤보 초기화
+  doorPhase = false; door = null; gateReady = false;   // 🚪 문 초기화
   themeIndex = (R - 1) % THEMES.length;       // 🎨 라운드별 판 테마
-  // 🎁 7일 연속 출석 보너스: 1라운드에 파워 고추로 시작
-  if (R === 1 && pendingBonus > 0 && dailyStreak % 7 === 0) powerT = 6;
-  // 바위 배치
-  const rocks = roundRockCount(R);
-  for (let i = 0; i < rocks; i++) spawnObstacle();
-  // 벌 배치
+  // 🏯 광화문 건설 목표 + 짓는 자리(상단 중앙 고정)
+  rocksGoal = rocksGoalForRound(R);
+  rocksBuilt = 0; powerGauge = 0;
+  flyingStones = []; gateFly = false; gateFlyT = 0;
+  gateSite = { x: field.x + field.w / 2, y: field.y + field.h * 0.26 };
+  // 🎁 7일 연속 출석 보너스: 1라운드에 파워로 시작
+  if (R === 1 && pendingBonus > 0 && dailyStreak % 7 === 0) powerT = POWER_DUR;
+  // 돌 배치(많이) + 벌
+  snapCam();   // 🎥 카메라를 뱀 중앙으로
+  ensureRocks();
   const beeN = roundBeeCount(R);
   for (let i = 0; i < beeN; i++) spawnBee();
   // 터널 1쌍 (라운드 3부터)
@@ -625,6 +792,7 @@ function reset() {
   running = false; dead = false; paused = false;
   applesEaten = 0; rocksSmashed = 0; score = 0;
   tongueT = 0; tongueOut = 0; shake = 0;
+  placedGates = [];   // 🏯 정착한 광화문 초기화(새 게임)
   startRound(1);
 }
 
@@ -648,7 +816,7 @@ function farFromSnake(x, y, minD) {
 
 function spawnApple() {
   let pos, tries = 0;
-  do { pos = randInField(30); tries++; } while (!farFromSnake(pos.x, pos.y, 50) && tries < 40);
+  do { pos = randInField(24); tries++; } while (!farFromSnake(pos.x, pos.y, 30) && tries < 40);
   // 사과 종류 (확률)
   const r = Math.random();
   let type;
@@ -667,22 +835,39 @@ function spawnApple() {
   apples.push({ x: pos.x, y: pos.y, type: type, t: 0, rotTime: rotTime });
 }
 
-// 목표 사과 개수 (길이에 따라 살짝 증가)
+// 목표 사과 개수 (3배! 화면 가득)
 function targetAppleCount() {
-  return Math.min(6, 3 + Math.floor(snakeLen / 18));
+  return Math.min(48, 32 + Math.floor(snakeLen / 6));
 }
 function ensureApples() {
   let guard = 0;
-  while (apples.length < targetAppleCount() && guard < 10) {
+  while (apples.length < targetAppleCount() && guard < 60) {
     spawnApple();
     guard++;
   }
 }
 
+// 머리 진행방향 앞 좁은 통로(여기엔 돌 X → 나오자마자 죽지 않게)
+function inFrontCorridor(x, y) {
+  const fx = x - headX, fy = y - headY;
+  const along = fx * dirX + fy * dirY;          // 진행 방향 거리
+  const side = Math.abs(fx * -dirY + fy * dirX);// 옆으로 벗어난 거리
+  return along > 0 && along < 230 && side < 48;
+}
 function spawnObstacle() {
   let pos, tries = 0;
-  do { pos = randInField(40); tries++; } while (!farFromSnake(pos.x, pos.y, 80) && tries < 40);
-  obstacles.push({ x: pos.x, y: pos.y, r: 16 });
+  do { pos = randInField(34); tries++; }
+  while ((Math.hypot(pos.x - headX, pos.y - headY) < 120 ||  // 머리 주변 안전지대
+          inFrontCorridor(pos.x, pos.y) ||                    // 진행 방향 앞 비우기
+          !farFromSnake(pos.x, pos.y, 44)) && tries < 60);
+  obstacles.push({ x: pos.x, y: pos.y, r: 14 });
+}
+// 판에 돌을 항상 채워둠 (계속 존재)
+function ensureRocks() {
+  let guard = 0;
+  while (obstacles.length < targetRockCount(round) && guard < 60) {
+    spawnObstacle(); guard++;
+  }
 }
 function spawnBee() {
   const edge = Math.floor(Math.random() * 2);
@@ -718,7 +903,7 @@ function spawnTunnel() {
 }
 
 function setDir(nx, ny) {
-  if (!running || dead) return;
+  if (!running || dead || paused) return;
   // 180도 반대 금지
   if (nx === -dirX && ny === -dirY) return;
   if (nx === dirX && ny === dirY) return;
@@ -727,47 +912,64 @@ function setDir(nx, ny) {
 
 function eatApple(a, idx) {
   applesEaten++;
+  stats.apples++;             // 🏅 통계
+  addCoins(1);                // 💰 사과당 코인
   haptic(12); // 📳 먹을 때 짧은 진동
+  // 🔥 콤보 갱신
+  eatCombo++; eatComboT = COMBO_WINDOW;
+  if (eatCombo > stats.bestCombo) stats.bestCombo = eatCombo;
+  const mult = comboMult();
+  let base = 10;
   if (a.type === 'power') {
-    // 🌶️ 파워 고추! 돌 부수기 모드
-    snakeLen += 1; timeLeft = Math.min(maxTime, timeLeft + getRefill());
-    powerT = 6; smashCombo = 0; // 6초간 무적 + 돌 부수기
-    addScore(30, true);
-    haptic([30, 40, 30]); // 강한 진동
-    sfxPower(); showCombo('🌶️ 파워 모드! 돌을 부숴요! 💥');
-    spawnParticles(a.x, a.y, '#FF3D00', 30);
-    spawnParticles(a.x, a.y, '#FFD700', 20);
+    snakeLen += 1; timeLeft = Math.min(maxTime, timeLeft + getRefill()); base = 30;
+    spawnParticles(a.x, a.y, '#FF3D00', 30); spawnParticles(a.x, a.y, '#FFD700', 20);
+    activatePower();
   } else if (a.type === 'golden') {
-    snakeLen += 3; timeLeft = Math.min(maxTime, timeLeft + 3.5);
-    addScore(50, true);
-    sfxGolden(); showCombo('🌟 황금 사과! +50점!');
+    snakeLen += 3; timeLeft = Math.min(maxTime, timeLeft + 3.5); base = 50;
+    sfxGolden(); showCombo('🌟 황금 사과!');
     spawnParticles(a.x, a.y, '#FFD700', 25);
   } else if (a.type === 'blue') {
     snakeLen += 1; timeLeft = Math.min(maxTime, timeLeft + getRefill());
-    speedBoostT = 2.5; // 잠깐 느려짐
-    addScore(15, true);
+    speedBoostT = 2.5; base = 15;
     sfxEat(); showCombo('🔵 슬로우!');
     spawnParticles(a.x, a.y, '#42A5F5', 18);
   } else if (a.type === 'green') {
-    timeLeft = Math.min(maxTime, timeLeft + getRefill() + 2);
-    addScore(10, true);
+    timeLeft = Math.min(maxTime, timeLeft + getRefill() + 2); base = 10;
     sfxEat(); showCombo('🍏 시간 회복!');
     spawnParticles(a.x, a.y, '#8BC34A', 18);
   } else {
-    snakeLen += 1; timeLeft = Math.min(maxTime, timeLeft + getRefill());
-    addScore(10, true);
+    snakeLen += 1; timeLeft = Math.min(maxTime, timeLeft + getRefill()); base = 10;
     sfxEat();
     spawnParticles(a.x, a.y, '#FF5252', 16);
+  }
+  // 콤보 배수 적용 점수
+  addScore(base * mult, true);
+  // 콤보 레벨업 알림 (2연속마다 배수 ↑) + ✨연출
+  if (mult >= 2 && eatCombo % 2 === 0) {
+    const praise = PRAISE[mult] || ('🔥 ' + eatCombo + '연속');
+    showCombo(praise + ' x' + mult);
+    sfxCombo(); haptic(20);
+    if (mult >= 4) flashT = 0.18;          // 번쩍
+    if (mult >= 5) { slowmoT = 0.35; shake = Math.max(shake, 10); } // 슬로우모션
+  }
+  // ⚡ 사과로 파워 게이지 충전 (고추 아니고, 파워 중이 아닐 때)
+  if (a.type !== 'power' && powerT <= 0) {
+    powerGauge++;
+    if (powerGauge >= POWER_NEED) activatePower();
   }
   // 혀 날름
   tongueOut = 1;
   apples.splice(idx, 1);
   ensureApples();
-  // 속도: 라운드 기본 + 길이에 따라 약간
-  speed = rdSpeed + Math.min(40, snakeLen * 1.2);
+  speed = computeSpeed();   // 동일 규칙 (라운드 기본 + 길이 보너스 캡)
   updateHUD();
-  // 🎯 목표 길이 도달 → 라운드 클리어
-  if (snakeLen >= roundGoalLen) roundClear();
+}
+// ⚡ 파워 충전 (사과를 충분히 먹거나 고추를 먹으면)
+function activatePower() {
+  powerT = POWER_DUR; smashCombo = 0; powerGauge = 0;
+  sfxPower(); haptic([30, 40, 30]);
+  showCombo('⚡ 파워 충전! 돌을 부숴 광화문을 지어요! 🏯');
+  spawnParticles(headX, headY, '#FFD700', 26);
 }
 function getRefill() {
   // 라운드 회복량 기준, 길수록 살짝 줄어듦
@@ -776,11 +978,32 @@ function getRefill() {
 
 let speedBoostT = 0;
 let lowTimePulseT = 0;
-let powerT = 0;          // 🌶️ 파워 모드 남은 시간 (돌 부수기)
-let rocksSmashed = 0;    // 부순 돌 개수
+let powerT = 0;          // ⚡ 파워 모드 남은 시간 (돌 부수기)
+let rocksSmashed = 0;    // 총 부순 돌 개수
 let smashCombo = 0;      // 파워 모드 중 연속 부수기 콤보
-let doorPhase = false;   // 🚪 라운드 클리어 후 문으로 들어가는 단계
-let door = null;         // 🚪 문 {x,y,r,t}
+// 🏯 광화문 건설 시스템: 사과→파워→돌깨기→건설→다음라운드
+let rocksGoal = 4;       // 이번 라운드 광화문 완성에 필요한 돌
+let rocksBuilt = 0;      // 이번 라운드 깬(쌓은) 돌
+let powerGauge = 0;      // 파워까지 먹은 사과 수
+let gateSite = { x: 0, y: 0 }; // 🏯 광화문 짓는 자리(고정)
+let flyingStones = [];   // 깨진 돌이 광화문으로 날아가는 연출
+// ✈️ 광화문 완성 → 하늘로 떴다가 마당에 정착하는 연출
+let gateFly = false, gateFlyT = 0;
+const GATE_FLY_DUR = 2.4;
+let gateFromX = 0, gateFromY = 0, gateToX = 0, gateToY = 0;
+let placedGates = [];   // 🏯 마당에 정착한 광화문들 (배경 장식)
+const POWER_NEED = 5;    // 사과 5개 먹으면 파워 충전
+const POWER_DUR = 5.5;   // 파워 지속(초)
+function rocksGoalForRound(R) { return Math.min(24, Math.round(6 + R * 1.5)); }   // 건설 목표(1R=8 → 초반도 충분히 길게)
+function targetRockCount(R) { return Math.min(32, Math.round((18 + R * 1.5) * 0.8)); } // 판에 깔린 돌 수 (이전의 80%)
+// 🔥 연속 먹기 콤보 (중독성 핵심)
+let eatCombo = 0;        // 연속으로 먹은 사과 수
+let eatComboT = 0;       // 콤보 유지 남은 시간(초)
+const COMBO_WINDOW = 2.5;// 규칙: 2.5초 안에 다음 사과! (빨리 연속으로 먹어야 콤보)
+function comboMult() { return Math.min(5, 1 + Math.floor(eatCombo / 2)); } // x1~x5 (2연속마다 ↑)
+let doorPhase = false;   // 🚪 (구) 안전 이동 단계 — 더는 사용 안 함
+let gateReady = false;   // 🏯 광화문 완성·정착 → 게임 진행 중 들어갈 수 있는 상태
+let door = null;         // 🚪 문/광화문 입구 {x,y,r,t}
 let themeIndex = 0;      // 🎨 라운드별 판 테마
 
 // 🎨 라운드마다 바뀌는 판 테마 (배경/판/벽 색)
@@ -798,6 +1021,7 @@ function curTheme() { return THEMES[themeIndex % THEMES.length]; }
 
 // 📳 진동(햅틱) - 모바일 손맛
 function haptic(ms) {
+  if (!vibeOn) return;
   if (navigator.vibrate) { try { navigator.vibrate(ms); } catch(e) {} }
 }
 
@@ -813,15 +1037,35 @@ function update(dt) {
 
   if (!running || dead || paused) return;
 
-  // 🚪 문 단계: 문으로 들어가면 다음 라운드
-  if (doorPhase) { updateDoorPhase(dt); return; }
+  // 🔢 시작 카운트다운 (움직임/시간 정지)
+  if (countdownT > 0) {
+    const ci = Math.ceil(countdownT);
+    if (ci !== lastCountInt) { lastCountInt = ci; tone(660, 0.12, 'square', 0.18); }
+    countdownT -= dt;
+    if (countdownT <= 0) { tone(990, 0.2, 'square', 0.2); graceT = Math.max(graceT, 0.8); }
+    return;
+  }
+
+  // ✈️ 광화문 완성 후 날아가는 연출 중 (잠깐의 착지 연출)
+  if (gateFly) { updateGateFly(dt); return; }
 
   // 파워 모드 타이머
   if (powerT > 0) {
     powerT -= dt;
     if (powerT <= 0) {
       powerT = 0; smashCombo = 0;
-      showCombo('파워 끝!'); tone(330, 0.2, 'sine', 0.15, 165);
+      showCombo('파워 끝! 사과 더 먹어요'); tone(330, 0.2, 'sine', 0.15, 165);
+      updateHUD();
+    }
+  }
+
+  // 🔥 콤보 타이머 (시간 안에 다음 사과 못 먹으면 콤보 끊김)
+  if (eatComboT > 0) {
+    eatComboT -= dt;
+    if (eatComboT <= 0) {
+      eatComboT = 0;
+      if (eatCombo >= 2) { showCombo('💔 콤보 끊김!'); tone(330, 0.15, 'sine', 0.12, 180); }
+      eatCombo = 0;
     }
   }
 
@@ -835,7 +1079,8 @@ function update(dt) {
       apples.splice(i, 1);
     }
   }
-  ensureApples();
+  ensureApples();   // 🍎 사과 항상 채움
+  ensureRocks();    // 🪨 바위 항상 채움
 
   // 방향 전환 적용
   if (pendingDir) { dirX = pendingDir.x; dirY = pendingDir.y; pendingDir = null; sfxTurn(); }
@@ -843,10 +1088,17 @@ function update(dt) {
   // 속도 (파랑사과 슬로우)
   let curSpeed = speed;
   if (speedBoostT > 0) { speedBoostT -= dt; curSpeed *= 0.55; }
+  if (powerT > 0) curSpeed *= 1.2;   // ⚡ 파워뱀 1.2배
 
   // 머리 이동
   headX += dirX * curSpeed * dt;
   headY += dirY * curSpeed * dt;
+
+  // 🎥 카메라가 뱀을 부드럽게 따라감
+  const camFollow = Math.min(1, dt * 6);
+  cam.x += ((headX - W / 2) - cam.x) * camFollow;
+  cam.y += ((headY - H / 2) - cam.y) * camFollow;
+  clampCam();
 
   // 🌀 터널 순간이동 (한 번 쓰면 사라지고 새 터널 생성)
   if (teleCooldown > 0) teleCooldown -= dt;
@@ -897,42 +1149,57 @@ function update(dt) {
     if (lowTimePulseT <= 0) { sfxLowTime(); lowTimePulseT = 0.3 + (timeLeft / 2.5) * 0.5; }
   } else lowTimePulseT = 0;
 
-  // 벽 충돌
-  if (headX < field.x + HEAD_R || headX > field.x + field.w - HEAD_R ||
-      headY < field.y + HEAD_R || headY > field.y + field.h - HEAD_R) {
+  // 벽 충돌 (벽에 닿으면 바로 죽음 - 머리 반지름 + 여유)
+  if (graceT > 0) graceT -= dt;  // 💖 부활 무적
+  const WALLM = HEAD_R + 5;
+  if (graceT <= 0 && (headX <= field.x + WALLM || headX >= field.x + field.w - WALLM ||
+      headY <= field.y + WALLM || headY >= field.y + field.h - WALLM)) {
     die('wall'); return;
   }
 
-  // 사과 먹기
+  // 사과 먹기 (관대하게 - 살짝만 스쳐도 먹힘 → 편하게 플레이)
   for (let i = apples.length - 1; i >= 0; i--) {
     const a = apples[i];
-    const er = a.type === 'golden' ? 16 : 13;
-    if (Math.hypot(headX - a.x, headY - a.y) < HEAD_R + er - 4) { eatApple(a, i); break; }
+    const er = a.type === 'golden' ? 18 : 15;
+    if (Math.hypot(headX - a.x, headY - a.y) < HEAD_R + er + 3) { eatApple(a, i); break; }
   }
 
-  // 🚪 이번 프레임에 라운드 클리어로 문이 열렸다면, 나머지 위험 판정 건너뜀
-  if (doorPhase) return;
+  // 🏯 완성된 광화문 입구에 도착 → 다음 라운드 (게임 진행 중 언제든)
+  if (gateReady && door && Math.hypot(headX - door.x, headY - door.y) < door.r) { enterDoor(); return; }
 
   // 장애물(돌) 충돌 — 파워 모드면 부숨!
   for (let i = obstacles.length - 1; i >= 0; i--) {
     const o = obstacles[i];
     if (Math.hypot(headX - o.x, headY - o.y) < HEAD_R + o.r - 4) {
       if (powerT > 0) {
-        // 💥 돌 부수기! (연속 콤보 = 점수 증가)
+        // 💥 돌 부수기 (파워 모드)
         obstacles.splice(i, 1);
-        rocksSmashed++;
-        smashCombo++;
-        const smashPts = 20 + (smashCombo - 1) * 10; // 연속일수록 점수 ↑
+        rocksSmashed++; smashCombo++; stats.rocks++;  // 🏅 통계
+        const smashPts = 25 + (smashCombo - 1) * 10;
         addScore(smashPts, true);
+        addCoins(2);                               // 💰 돌당 코인
         shake = 12 + Math.min(8, smashCombo * 2);
         sfxSmash();
         haptic(smashCombo > 1 ? [20, 30, 20] : 30);
-        if (smashCombo >= 2) showCombo('💥 ' + smashCombo + '연속! +' + smashPts);
-        else showCombo('💥 돌 부쉈다! +' + smashPts);
-        spawnParticles(o.x, o.y, '#9E9E9E', 22);
-        spawnParticles(o.x, o.y, '#FFD700', 10);
-        timeLeft = Math.min(maxTime, timeLeft + 0.5);
-      } else { die('obstacle'); return; }
+        spawnParticles(o.x, o.y, '#9E9E9E', 12);   // 💥 먼지
+        timeLeft = Math.min(maxTime, timeLeft + 0.4);
+        // 🏯 광화문 아직 완성 전이면 → 건설 진행 (완성 후엔 돌은 그냥 장애물)
+        if (!gateReady && rocksBuilt < rocksGoal) {
+          rocksBuilt++;                            // 🧱 건설 진행
+          snakeLen += 1;                           // 🐍 돌 깰 때마다 꼬리도 자람!
+          // 🧱 깨진 돌이 광화문 자리로 날아감 (실시간 건설 연출)
+          for (let k = 0; k < 3; k++) {
+            flyingStones.push({
+              x: o.x + (Math.random()-0.5)*10, y: o.y + (Math.random()-0.5)*10,
+              tx: gateSite.x + (Math.random()-0.5)*40, ty: gateSite.y + 20 - Math.random()*30,
+              t: 0, dur: 0.45 + Math.random()*0.15
+            });
+          }
+          if (rocksBuilt >= rocksGoal) { roundClear(); return; }  // 🏯 완성!
+        }
+        ensureRocks();
+        updateHUD();
+      } else if (graceT <= 0) { die('obstacle'); return; }
     }
   }
 
@@ -947,16 +1214,17 @@ function update(dt) {
         bees.splice(i, 1);
         sfxSmash();
         spawnParticles(b.x, b.y, '#FFC107', 18);
-      } else { die('bee'); return; }
+      } else if (graceT <= 0) { die('bee'); return; }
     }
   }
 
-  // 자기 꼬리 충돌 (머리 근처 마디는 제외) — 파워 모드면 통과
-  if (powerT <= 0) {
-    const skip = 4; // 머리 바로 뒤 4마디는 무시
-    for (let s = skip; s < snakeLen; s++) {
-      const p = getPointAtDist(s * SEG_SPACING);
-      if (Math.hypot(headX - p.x, headY - p.y) < HEAD_R + BODY_R - 8) { die('self'); return; }
+  // 자기 꼬리 충돌 — 촘촘히(6px 간격) 검사해서 빠져나가지 못하게
+  if (powerT <= 0 && graceT <= 0) {
+    const total = snakeLen * SEG_SPACING;
+    const hitR = HEAD_R + BODY_R - 4; // 머리·몸이 실제로 겹칠 때
+    for (let d = 28; d < total; d += 6) {  // 목(28px)까지는 제외, 그 뒤는 촘촘히
+      const p = getPointAtDist(d);
+      if (Math.hypot(headX - p.x, headY - p.y) < hitR) { die('self'); return; }
     }
   }
 
@@ -965,6 +1233,17 @@ function update(dt) {
     const p = particles[i];
     p.x += p.vx; p.y += p.vy; p.vy += 0.3; p.life--;
     if (p.life <= 0) particles.splice(i, 1);
+  }
+
+  // 🧱 날아가는 돌 갱신 (광화문으로 이동 → 도착하면 먼지)
+  for (let i = flyingStones.length - 1; i >= 0; i--) {
+    const s = flyingStones[i];
+    s.t += dt;
+    if (s.t >= s.dur) {
+      spawnParticles(s.tx, s.ty, '#D8CCB0', 5);
+      tone(500 + Math.random()*150, 0.05, 'square', 0.05);
+      flyingStones.splice(i, 1);
+    }
   }
 
   // 시간바
@@ -991,9 +1270,11 @@ function showCombo(text) {
 
 function updateHUD() {
   document.getElementById('roundVal').textContent = round;
-  document.getElementById('lengthVal').textContent = snakeLen;
-  document.getElementById('goalVal').textContent = roundGoalLen;
+  document.getElementById('buildVal').textContent = rocksBuilt;
+  document.getElementById('buildGoalVal').textContent = rocksGoal;
+  document.getElementById('powerVal').textContent = (powerT > 0 ? '파워!' : powerGauge + '/' + POWER_NEED);
   document.getElementById('scoreVal').textContent = score;
+  const lv = document.getElementById('lenVal'); if (lv) lv.textContent = snakeLen;
 }
 let scorePopTimer = null;
 function addScore(pts, popup) {
@@ -1011,16 +1292,13 @@ function addScore(pts, popup) {
 
 let lastRoundBonus = 0;
 function roundClear() {
-  if (doorPhase) return; // 이미 클리어해서 문 대기 중
+  if (gateFly) return; // 이미 완성 연출 중
   // 🎁 라운드 클리어 보너스: 라운드×100 + 남은 시간×10
   const clearBonus = round * 100;
   const timeBonus = Math.floor(timeLeft * 10);
   lastRoundBonus = clearBonus + timeBonus;
   addScore(lastRoundBonus, false);
-  // 폭죽
-  for (let i = 0; i < 40; i++) particles.push({ x: headX, y: headY, vx:(Math.random()-0.5)*10, vy:-Math.random()*8-2, life:40, max:40, color: i%2?'#FFD700':'#8BC34A', size:Math.random()*4+2 });
-  sfxNewBest();
-  haptic([40, 30, 40, 30, 80]); // 📳 라운드 클리어 진동
+  haptic([40, 30, 40, 30, 120]);
   // 최고 점수 갱신
   if (score > best) {
     best = score;
@@ -1034,8 +1312,71 @@ function roundClear() {
     setTimeout(() => { document.getElementById('gameClear').style.display = 'flex'; }, 600);
     return;
   }
-  // 🚪 문 열기 (들어가면 다음 라운드)
-  openDoor();
+  // ✈️ 광화문 완성 → 음악 바꾸고 날아가는 연출
+  gateComplete();
+}
+
+function gateComplete() {
+  gateFly = true; gateFlyT = 0;
+  // (돌은 그대로 유지 — 완성 후에도 장애물로 남음)
+  // 💰🏅 라운드 보상 + 통계
+  addCoins(round * 5);
+  stats.gates++;
+  if (round > stats.bestRound) stats.bestRound = round;
+  saveCoins(); saveStats();
+  gateFromX = gateSite.x; gateFromY = gateSite.y;
+  // 🏯 마당 한쪽(위쪽 가장자리)에 정착할 자리 선택 — 이미 놓인 것과 안 겹치게
+  const slotN = placedGates.length;
+  gateToX = field.x + 50 + (slotN % 4) * ((field.w - 100) / 3);
+  gateToY = field.y + 44 + Math.floor(slotN / 4) * 60;
+  stopBGM();              // 🎵 BGM 멈추고
+  sfxGateComplete();      // 🎵 팡파레!
+  flashT = 0.18; slowmoT = 0.4;   // ✨ 번쩍 + 슬로우모션
+  showCombo('🏯 광화문 완성! +' + lastRoundBonus + '점');
+  // 화려한 폭죽
+  for (let i = 0; i < 55; i++) particles.push({ x: gateSite.x, y: gateSite.y, vx:(Math.random()-0.5)*13, vy:-Math.random()*10-2, life:48, max:48, color: i%3===0?'#FFD700':(i%3===1?'#FF1493':'#8BC34A'), size:Math.random()*4+2 });
+}
+
+function updateGateFly(dt) {
+  gateFlyT += dt;
+  // 파티클 갱신
+  for (let i = particles.length - 1; i >= 0; i--) {
+    const p = particles[i]; p.x += p.vx; p.y += p.vy; p.vy += 0.3; p.life--;
+    if (p.life <= 0) particles.splice(i, 1);
+  }
+  const pos = gateFlyPos();
+  // 반짝이 꼬리
+  if (Math.random() < 0.5) particles.push({ x: pos.x + (Math.random()-0.5)*46, y: pos.y + (Math.random()-0.5)*50, vx:(Math.random()-0.5)*2, vy:Math.random()*1.5, life:22, max:22, color: Math.random()<0.5?'#FFD700':'#FFF', size:Math.random()*2.5+1 });
+  if (gateFlyT >= GATE_FLY_DUR) {
+    gateFly = false;
+    spawnParticles(gateToX, gateToY + 14, '#D8CCB0', 16);
+    tone(200, 0.2, 'sine', 0.18, 90); // 쿵(착지)
+    // 🏯 정착 → 게임 진행하며 언제든 들어갈 수 있는 입구로
+    door = { x: gateToX, y: gateToY, r: 32, t: 0 };
+    gateReady = true;
+    timeLeft = Math.max(timeLeft, 8);   // 광화문까지 갈 최소 시간 보장
+    startBGM();                          // 🎵 음악 계속 (게임 진행)
+    showCombo('🏯 광화문으로 들어가세요! ⏱️');
+  }
+}
+// 광화문 비행 경로: 솟아올랐다가 → 마당 착지 자리로 내려앉음
+function gateFlyPos() {
+  const f = Math.min(1, gateFlyT / GATE_FLY_DUR);
+  // 1단계(0~0.4): 하늘로 솟음 / 2단계(0.4~1): 착지 자리로 이동하며 내려앉음
+  let x, y, sc;
+  if (f < 0.4) {
+    const a = f / 0.4;
+    x = gateFromX;
+    y = gateFromY - a * 80;          // 위로 솟음
+    sc = 1.0 + a * 0.15;
+  } else {
+    const a = (f - 0.4) / 0.6;
+    const ease = a * a * (3 - 2 * a); // smoothstep
+    x = gateFromX + (gateToX - gateFromX) * ease;
+    y = (gateFromY - 80) + (gateToY - (gateFromY - 80)) * ease - Math.sin(ease * Math.PI) * 40;
+    sc = 1.15 - ease * 0.65;          // 점점 작아져 착지 크기(0.5)
+  }
+  return { x: x, y: y, scale: sc };
 }
 
 function openDoor() {
@@ -1044,9 +1385,24 @@ function openDoor() {
   let pos, tries = 0;
   do { pos = randInField(48); tries++; }
   while ((Math.hypot(pos.x - headX, pos.y - headY) < 140 || !farFromSnake(pos.x, pos.y, 50)) && tries < 50);
-  door = { x: pos.x, y: pos.y, r: 26, t: 0 };
+  door = { x: pos.x, y: pos.y, r: 28, t: 0 };
+  // 돌이 다 모여 광화문 완성 → 비우기(다음 라운드까지 깔끔)
+  obstacles = [];
   sfxDoorOpen();
-  showCombo('🚪 문이 열렸어요! +' + lastRoundBonus + '점 · 들어가세요!');
+  showCombo('🏯 광화문 완성! +' + lastRoundBonus + '점 · 들어가세요!');
+}
+
+function openDoor() {
+  doorPhase = true;
+  // 머리에서 적당히 떨어진, 뱀과 겹치지 않는 곳에 문 배치
+  let pos, tries = 0;
+  do { pos = randInField(48); tries++; }
+  while ((Math.hypot(pos.x - headX, pos.y - headY) < 140 || !farFromSnake(pos.x, pos.y, 50)) && tries < 50);
+  door = { x: pos.x, y: pos.y, r: 28, t: 0 };
+  // 돌이 다 모여 광화문 완성 → 비우기(다음 라운드까지 깔끔)
+  obstacles = [];
+  sfxDoorOpen();
+  showCombo('🏯 광화문 완성! +' + lastRoundBonus + '점 · 들어가세요!');
 }
 
 function updateDoorPhase(dt) {
@@ -1087,8 +1443,11 @@ function enterDoor() {
   for (let i = 0; i < 30; i++) particles.push({ x: door.x, y: door.y, vx:(Math.random()-0.5)*9, vy:-Math.random()*6-1, life:30, max:30, color: i%2?'#FFD700':'#8BC34A', size:Math.random()*3+2 });
   sfxTeleport();
   haptic([30, 40]);
-  doorPhase = false; door = null;
+  // 🏯 들어간 광화문은 마당에 영구 장식으로 남음
+  placedGates.push({ x: door.x, y: door.y, scale: 0.6 });
+  doorPhase = false; gateReady = false; door = null;
   startRound(nextR, carry);
+  startBGM();   // 🎵 다음 라운드 음악
   showCombo('🏁 ' + nextR + '라운드 · 🎨 ' + curTheme().name + '!');
 }
 
@@ -1104,30 +1463,69 @@ function die(cause) {
 //=========================================
 // 렌더링
 //=========================================
-function drawField() {
-  const th = curTheme();
-  // 배경 (테마별)
-  const g = ctx.createLinearGradient(0, 0, 0, H);
+// 배경 캐시(성능): 정적 배경을 한 번만 그려두고 매 프레임 재사용
+let bgCanvas = document.createElement('canvas');
+let bgCtx = bgCanvas.getContext('2d');
+let bgKey = '';
+function roundRectPath(c, x, y, w, h, r) {
+  c.beginPath();
+  c.moveTo(x+r, y);
+  c.arcTo(x+w, y, x+w, y+h, r);
+  c.arcTo(x+w, y+h, x, y+h, r);
+  c.arcTo(x, y+h, x, y, r);
+  c.arcTo(x, y, x+w, y, r);
+  c.closePath();
+}
+function buildBgCache() {
+  const th = curTheme(); const RAD = 28; const c = bgCtx;
+  bgCanvas.width = Math.round(WORLD_W * DPR); bgCanvas.height = Math.round(WORLD_H * DPR);
+  c.setTransform(DPR, 0, 0, DPR, 0, 0);
+  c.clearRect(0, 0, WORLD_W, WORLD_H);
+  // 하늘(월드 전체)
+  const g = c.createLinearGradient(0, 0, 0, WORLD_H);
   g.addColorStop(0, th.sky1); g.addColorStop(1, th.sky2);
-  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
-  // 놀이판 (테마별)
-  ctx.fillStyle = th.board;
-  roundRect(field.x, field.y, field.w, field.h, 16); ctx.fill();
-  // 체크 무늬
-  ctx.fillStyle = 'rgba(255,255,255,0.05)';
-  const cell = 36;
-  for (let yy = field.y; yy < field.y + field.h; yy += cell) {
-    for (let xx = field.x; xx < field.x + field.w; xx += cell) {
-      if ((Math.floor((xx-field.x)/cell) + Math.floor((yy-field.y)/cell)) % 2 === 0) {
-        ctx.fillRect(xx, yy, cell, cell);
-      }
+  c.fillStyle = g; c.fillRect(0, 0, WORLD_W, WORLD_H);
+  // 놀이판
+  c.save();
+  roundRectPath(c, field.x, field.y, field.w, field.h, RAD); c.clip();
+  c.fillStyle = th.board; c.fillRect(field.x, field.y, field.w, field.h);
+  // 폴카닷
+  c.fillStyle = 'rgba(255,255,255,0.08)';
+  const gap = 52, dot = 12; let row = 0;
+  for (let yy = field.y + 26; yy < field.y + field.h; yy += gap) {
+    const off = (row % 2) * (gap / 2);
+    for (let xx = field.x + 26 + off; xx < field.x + field.w; xx += gap) {
+      c.beginPath(); c.arc(xx, yy, dot, 0, Math.PI*2); c.fill();
     }
+    row++;
   }
-  // 벽 테두리 (테마별)
-  ctx.strokeStyle = th.wall1; ctx.lineWidth = 6;
-  roundRect(field.x, field.y, field.w, field.h, 16); ctx.stroke();
-  ctx.strokeStyle = th.wall2; ctx.lineWidth = 2;
-  roundRect(field.x+3, field.y+3, field.w-6, field.h-6, 13); ctx.stroke();
+  c.restore();
+  // 둥근 벽(월드 경계)
+  c.lineJoin = 'round';
+  c.strokeStyle = th.wall1; c.lineWidth = 12;
+  roundRectPath(c, field.x, field.y, field.w, field.h, RAD); c.stroke();
+  c.strokeStyle = th.wall2; c.lineWidth = 5;
+  roundRectPath(c, field.x + 6, field.y + 6, field.w - 12, field.h - 12, RAD - 6); c.stroke();
+}
+function drawField() {
+  const key = themeIndex + '_' + WORLD_W + '_' + WORLD_H + '_' + DPR;
+  if (key !== bgKey) { buildBgCache(); bgKey = key; }
+  // 보이는 월드 영역만 잘라서 화면에 그림 (카메라)
+  ctx.drawImage(bgCanvas, cam.x * DPR, cam.y * DPR, W * DPR, H * DPR, 0, 0, W, H);
+  // 구름(화면 고정 장식)
+  ctx.save();
+  ctx.globalAlpha = 0.12; ctx.fillStyle = '#FFFFFF';
+  const t2 = performance.now() / 4000;
+  for (let i = 0; i < 3; i++) {
+    const cx = ((i * 0.4 + t2 * 0.05) % 1.2 - 0.1) * W;
+    const cy = 70 + i * 14;
+    ctx.beginPath();
+    ctx.arc(cx, cy, 16, 0, Math.PI*2);
+    ctx.arc(cx + 16, cy - 6, 20, 0, Math.PI*2);
+    ctx.arc(cx + 36, cy, 16, 0, Math.PI*2);
+    ctx.fill();
+  }
+  ctx.restore();
 }
 function roundRect(x, y, w, h, r) {
   ctx.beginPath();
@@ -1343,48 +1741,109 @@ function drawBee(b) {
   ctx.restore();
 }
 
+function strokePath(pts) {
+  if (pts.length < 2) return;
+  ctx.beginPath();
+  ctx.moveTo(pts[0].x, pts[0].y);
+  for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
+  ctx.stroke();
+}
 function drawSnake() {
   const skin = SKINS[selectedSkin] || SKINS.green;
   const powered = powerT > 0;
-  // 몸통: 꼬리부터 머리쪽으로 그림 (머리가 위)
-  for (let s = snakeLen - 1; s >= 1; s--) {
-    const p = getPointAtDist(s * SEG_SPACING);
-    const taper = 1 - (s / snakeLen) * 0.35; // 꼬리로 갈수록 살짝 가늘게
-    const r = BODY_R * taper;
-    let col;
-    if (powered) {
-      // 파워 모드: 불꽃 색 (빨강~노랑 깜빡)
-      const f = (Math.sin(performance.now()/80 + s * 0.5) + 1) / 2;
-      col = mixColor('#FF3D00', '#FFD700', f);
-    } else if (skin.rainbow) col = hslColor(s, snakeLen);
-    else col = (s % 2 === 0) ? skin.body1 : skin.body2;
-    // 파워 오라
-    if (powered) {
-      ctx.shadowBlur = 12; ctx.shadowColor = '#FF6D00';
-    }
-    const g = ctx.createRadialGradient(p.x - 3, p.y - 3, 1, p.x, p.y, r);
-    g.addColorStop(0, lighten(col, 25)); g.addColorStop(1, col);
-    ctx.fillStyle = g;
-    ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, Math.PI*2); ctx.fill();
-    ctx.shadowBlur = 0;
-    if (s % 2 === 0 && !powered) {
-      ctx.fillStyle = 'rgba(255,255,255,0.25)';
-      ctx.beginPath(); ctx.arc(p.x, p.y, r*0.5, 0, Math.PI*2); ctx.fill();
-    }
-  }
-  // 파워 모드 머리 후광
+  const pf = powered ? Math.max(0, Math.min(1, powerT / POWER_DUR)) : 0;  // 남은 파워 비율(불빛 세기)
+  const total = snakeLen * SEG_SPACING;
+  // 몸통 경로 점들 (머리쪽 → 꼬리)
+  const pts = [];
+  for (let d = 0; d <= total; d += SEG_SPACING) pts.push(getPointAtDist(d));
+  if (pts.length < 2) pts.push(getPointAtDist(total + 1));
+
+  ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+
+  // ✨ 파워뱀: 몸 전체를 감싸는 금빛 후광 (블러 없이 겹쳐 그려 가볍게)
   if (powered) {
-    const glow = 22 + Math.sin(performance.now()/100) * 5;
-    const gg = ctx.createRadialGradient(headX, headY, 5, headX, headY, glow);
-    gg.addColorStop(0, 'rgba(255,109,0,0.5)'); gg.addColorStop(1, 'rgba(255,109,0,0)');
-    ctx.fillStyle = gg;
-    ctx.beginPath(); ctx.arc(headX, headY, glow, 0, Math.PI*2); ctx.fill();
-    // 불꽃 파티클
-    if (Math.random() < 0.5) particles.push({ x: headX + (Math.random()-0.5)*20, y: headY + (Math.random()-0.5)*20, vx:(Math.random()-0.5)*2, vy:-Math.random()*2-1, life:18, max:18, color: Math.random()<0.5?'#FF6D00':'#FFD700', size:Math.random()*2+1.5 });
+    const f = (Math.sin(performance.now()/110) + 1) / 2;
+    ctx.save();
+    ctx.strokeStyle = 'rgba(255,205,40,' + ((0.16 + f * 0.10) * pf) + ')';
+    ctx.lineWidth = BODY_R * 2 + 14;
+    strokePath(pts);
+    ctx.strokeStyle = 'rgba(255,224,130,' + ((0.30 + f * 0.18) * pf) + ')';
+    ctx.lineWidth = BODY_R * 2 + 7;
+    strokePath(pts);
+    ctx.restore();
   }
-  // 머리
+
+  // 1) 어두운 외곽선 → 또렷한 2D
+  ctx.strokeStyle = 'rgba(0,0,0,0.28)';
+  ctx.lineWidth = BODY_R * 2 + 4;
+  strokePath(pts);
+
+  // 2) 몸통 본체 (파워뱀이어도 기본 외형 그대로 유지)
+  if (skin.rainbow) {
+    ctx.lineWidth = BODY_R * 2;
+    for (let i = 0; i < pts.length - 1; i++) {
+      ctx.strokeStyle = hslColor(i, pts.length);
+      ctx.beginPath(); ctx.moveTo(pts[i].x, pts[i].y); ctx.lineTo(pts[i+1].x, pts[i+1].y); ctx.stroke();
+    }
+  } else {
+    ctx.strokeStyle = skin.body1;
+    ctx.lineWidth = BODY_R * 2;
+    strokePath(pts);
+  }
+
+  // 3) 가운데 광택 선(2D 느낌)
+  ctx.strokeStyle = 'rgba(255,255,255,0.28)';
+  ctx.lineWidth = BODY_R * 0.7;
+  strokePath(pts);
+
+  // 4) 무늬 점(귀여움)
+  if (!skin.rainbow) {
+    ctx.fillStyle = skin.body2 || 'rgba(255,255,255,0.5)';
+    for (let i = 3; i < pts.length; i += 3) {
+      ctx.beginPath(); ctx.arc(pts[i].x, pts[i].y, BODY_R * 0.4, 0, Math.PI*2); ctx.fill();
+    }
+  }
+
+  // ✨ 파워뱀: 외형은 그대로, 반짝임 (시간 갈수록 pf만큼 약해짐)
+  if (powered) {
+    const f = (Math.sin(performance.now()/110) + 1) / 2;
+    // 몸 위로 흐르는 밝은 금빛 하이라이트
+    ctx.save();
+    ctx.globalAlpha = (0.45 + f * 0.45) * pf;
+    ctx.strokeStyle = 'rgba(255,252,225,0.9)';
+    ctx.lineWidth = BODY_R * 0.8;
+    strokePath(pts);
+    ctx.restore();
+    // ✨ 반짝이 별가루 (남은 파워가 많을수록 더 많이)
+    const sparkN = Math.round(3 * pf);
+    for (let s = 0; s < sparkN; s++) {
+      const sp = pts[Math.floor(Math.random() * pts.length)] || { x: headX, y: headY };
+      particles.push({ x: sp.x + (Math.random()-0.5)*22, y: sp.y + (Math.random()-0.5)*22,
+        vx:(Math.random()-0.5)*1.6, vy:-Math.random()*1.6-0.4, life:24, max:24,
+        color: Math.random()<0.5?'#FFFFFF':'#FFD700', size:Math.random()*2.5+1.8 });
+    }
+  }
+
+  // 머리 (파워뱀이어도 기본 크기/외형 유지)
   const angle = Math.atan2(dirY, dirX);
-  drawSnakeHead(ctx, headX, headY, angle, selectedSkin, (powered ? 1.1 : 1) * (HEAD_R / 13));
+  drawSnakeHead(ctx, headX, headY, angle, selectedSkin, HEAD_R / 13);
+
+  // ⚡ 파워 남은 시간 — 머리 부근에 표시
+  if (powered) {
+    ctx.save();
+    ctx.font = 'bold 14px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    const lab = '⚡ ' + powerT.toFixed(1) + '초';
+    const tw = ctx.measureText(lab).width + 16;
+    const ty = headY - HEAD_R - 20;
+    ctx.fillStyle = 'rgba(0,0,0,0.6)';
+    roundRect(headX - tw/2, ty - 11, tw, 22, 11); ctx.fill();
+    ctx.strokeStyle = 'rgba(255,193,7,' + (0.4 + pf * 0.6) + ')'; ctx.lineWidth = 2;
+    roundRect(headX - tw/2, ty - 11, tw, 22, 11); ctx.stroke();
+    ctx.fillStyle = pf > 0.35 ? '#FFD54F' : '#FF7043';   // 끝나갈 땐 주황 경고색
+    ctx.fillText(lab, headX, ty);
+    ctx.textBaseline = 'alphabetic'; ctx.textAlign = 'left';
+    ctx.restore();
+  }
 }
 
 function drawParticles() {
@@ -1402,72 +1861,338 @@ function drawBestMarker() {
   // 화면 상단에 "최고 기록까지 N칸" 표시는 HUD로, 여기선 생략
 }
 
+// 🏯 광화문 스타일 문
 function drawDoor() {
-  const x = door.x, y = door.y, w = 46, h = 64;
-  const pulse = Math.sin(door.t * 5) * 3;
+  const x = door.x, y = door.y;
+  const pulse = Math.sin(door.t * 5) * 2;
   ctx.save();
   ctx.translate(x, y);
-  // 후광
-  const gl = ctx.createRadialGradient(0, 0, 5, 0, 0, 52 + pulse);
-  gl.addColorStop(0, 'rgba(255,224,102,0.6)'); gl.addColorStop(1, 'rgba(255,224,102,0)');
-  ctx.fillStyle = gl; ctx.beginPath(); ctx.arc(0, 0, 52 + pulse, 0, Math.PI*2); ctx.fill();
-  // 문틀 (금색)
-  ctx.fillStyle = '#DAA520';
-  roundRect(-w/2, -h/2, w, h, 12); ctx.fill();
-  // 안쪽 빛나는 입구
-  const g = ctx.createLinearGradient(0, -h/2, 0, h/2);
-  g.addColorStop(0, '#FFFFFF'); g.addColorStop(0.5, '#FFF3B0'); g.addColorStop(1, '#FFD54F');
-  ctx.fillStyle = g;
-  roundRect(-w/2+6, -h/2+6, w-12, h-12, 8); ctx.fill();
-  // 다음 라운드 번호
-  ctx.fillStyle = '#FF8C00';
-  ctx.font = 'bold 22px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.fillText((round + 1) + '', 0, -4);
-  ctx.font = 'bold 11px sans-serif';
-  ctx.fillText('라운드', 0, 16);
+
+  // 후광 (들어가야 하는 곳 강조)
+  const gl = ctx.createRadialGradient(0, 0, 6, 0, 0, 62 + pulse);
+  gl.addColorStop(0, 'rgba(255,224,102,0.55)'); gl.addColorStop(1, 'rgba(255,224,102,0)');
+  ctx.fillStyle = gl; ctx.beginPath(); ctx.arc(0, 0, 62 + pulse, 0, Math.PI*2); ctx.fill();
+
+  // 석축(돌담 받침)
+  ctx.fillStyle = '#D8CCB0';
+  roundRect(-40, -22, 80, 52, 6); ctx.fill();
+  ctx.strokeStyle = 'rgba(120,100,70,0.45)'; ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(-40, -4); ctx.lineTo(40, -4);
+  ctx.moveTo(-40, 14); ctx.lineTo(40, 14);
+  ctx.moveTo(-15, -22); ctx.lineTo(-15, 30);
+  ctx.moveTo(15, -22); ctx.lineTo(15, 30);
+  ctx.stroke();
+
+  // 홍예문(아치 입구) - 빛나는 포털
+  const ag = ctx.createLinearGradient(0, -22, 0, 30);
+  ag.addColorStop(0, '#FFF8D0'); ag.addColorStop(0.5, '#FFD54F'); ag.addColorStop(1, '#FF9800');
+  ctx.fillStyle = ag;
+  ctx.beginPath();
+  ctx.moveTo(-15, 30); ctx.lineTo(-15, -4);
+  ctx.arc(0, -4, 15, Math.PI, 0);
+  ctx.lineTo(15, 30); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = 'rgba(255,255,255,0.5)';
+  ctx.beginPath(); ctx.ellipse(-6, 4, 3, 9, 0, 0, Math.PI*2); ctx.fill();
+
+  // 지붕(기와, 처마 위로 들림)
+  ctx.fillStyle = '#3C4E78';
+  ctx.beginPath();
+  ctx.moveTo(-50, -22);
+  ctx.quadraticCurveTo(-55, -31, -46, -33);
+  ctx.lineTo(-30, -48); ctx.lineTo(30, -48); ctx.lineTo(46, -33);
+  ctx.quadraticCurveTo(55, -31, 50, -22);
+  ctx.closePath(); ctx.fill();
+  // 용마루
+  ctx.fillStyle = '#2A3A5E';
+  roundRect(-32, -53, 64, 8, 4); ctx.fill();
+  // 기와 줄
+  ctx.strokeStyle = 'rgba(255,255,255,0.12)'; ctx.lineWidth = 1;
+  for (let i = -26; i <= 26; i += 8) { ctx.beginPath(); ctx.moveTo(i, -45); ctx.lineTo(i*1.5, -24); ctx.stroke(); }
+  // 단청 띠(색동)
+  ctx.fillStyle = '#2E8B57'; ctx.fillRect(-45, -24, 90, 5);
+  ctx.fillStyle = '#C0392B';
+  for (let i = -42; i < 45; i += 12) ctx.fillRect(i, -24, 5, 5);
+
+  // 현판(다음 라운드 번호)
+  ctx.fillStyle = '#2A1A0A';
+  roundRect(-16, -19, 32, 15, 3); ctx.fill();
+  ctx.strokeStyle = '#FFD700'; ctx.lineWidth = 1.5; roundRect(-16, -19, 32, 15, 3); ctx.stroke();
+  ctx.fillStyle = '#FFD700';
+  ctx.font = 'bold 12px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText((round + 1) + 'R', 0, -11);
+
   ctx.restore();
   // 머리 위 안내
-  ctx.fillStyle = '#fff'; ctx.font = 'bold 12px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
-  ctx.fillText('🚪 들어가기!', x, y - h/2 - 8);
+  ctx.font = 'bold 13px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+  ctx.strokeStyle = 'rgba(0,0,0,0.55)'; ctx.lineWidth = 3;
+  ctx.strokeText('🏯 광화문으로 들어가기!', x, y - 58);
+  ctx.fillStyle = '#fff';
+  ctx.fillText('🏯 광화문으로 들어가기!', x, y - 58);
   ctx.textAlign = 'left';
+}
+
+// 🏯 완성된 광화문 — 중심(cx,cy), 크기 scale, (noGlow: 정착한 건 후광 생략)
+// 🏯 가벼운 광화문 (마당에 쌓인 장식용 — 그라데이션 없이 단순 도형, 성능↑)
+function drawMiniGate(cx, cy, scale) {
+  ctx.save();
+  ctx.globalAlpha = 0.7;
+  ctx.translate(cx, cy);
+  ctx.scale(scale, scale);
+  // 석축
+  ctx.fillStyle = '#D8CCB0';
+  ctx.fillRect(-40, -22, 80, 52);
+  // 홍예문
+  ctx.fillStyle = '#8D6E63';
+  ctx.beginPath(); ctx.arc(0, 18, 13, Math.PI, 0); ctx.rect(-13, 18, 26, 12); ctx.fill();
+  // 지붕
+  ctx.fillStyle = '#3C4E78';
+  ctx.beginPath();
+  ctx.moveTo(-48, -22); ctx.lineTo(-28, -40); ctx.lineTo(28, -40); ctx.lineTo(48, -22); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = '#5C6BC0';
+  ctx.fillRect(-32, -45, 64, 6);
+  // 현판
+  ctx.fillStyle = '#1B3A2F';
+  ctx.fillRect(-16, -18, 32, 13);
+  ctx.restore();
+  ctx.globalAlpha = 1;
+}
+function drawGwanghwamun(cx, cy, scale, alpha, noGlow) {
+  ctx.save();
+  ctx.globalAlpha = alpha == null ? 1 : alpha;
+  ctx.translate(cx, cy);
+  ctx.scale(scale, scale);
+  // 후광
+  if (!noGlow) {
+    const gl = ctx.createRadialGradient(0, 0, 6, 0, 0, 64);
+    gl.addColorStop(0, 'rgba(255,224,102,0.6)'); gl.addColorStop(1, 'rgba(255,224,102,0)');
+    ctx.fillStyle = gl; ctx.beginPath(); ctx.arc(0, 0, 64, 0, Math.PI*2); ctx.fill();
+  }
+  // 석축
+  ctx.fillStyle = '#D8CCB0'; roundRect(-40, -22, 80, 52, 6); ctx.fill();
+  ctx.strokeStyle = 'rgba(120,100,70,0.45)'; ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(-40, -4); ctx.lineTo(40, -4); ctx.moveTo(-40, 14); ctx.lineTo(40, 14);
+  ctx.moveTo(-15, -22); ctx.lineTo(-15, 30); ctx.moveTo(15, -22); ctx.lineTo(15, 30);
+  ctx.stroke();
+  // 홍예문
+  const ag = ctx.createLinearGradient(0, -22, 0, 30);
+  ag.addColorStop(0, '#FFF8D0'); ag.addColorStop(0.5, '#FFD54F'); ag.addColorStop(1, '#FF9800');
+  ctx.fillStyle = ag;
+  ctx.beginPath(); ctx.moveTo(-15, 30); ctx.lineTo(-15, -4); ctx.arc(0, -4, 15, Math.PI, 0); ctx.lineTo(15, 30); ctx.closePath(); ctx.fill();
+  // 지붕
+  ctx.fillStyle = '#3C4E78';
+  ctx.beginPath();
+  ctx.moveTo(-50, -22); ctx.quadraticCurveTo(-55, -31, -46, -33);
+  ctx.lineTo(-30, -48); ctx.lineTo(30, -48); ctx.lineTo(46, -33);
+  ctx.quadraticCurveTo(55, -31, 50, -22); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = '#2A3A5E'; roundRect(-32, -53, 64, 8, 4); ctx.fill();
+  ctx.strokeStyle = 'rgba(255,255,255,0.12)'; ctx.lineWidth = 1;
+  for (let i = -26; i <= 26; i += 8) { ctx.beginPath(); ctx.moveTo(i, -45); ctx.lineTo(i*1.5, -24); ctx.stroke(); }
+  // 단청
+  ctx.fillStyle = '#2E8B57'; ctx.fillRect(-45, -24, 90, 5);
+  ctx.fillStyle = '#C0392B';
+  for (let i = -42; i < 45; i += 12) ctx.fillRect(i, -24, 5, 5);
+  // 현판
+  ctx.fillStyle = '#2A1A0A'; roundRect(-16, -19, 32, 15, 3); ctx.fill();
+  ctx.strokeStyle = '#FFD700'; ctx.lineWidth = 1.5; roundRect(-16, -19, 32, 15, 3); ctx.stroke();
+  ctx.fillStyle = '#FFD700';
+  ctx.font = 'bold 12px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText('光化門', 0, -11);
+  ctx.restore();
+}
+
+// 🏯 지어지는 중인 광화문 (깬 돌 수만큼 돌담이 쌓임)
+function drawGateConstruction() {
+  const x = gateSite.x, baseY = gateSite.y + 28;
+  const p = Math.min(1, rocksBuilt / rocksGoal);
+  ctx.save();
+  // 공사 터
+  ctx.fillStyle = 'rgba(0,0,0,0.12)';
+  ctx.beginPath(); ctx.ellipse(x, baseY + 6, 50, 9, 0, 0, Math.PI*2); ctx.fill();
+  // 쌓인 돌담 블록 (rocksBuilt 만큼)
+  const cols = 6, bw = 15, bh = 9;
+  const startX = x - (cols * bw) / 2;
+  for (let b = 0; b < rocksBuilt; b++) {
+    const rr = Math.floor(b / cols), cc = b % cols;
+    const bx = startX + cc * bw;
+    const by = baseY - (rr + 1) * bh;
+    ctx.fillStyle = (b % 2) ? '#CFC3A8' : '#E0D4B8';
+    ctx.fillRect(bx + 1, by + 1, bw - 2, bh - 2);
+    ctx.strokeStyle = 'rgba(110,90,60,0.45)'; ctx.lineWidth = 1;
+    ctx.strokeRect(bx + 1, by + 1, bw - 2, bh - 2);
+  }
+  // 거의 완성되면 지붕 미리보기(반투명)
+  if (p >= 0.75) {
+    ctx.globalAlpha = (p - 0.75) / 0.25 * 0.85;
+    const topY = baseY - Math.ceil(rocksGoal / cols) * bh - 4;
+    ctx.fillStyle = '#3C4E78';
+    ctx.beginPath();
+    ctx.moveTo(x - 48, topY); ctx.quadraticCurveTo(x - 52, topY - 8, x - 44, topY - 10);
+    ctx.lineTo(x - 28, topY - 22); ctx.lineTo(x + 28, topY - 22); ctx.lineTo(x + 44, topY - 10);
+    ctx.quadraticCurveTo(x + 52, topY - 8, x + 48, topY); ctx.closePath(); ctx.fill();
+    ctx.globalAlpha = 1;
+  }
+  // 진행 라벨
+  ctx.font = 'bold 13px sans-serif'; ctx.textAlign = 'center';
+  ctx.strokeStyle = 'rgba(0,0,0,0.5)'; ctx.lineWidth = 3;
+  const lab = '🏯 ' + rocksBuilt + '/' + rocksGoal;
+  ctx.strokeText(lab, x, gateSite.y - 36); ctx.fillStyle = '#fff'; ctx.fillText(lab, x, gateSite.y - 36);
+  ctx.textAlign = 'left';
+  ctx.restore();
+}
+
+// 🧱 깨진 돌이 광화문으로 날아가는 모습
+function drawFlyingStones() {
+  for (const s of flyingStones) {
+    const f = Math.min(1, s.t / s.dur);
+    const cx = s.x + (s.tx - s.x) * f;
+    const cy = s.y + (s.ty - s.y) * f - Math.sin(f * Math.PI) * 40; // 포물선
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(f * 8);
+    ctx.fillStyle = '#C9BCA0';
+    ctx.strokeStyle = 'rgba(90,70,50,0.6)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.arc(0, 0, 5, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+    ctx.restore();
+  }
 }
 
 function render() {
   ctx.save();
   if (shake > 0) ctx.translate((Math.random()-0.5)*shake, (Math.random()-0.5)*shake);
   drawField();
-  // 클리핑 (놀이판 안에만 그림)
+  // 🎥 카메라: 월드 좌표 → 화면 (보이는 부분만)
   ctx.save();
-  roundRect(field.x, field.y, field.w, field.h, 16); ctx.clip();
+  ctx.translate(-cam.x, -cam.y);
+  // 화면에 보이는 것만 그리도록 간단 컬링
+  const vL = cam.x - 40, vR = cam.x + W + 40, vT = cam.y - 40, vB = cam.y + H + 40;
+  function vis(x, y, m) { m = m || 40; return x > vL - m && x < vR + m && y > vT - m && y < vB + m; }
   for (const tn of tunnels) { drawTunnel(tn.a, tn); drawTunnel(tn.b, tn); }
-  for (const a of apples) drawApple(a);
-  for (const o of obstacles) drawObstacle(o);
-  for (const b of bees) drawBee(b);
-  if (doorPhase && door) drawDoor();
-  drawSnake();
-  drawParticles();
-  ctx.restore();
-  // 파워 모드 타이머 (놀이판 위, 클립 밖)
-  if (powerT > 0) {
-    const txt = '🌶️ 파워 ' + powerT.toFixed(1) + '초 💥';
-    ctx.font = 'bold 20px sans-serif';
-    ctx.textAlign = 'center';
-    const tw = ctx.measureText(txt).width + 24;
-    ctx.fillStyle = 'rgba(198,40,40,0.92)';
-    roundRect(W/2 - tw/2, field.y + field.h - 44, tw, 30, 15); ctx.fill();
-    ctx.strokeStyle = '#FFD700'; ctx.lineWidth = 2;
-    roundRect(W/2 - tw/2, field.y + field.h - 44, tw, 30, 15); ctx.stroke();
-    ctx.fillStyle = '#fff';
-    ctx.fillText(txt, W/2, field.y + field.h - 23);
+  // 🏯 마당에 정착한 광화문들 (가벼운 장식 — 성능)
+  for (const pg of placedGates) if (vis(pg.x, pg.y, 70)) drawMiniGate(pg.x, pg.y, pg.scale);
+  if (!gateFly && !gateReady) drawGateConstruction();   // 🏯 지어지는 광화문 (완성 전)
+  // 🚪 들어갈 광화문 강조 (완성·정착 후, 게임 진행 중)
+  if (gateReady && door) {
+    const pulse = 1 + Math.sin(performance.now()/180) * 0.12;
+    drawGwanghwamun(door.x, door.y, 0.62 * pulse, 1, false);  // 후광 켜서 빛남
+    // 들어가기 화살표
+    ctx.save();
+    ctx.font = 'bold 22px sans-serif'; ctx.textAlign = 'center';
+    const bob = Math.sin(performance.now()/200) * 4;
+    ctx.fillText('⬇️', door.x, door.y - 46 + bob);
+    ctx.strokeStyle = 'rgba(0,0,0,0.5)'; ctx.lineWidth = 3;
+    ctx.font = 'bold 13px sans-serif';
+    ctx.strokeText('들어가기!', door.x, door.y + 44);
+    ctx.fillStyle = '#FFD700'; ctx.fillText('들어가기!', door.x, door.y + 44);
     ctx.textAlign = 'left';
+    ctx.restore();
+  }
+  for (const a of apples) if (vis(a.x, a.y)) drawApple(a);
+  for (const o of obstacles) if (vis(o.x, o.y)) drawObstacle(o);
+  for (const b of bees) if (vis(b.x, b.y)) drawBee(b);
+  drawSnake();
+  // 😅 위기(시간 부족) 땀방울 / 💖 부활 무적 반짝
+  if (running && !dead) {
+    if (graceT > 0 && Math.floor(performance.now()/120)%2===0) {
+      ctx.fillStyle = 'rgba(255,255,255,0.7)';
+      ctx.beginPath(); ctx.arc(headX, headY, HEAD_R + 6, 0, Math.PI*2); ctx.fill();
+    }
+    if (timeLeft < 3 && Math.floor(performance.now()/350)%2===0) {
+      ctx.font = '16px sans-serif'; ctx.textAlign = 'center';
+      ctx.fillText('💦', headX + HEAD_R, headY - HEAD_R);
+      ctx.textAlign = 'left';
+    }
+  }
+  drawParticles();
+  drawFlyingStones();                        // 🧱 날아가는 돌
+  // ✈️ 완성된 광화문이 하늘로 떴다가 마당에 내려앉는 연출
+  if (gateFly) {
+    const g = gateFlyPos();
+    drawGwanghwamun(g.x, g.y, g.scale, 1);
+  }
+  ctx.restore();
+  // 완성 배너 (화면 고정)
+  if (gateFly) {
+    ctx.font = 'bold 26px sans-serif'; ctx.textAlign = 'center';
+    ctx.strokeStyle = 'rgba(0,0,0,0.5)'; ctx.lineWidth = 4;
+    ctx.strokeText('🏯 광화문 완성! 🎉', W/2, H * 0.5);
+    ctx.fillStyle = '#FFD700';
+    ctx.fillText('🏯 광화문 완성! 🎉', W/2, H * 0.5);
+    ctx.textAlign = 'left';
+  }
+  // 하단 파워 표시 (충전 중일 때만 — 파워 중엔 머리 위에 표시)
+  if (running && !dead && powerT <= 0) {
+    let txt = '⚡ 파워 충전 ' + powerGauge + '/' + POWER_NEED + ' (사과 먹기)', bg = 'rgba(0,0,0,0.55)';
+    ctx.font = 'bold 18px sans-serif'; ctx.textAlign = 'center';
+    const tw = ctx.measureText(txt).width + 24;
+    const py = H - 44 - safeIn.bottom;
+    ctx.fillStyle = bg;
+    roundRect(W/2 - tw/2, py, tw, 28, 14); ctx.fill();
+    ctx.strokeStyle = '#FFD700'; ctx.lineWidth = 2;
+    roundRect(W/2 - tw/2, py, tw, 28, 14); ctx.stroke();
+    ctx.fillStyle = '#fff';
+    ctx.fillText(txt, W/2, py + 20);
+    ctx.textAlign = 'left';
+  }
+  // 🔥 콤보 미터 (크게, 타이머 바와 함께 → 확실히 보이게)
+  if (eatCombo >= 2) {
+    const mult = comboMult();
+    const frac = Math.max(0, Math.min(1, eatComboT / COMBO_WINDOW));
+    const pulse = 1 + Math.sin(performance.now() / 110) * (0.04 + mult * 0.015);
+    const col = mult >= 4 ? '#FF1744' : (mult >= 3 ? '#FF6D00' : '#FFB300');
+    const label = '🔥 ' + eatCombo + '연속  x' + mult;
+    ctx.save();
+    ctx.translate(W / 2, 138 + safeIn.top);
+    ctx.scale(pulse, pulse);
+    ctx.font = 'bold 24px sans-serif'; ctx.textAlign = 'center';
+    const tw = Math.max(160, ctx.measureText(label).width + 34);
+    // 알약 배경
+    ctx.fillStyle = 'rgba(0,0,0,0.5)';
+    roundRect(-tw/2, -22, tw, 40, 20); ctx.fill();
+    // 남은 시간 바(줄어듦)
+    ctx.fillStyle = col;
+    roundRect(-tw/2, -22, tw * frac, 40, 20); ctx.fill();
+    // 외곽 + 글자
+    ctx.strokeStyle = col; ctx.lineWidth = 2.5;
+    roundRect(-tw/2, -22, tw, 40, 20); ctx.stroke();
+    ctx.fillStyle = '#fff';
+    ctx.strokeStyle = 'rgba(0,0,0,0.5)'; ctx.lineWidth = 4;
+    ctx.strokeText(label, 0, 6); ctx.fillText(label, 0, 6);
+    ctx.textAlign = 'left';
+    ctx.restore();
+  }
+  // ✨ 화면 번쩍
+  if (flashT > 0) {
+    ctx.fillStyle = 'rgba(255,255,255,' + (flashT / 0.18 * 0.35) + ')';
+    ctx.fillRect(0, 0, W, H);
+  }
+  // 🔢 시작 카운트다운 숫자
+  if (running && !dead && !paused && countdownT > 0) {
+    const ci = Math.ceil(countdownT);
+    const frac = countdownT - Math.floor(countdownT); // 0~1
+    const scale = 1.6 - frac * 0.6;
+    ctx.save();
+    ctx.translate(W/2, H/2);
+    ctx.scale(scale, scale);
+    ctx.globalAlpha = Math.min(1, frac * 2);
+    ctx.font = 'bold 90px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.lineWidth = 8; ctx.strokeStyle = 'rgba(0,0,0,0.6)';
+    ctx.fillStyle = '#FFD700';
+    const label = ci > 0 ? String(ci) : '시작!';
+    ctx.strokeText(label, 0, 0); ctx.fillText(label, 0, 0);
+    ctx.textBaseline = 'alphabetic';
+    ctx.restore();
   }
   ctx.restore();
 }
 
 let lastT = performance.now();
 function loop(t) {
-  const dt = Math.min(0.04, (t - lastT) / 1000);
+  let dt = Math.min(0.05, (t - lastT) / 1000);  // 상한 0.05(20fps) → 살짝 끊겨도 속도 일정
   lastT = t;
+  // (슬로우모션 제거 → 속도 항상 일정)
+  if (flashT > 0) flashT -= dt;
   try { update(dt); render(); } catch(e) { console.error(e); }
   requestAnimationFrame(loop);
 }
@@ -1477,21 +2202,37 @@ function loop(t) {
 //=========================================
 function startGame() {
   reset();
+  revivedThisRun = false; graceT = 0;
+  countdownT = 3; lastCountInt = -1;   // 🔢 3·2·1 카운트다운
+  runStartCoins = coins;               // 💰 이번 판 코인 시작값
   document.getElementById('startScreen').style.display = 'none';
   document.getElementById('gameOver').style.display = 'none';
   document.getElementById('roundClear').style.display = 'none';
   document.getElementById('gameClear').style.display = 'none';
+  document.getElementById('pauseScreen').style.display = 'none';
+  document.getElementById('pauseBtn').style.display = 'flex';
   running = true;
   sfxStart();
   startBGM(); // 🎵 배경음악 시작
 }
 
 let goMyEntry = null; // 게임오버 시 내 엔트리 (미리보기/저장 후)
+let revivedThisRun = false;
 function gameOver() {
   running = false;
   stopBGM(); // 🎵 배경음악 정지
   const finalScore = score;       // 💯 누적 점수
   const finalRound = round;
+  // 🏅 통계 갱신 + 저장 + 업적 + 코인 저장
+  stats.plays++;
+  if (finalRound > stats.bestRound) stats.bestRound = finalRound;
+  saveStats();
+  const newAch = checkAchievements();   // 새 업적 → 코인 보상
+  saveCoins();
+  // 💰 이번 판 코인 요약
+  const earned = Math.max(0, coins - runStartCoins);
+  const gc = document.getElementById('goCoinMsg');
+  if (gc) gc.textContent = '💰 이번 판 +' + earned + ' · 보유 ' + coins;
   const newBest = finalScore > best;
   if (newBest) {
     best = finalScore;
@@ -1499,6 +2240,20 @@ function gameOver() {
     document.getElementById('bestVal').textContent = best;
     setTimeout(sfxNewBest, 300);
   } else setTimeout(sfxGameOver, 300);
+  // 💖 부활 버튼 (코인 충분 + 이번 판 미사용)
+  const reviveBtn = document.getElementById('reviveBtn');
+  if (reviveBtn) {
+    if (!revivedThisRun && coins >= REVIVE_COST && finalRound >= 1) {
+      reviveBtn.style.display = 'inline-block';
+      reviveBtn.textContent = '💖 한 번 더! (코인 ' + REVIVE_COST + ')';
+    } else reviveBtn.style.display = 'none';
+  }
+  // 새 업적 알림
+  const achMsg = document.getElementById('goAchMsg');
+  if (achMsg) {
+    if (newAch.length) achMsg.textContent = '🏅 업적 달성! ' + newAch.map(a=>a.icon+a.name).join(', ') + ' (+코인)';
+    else achMsg.textContent = '';
+  }
   document.getElementById('finalLen').textContent = finalScore;
   document.getElementById('finalRound').textContent = finalRound;
   document.getElementById('applesEaten').textContent = applesEaten;
@@ -1526,7 +2281,101 @@ function gameOver() {
   }
   renderGoRankList();
   renderStartTopRankings();
+  document.getElementById('pauseBtn').style.display = 'none';
   document.getElementById('gameOver').style.display = 'flex';
+}
+
+// ⏸️ 일시정지 / 재개
+function pauseGame() {
+  if (!running || dead || paused || countdownT > 0) return;
+  paused = true;
+  stopBGM();
+  document.getElementById('pauseScreen').style.display = 'flex';
+}
+function resumeGame() {
+  if (!paused) return;
+  paused = false;
+  document.getElementById('pauseScreen').style.display = 'none';
+  lastT = performance.now();   // dt 점프 방지
+  countdownT = 1.2; lastCountInt = -1;  // 재개 시 짧은 카운트
+  startBGM();
+}
+function togglePause() { if (paused) resumeGame(); else pauseGame(); }
+function quitToStart() {
+  paused = false; running = false; dead = false;
+  stopBGM();
+  document.getElementById('pauseScreen').style.display = 'none';
+  document.getElementById('pauseBtn').style.display = 'none';
+  document.getElementById('startScreen').style.display = 'flex';
+  renderStartTopRankings(); updateCoinUI();
+}
+// 📱 앱이 뒤로 가면 자동 일시정지
+document.addEventListener('visibilitychange', function() {
+  if (document.hidden && running && !dead && !paused) pauseGame();
+});
+
+// 📸🎬 크리에이터: 스크린샷 / 녹화 (트레일러·홍보 소재용)
+let captureN = 1;
+let mediaRec = null, recChunks = [], recording = false;
+function downloadBlobURL(url, filename) {
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+}
+function captureScreenshot() {
+  try {
+    const url = canvas.toDataURL('image/png');
+    downloadBlobURL(url, 'cutesnake_shot_' + (captureN++) + '.png');
+    flashT = 0.16; tone(1200, 0.06, 'square', 0.12);   // 찰칵 느낌
+  } catch(e) { alert('스크린샷 실패: ' + e.message); }
+}
+function toggleRecord() {
+  if (recording) { stopRecord(); return; }
+  try {
+    const stream = canvas.captureStream(60);
+    const mime = (window.MediaRecorder && MediaRecorder.isTypeSupported('video/webm;codecs=vp9'))
+      ? 'video/webm;codecs=vp9' : 'video/webm';
+    mediaRec = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 8000000 });
+    recChunks = [];
+    mediaRec.ondataavailable = function(e) { if (e.data && e.data.size) recChunks.push(e.data); };
+    mediaRec.onstop = function() {
+      const blob = new Blob(recChunks, { type: 'video/webm' });
+      const url = URL.createObjectURL(blob);
+      downloadBlobURL(url, 'cutesnake_clip_' + (captureN++) + '.webm');
+      setTimeout(function(){ URL.revokeObjectURL(url); }, 3000);
+    };
+    mediaRec.start();
+    recording = true; updateRecUI();
+  } catch(e) { alert('녹화 실패: ' + e.message); }
+}
+function stopRecord() {
+  if (mediaRec && recording) { try { mediaRec.stop(); } catch(e) {} }
+  recording = false; updateRecUI();
+}
+function updateRecUI() {
+  const b = document.getElementById('recBtn'); if (b) b.textContent = recording ? '⏹️ 녹화 정지 (저장)' : '🎬 녹화 시작';
+  const d = document.getElementById('recDot'); if (d) d.style.display = recording ? 'block' : 'none';
+}
+
+// 💖 부활: 코인 쓰고 그 자리에서 계속
+function revive() {
+  if (revivedThisRun || coins < REVIVE_COST || !dead) return;
+  coins -= REVIVE_COST; saveCoins();
+  revivedThisRun = true;
+  dead = false; running = true; paused = false;
+  // 머리를 벽 안쪽으로 살짝 들여놓고 주변 위험 제거
+  const m = HEAD_R + 20;
+  headX = Math.max(field.x + m, Math.min(field.x + field.w - m, headX));
+  headY = Math.max(field.y + m, Math.min(field.y + field.h - m, headY));
+  obstacles = obstacles.filter(o => Math.hypot(o.x - headX, o.y - headY) > 150);
+  bees = bees.filter(b => Math.hypot(b.x - headX, b.y - headY) > 150);
+  timeLeft = Math.max(timeLeft, maxTime * 0.7);
+  graceT = 2.2;                       // 잠깐 무적
+  snapCam();
+  document.getElementById('gameOver').style.display = 'none';
+  startBGM();
+  sfxStart();
+  showCombo('💖 부활! 계속 가자!');
 }
 
 //=========================================
@@ -1649,7 +2498,30 @@ function renderSkinPreviews() {
     c.restore();
   });
 }
+// 🔒 스킨 잠금/가격 표시
+function renderSkinLocks() {
+  document.querySelectorAll('.skinOption').forEach(opt => {
+    const id = opt.dataset.skin;
+    const tag = opt.querySelector('.lockTag');
+    if (isUnlocked(id)) { opt.classList.remove('locked'); if (tag) tag.textContent = ''; }
+    else { opt.classList.add('locked'); if (tag) tag.innerHTML = '🔒<br>' + SKIN_COST[id]; }
+  });
+}
 function selectSkin(id) {
+  if (!isUnlocked(id)) {
+    // 구매 시도
+    const cost = SKIN_COST[id];
+    if (coins >= cost) {
+      coins -= cost; unlocked.push(id); saveUnlocked(); saveCoins();
+      renderSkinLocks();
+      tone(523,0.1,'square',0.2); tone(1047,0.15,'square',0.2,1047,0.08);
+      showCombo && showCombo('🎉 ' + (SKINS[id]?'새 스킨':'') + ' 해제!');
+    } else {
+      tone(200, 0.15, 'sawtooth', 0.2, 100); // 부족 소리
+      const cb = document.getElementById('coinValStart'); if (cb) { cb.style.color = '#FF5252'; setTimeout(()=>cb.style.color='', 400); }
+      return;
+    }
+  }
   selectedSkin = id;
   try { localStorage.setItem('snake_skin', id); } catch(e) {}
   document.querySelectorAll('.skinOption').forEach(o => o.classList.toggle('selected', o.dataset.skin === id));
@@ -1659,7 +2531,26 @@ document.querySelectorAll('.skinOption').forEach(opt => {
   opt.addEventListener('click', function(e) { e.preventDefault(); selectSkin(opt.dataset.skin); });
   opt.addEventListener('touchstart', function(e) { e.preventDefault(); selectSkin(opt.dataset.skin); }, {passive:false});
 });
+// 잠긴 스킨이 선택돼 있으면 기본으로
+if (!isUnlocked(selectedSkin)) selectedSkin = 'green';
+renderSkinLocks();
 document.querySelector(`.skinOption[data-skin="${selectedSkin}"]`)?.classList.add('selected');
+
+// 🏅 업적 목록 렌더 + 화면 열기
+function renderAchList() {
+  const el = document.getElementById('achList');
+  if (!el) return;
+  el.innerHTML = '';
+  for (const a of ACHIEVEMENTS) {
+    const done = achDone.indexOf(a.id) !== -1;
+    const row = document.createElement('div');
+    row.className = 'achRow' + (done ? ' done' : '');
+    row.innerHTML = '<span class="aIcon">' + a.icon + '</span>' +
+      '<span class="aName">' + a.name + '<small>' + a.desc + '</small></span>' +
+      '<span class="aRew">' + (done ? '✅' : '💰' + a.reward) + '</span>';
+    el.appendChild(row);
+  }
+}
 
 function bindBtn(id, fn) {
   const b = document.getElementById(id);
@@ -1688,6 +2579,33 @@ bindBtn('tutorialOkBtn', function() {
   startGame();
 });
 bindBtn('shareBtn', shareScore);
+bindBtn('reviveBtn', revive);
+bindBtn('achBtn', function() { renderAchList(); document.getElementById('achScreen').style.display = 'flex'; });
+bindBtn('achCloseBtn', function() { document.getElementById('achScreen').style.display = 'none'; });
+// ⏸️ 일시정지
+bindBtn('pauseBtn', pauseGame);
+bindBtn('resumeBtn', resumeGame);
+bindBtn('pauseQuitBtn', quitToStart);
+// ⚙️ 설정 토글
+bindBtn('settingsCloseBtn', function() {
+  document.getElementById('settingsScreen').style.display = 'none';
+  updateMuteUI();
+});
+bindBtn('tgBgm', function() {
+  bgmOn = !bgmOn; saveAudioPrefs(); refreshSettingsUI(); updateMuteUI();
+  if (bgmOn) { if (running && !paused) startBGM(); } else stopBGM();
+});
+bindBtn('tgSfx', function() { sfxOn = !sfxOn; saveAudioPrefs(); refreshSettingsUI(); updateMuteUI(); if (sfxOn) tone(800,0.1,'sine',0.15); });
+bindBtn('tgVibe', function() { vibeOn = !vibeOn; saveAudioPrefs(); refreshSettingsUI(); if (vibeOn) haptic(30); });
+// 📸🎬 크리에이터
+bindBtn('shotBtn', captureScreenshot);
+bindBtn('recBtn', toggleRecord);
+// 키보드 단축키: P=스크린샷, R=녹화 토글
+window.addEventListener('keydown', function(e) {
+  const k = e.key.toLowerCase();
+  if (k === 'p') { e.preventDefault(); captureScreenshot(); }
+  else if (k === 'r') { e.preventDefault(); toggleRecord(); }
+});
 bindBtn('dailyOkBtn', function() {
   document.getElementById('dailyReward').style.display = 'none';
   tone(523,0.1,'square',0.2); tone(784,0.12,'square',0.2,784,0.06); tone(1318,0.2,'square',0.2,1318,0.12);
@@ -1721,12 +2639,14 @@ function checkDailyReward() {
     localStorage.setItem('snake_streak', dailyStreak);
     localStorage.setItem('snake_lastclaim', today);
   } catch(e) {}
-  // 보상: 연속일에 따라 시작 시간 보너스 (최대 +5초)
+  // 보상: 시작 시간 보너스 + 💰코인
   pendingBonus = Math.min(5, 1 + dailyStreak * 0.5);
+  const coinReward = 20 + dailyStreak * 5;
+  addCoins(coinReward); saveCoins();
   document.getElementById('streakDays').textContent = dailyStreak;
   document.getElementById('dailyStreakNum').textContent = dailyStreak;
-  let info = '⏱️ 다음 게임 <b>시작 시간 +' + pendingBonus.toFixed(1) + '초</b>!';
-  if (dailyStreak % 7 === 0) info += '<br>🌶️ 7일 보너스: 파워 고추로 시작!';
+  let info = '💰 <b>코인 +' + coinReward + '</b><br>⏱️ 다음 게임 <b>시작 시간 +' + pendingBonus.toFixed(1) + '초</b>!';
+  if (dailyStreak % 7 === 0) info += '<br>🌶️ 7일 보너스: 파워로 시작!';
   document.getElementById('dailyRewardInfo').innerHTML = info;
   document.getElementById('dailyReward').style.display = 'flex';
 }
@@ -1822,39 +2742,38 @@ function bindDir(id, nx, ny) {
 bindDir('btnUp', 0, -1); bindDir('btnDown', 0, 1);
 bindDir('btnLeft', -1, 0); bindDir('btnRight', 1, 0);
 
-// 스와이프
-let touchStart = null;
+// 🎮 손가락 따라가기 조작 (가장 쉬움): 누른 곳/끄는 곳으로 뱀이 향함
+function steerToward(clientX, clientY) {
+  const rect = canvas.getBoundingClientRect();
+  const tx = clientX - rect.left, ty = clientY - rect.top;
+  // 머리의 화면상 위치(월드→화면 = 월드좌표 - 카메라)
+  const hx = headX - cam.x, hy = headY - cam.y;
+  const dx = tx - hx, dy = ty - hy;
+  if (Math.hypot(dx, dy) < 22) return;            // 머리 바로 위는 무시(떨림 방지)
+  if (Math.abs(dx) > Math.abs(dy) * 1.15) setDir(dx > 0 ? 1 : -1, 0);
+  else if (Math.abs(dy) > Math.abs(dx) * 1.15) setDir(0, dy > 0 ? 1 : -1);
+  // 애매한 대각선은 현재 방향 유지
+}
+// 터치: 누르거나 끄는 동안 그 방향으로
 canvas.addEventListener('touchstart', function(e) {
-  touchStart = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-}, {passive:true});
+  if (e.cancelable) e.preventDefault();
+  steerToward(e.touches[0].clientX, e.touches[0].clientY);
+}, {passive:false});
 canvas.addEventListener('touchmove', function(e) {
-  if (!touchStart) return;
-  const dx = e.touches[0].clientX - touchStart.x;
-  const dy = e.touches[0].clientY - touchStart.y;
-  if (Math.hypot(dx, dy) > 16) {  // 더 민감하게(짧은 밀기에도 반응)
-    if (Math.abs(dx) > Math.abs(dy)) setDir(dx > 0 ? 1 : -1, 0);
-    else setDir(0, dy > 0 ? 1 : -1);
-    touchStart = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-  }
-}, {passive:true});
-// 마우스 드래그(데스크탑 보조)
-let mouseDown = false, mouseStart = null;
-canvas.addEventListener('mousedown', function(e) { mouseDown = true; mouseStart = {x:e.clientX, y:e.clientY}; });
-canvas.addEventListener('mousemove', function(e) {
-  if (!mouseDown || !mouseStart) return;
-  const dx = e.clientX - mouseStart.x, dy = e.clientY - mouseStart.y;
-  if (Math.hypot(dx, dy) > 30) {
-    if (Math.abs(dx) > Math.abs(dy)) setDir(dx > 0 ? 1 : -1, 0);
-    else setDir(0, dy > 0 ? 1 : -1);
-    mouseStart = {x:e.clientX, y:e.clientY};
-  }
-});
-canvas.addEventListener('mouseup', function() { mouseDown = false; });
+  if (e.cancelable) e.preventDefault();
+  steerToward(e.touches[0].clientX, e.touches[0].clientY);
+}, {passive:false});
+// 마우스(데스크탑): 누르고 움직이는 동안
+let steering = false;
+canvas.addEventListener('mousedown', function(e) { steering = true; steerToward(e.clientX, e.clientY); });
+canvas.addEventListener('mousemove', function(e) { if (steering) steerToward(e.clientX, e.clientY); });
+window.addEventListener('mouseup', function() { steering = false; });
 
 resize();
 reset();
 renderSkinPreviews();
 renderStartTopRankings();
+updateCoinUI();      // 💰 코인 표시
 checkDailyReward(); // 🎁 일일 출석 보상 체크
 lastT = performance.now();
 requestAnimationFrame(loop);
