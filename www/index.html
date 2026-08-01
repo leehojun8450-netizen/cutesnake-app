@@ -120,6 +120,15 @@
   #missionBox .mNum { color: #FFD700; }
   #missionBox .mBar { height: 6px; background: rgba(255,255,255,0.15); border-radius: 4px; margin: 6px 0 4px; overflow: hidden; }
   #missionBox .mBar i { display: block; height: 100%; background: linear-gradient(90deg,#8BC34A,#FFD700); border-radius: 4px; }
+  /* 🛒 시작 부스터 상점 (💰 코인 싱크) */
+  #boosterShop { display: flex; gap: 6px; width: 100%; max-width: 340px; margin: 2px auto 12px; }
+  #boosterShop .bItem { flex: 1; background: rgba(0,0,0,0.30); border: 2px solid rgba(255,215,0,0.30);
+    border-radius: 12px; padding: 8px 4px; text-align: center; cursor: pointer; user-select: none; }
+  #boosterShop .bItem.on { border-color: #FFD700; background: rgba(255,215,0,0.18); }
+  #boosterShop .bItem.poor { opacity: 0.55; }
+  #boosterShop .bIcon { font-size: 20px; }
+  #boosterShop .bName { font-size: 11px; color: #eee; font-weight: bold; margin-top: 2px; line-height: 1.25; }
+  #boosterShop .bCost { font-size: 11px; color: #FFD700; font-weight: bold; margin-top: 3px; }
   #missionBox .mWait { font-size: 11px; color: #aaa; }
   #missionBox .mDone { font-size: 11px; color: #8BC34A; font-weight: bold; }
   #missionBox .mBtn { width: 100%; margin-top: 4px; padding: 6px; border: none; border-radius: 10px; font-size: 13px; font-weight: bold;
@@ -189,6 +198,10 @@
 
     <!-- 🎯 오늘의 미션 (앱인토스 리텐션 골격 — JS renderMissions()가 채움) -->
     <div id="missionBox"></div>
+
+    <!-- 🛒 시작 부스터 = 반복 소비형 코인 싱크. 코인이 무한 축적되면 광고 경로가 다시 막힌다 -->
+    <div class="charLabel">🛒 시작 부스터 (이번 판만) 🛒</div>
+    <div id="boosterShop"></div>
 
     <div class="charLabel">🏆 명예의 전당 (최고 점수) 🏆</div>
     <div id="startTopRankings"></div>
@@ -433,6 +446,15 @@ try { dailyStreak = parseInt(localStorage.getItem('snake_streak') || '0') || 0; 
 // 💖 부활: 판당 최대 3회. 코인 비용은 회차마다 체증(코인 경로 억제 → 📺 광고 경로 유도)
 const REVIVE_COIN_COST = [50, 150, 300];
 const MAX_REVIVE = 3;
+// 🛒 시작 부스터 — 판마다 소비되는 코인 싱크(스킨은 1회성이라 싱크가 못 된다)
+const BOOSTERS = {
+  time:  { icon: '⏱️', name: '시작시간<br>+3초',  cost: 60,  bonus: 3 },
+  power: { icon: '⚡', name: '파워 달고<br>시작', cost: 80 },
+  apple: { icon: '🍎', name: '사과 2배<br>등장',  cost: 100, mult: 2 }
+};
+let boostPick = { time: false, power: false, apple: false };  // 상점에서 고른 것(다음 판에 적용)
+let boostRun  = { time: false, power: false, apple: false };  // 이번 판에 적용 중인 것
+let boostPaid = { time: 0, power: 0, apple: 0 };              // 실지불 코인(📺광고로 얻으면 0 → 취소해도 환불 없음)
 let graceT = 0;          // 부활/시작 직후 무적 시간
 let countdownT = 0;      // 🔢 시작 카운트다운
 let lastCountInt = -1;   // 카운트다운 소리용
@@ -885,6 +907,11 @@ function startRound(R, startLen) {
   if (R === 1 && pendingBonus > 0) {
     timeLeft = Math.min(maxTime, timeLeft + pendingBonus);
   }
+  // 🛒 1라운드 시작 시 부스터(시작시간) 적용 — maxTime 상한도 같이 올려야 실제로 늘어난다
+  if (R === 1 && boostRun.time) {
+    maxTime += BOOSTERS.time.bonus;
+    timeLeft = Math.min(maxTime, timeLeft + BOOSTERS.time.bonus);
+  }
   apples = []; bees = []; obstacles = []; tunnels = []; particles = [];
   powerT = 0; teleCooldown = 0; smashCombo = 0;
   eatCombo = 0; eatComboT = 0;                // 🔥 콤보 초기화
@@ -897,6 +924,7 @@ function startRound(R, startLen) {
   gateSite = { x: field.x + field.w / 2, y: field.y + field.h * 0.26 };
   // 🎁 7일 연속 출석 보너스: 1라운드에 파워로 시작
   if (R === 1 && pendingBonus > 0 && dailyStreak % 7 === 0) powerT = POWER_DUR;
+  if (R === 1 && boostRun.power) powerT = POWER_DUR;   // 🛒 부스터: 파워 달고 시작
   // 돌 배치(많이) + 벌
   snapCam();   // 🎥 카메라를 뱀 중앙으로
   ensureRocks();
@@ -960,7 +988,8 @@ function spawnApple() {
 // 목표 사과 개수 (3배! 화면 가득) - 난이도별로 조절
 function targetAppleCount() {
   const base = Math.min(48, 32 + Math.floor(snakeLen / 6));
-  return Math.max(6, Math.round(base * dcfg().apple));
+  const bm = boostRun.apple ? BOOSTERS.apple.mult : 1;   // 🛒 부스터: 사과 2배 등장
+  return Math.max(6, Math.round(base * dcfg().apple * bm));
 }
 function ensureApples() {
   let guard = 0;
@@ -1079,7 +1108,7 @@ function eatApple(a, idx) {
   // ⚡ 사과로 파워 게이지 충전 (고추 아니고, 파워 중이 아닐 때)
   if (a.type !== 'power' && powerT <= 0) {
     powerGauge++;
-    if (powerGauge >= POWER_NEED) activatePower();
+    if (powerGauge >= powerNeed()) activatePower();
   }
   // 혀 날름
   tongueOut = 1;
@@ -1116,7 +1145,8 @@ let gateFly = false, gateFlyT = 0;
 const GATE_FLY_DUR = 2.4;
 let gateFromX = 0, gateFromY = 0, gateToX = 0, gateToY = 0;
 let placedGates = [];   // 🏯 마당에 정착한 광화문들 (배경 장식)
-const POWER_NEED = 5;    // 사과 5개 먹으면 파워 충전
+function POWER_NEED_FOR(R) { return R === 1 ? 3 : 5; }  // 🎯 1라운드는 3개로 낮춰서 첫 광화문 체험 문턱을 낮춤
+function powerNeed() { return POWER_NEED_FOR(round); }
 const POWER_DUR = 5.5;   // 파워 지속(초)
 function rocksGoalForRound(R) { return Math.min(24, Math.round(6 + R * 1.5)); }   // 건설 목표(1R=8 → 초반도 충분히 길게)
 function targetRockCount(R) { return Math.min(32, Math.round((18 + R * 1.5) * 0.8 * dcfg().rock)); } // 판에 깔린 돌 수 × 난이도
@@ -1397,7 +1427,7 @@ function updateHUD() {
   document.getElementById('roundVal').textContent = round;
   document.getElementById('buildVal').textContent = rocksBuilt;
   document.getElementById('buildGoalVal').textContent = rocksGoal;
-  document.getElementById('powerVal').textContent = (powerT > 0 ? '파워!' : powerGauge + '/' + POWER_NEED);
+  document.getElementById('powerVal').textContent = (powerT > 0 ? '파워!' : powerGauge + '/' + powerNeed());
   document.getElementById('scoreVal').textContent = score;
   const lv = document.getElementById('lenVal'); if (lv) lv.textContent = snakeLen;
 }
@@ -2238,7 +2268,7 @@ function render() {
   }
   // 하단 파워 표시 (충전 중일 때만 — 파워 중엔 머리 위에 표시)
   if (running && !dead && powerT <= 0) {
-    let txt = '⚡ 파워 충전 ' + powerGauge + '/' + POWER_NEED + ' (사과 먹기)', bg = 'rgba(0,0,0,0.55)';
+    let txt = '⚡ 파워 충전 ' + powerGauge + '/' + powerNeed() + ' (사과 먹기)', bg = 'rgba(0,0,0,0.55)';
     ctx.font = 'bold 18px sans-serif'; ctx.textAlign = 'center';
     const tw = ctx.measureText(txt).width + 24;
     const py = H - 44 - safeIn.bottom;
@@ -2316,7 +2346,12 @@ function loop(t) {
 // 게임 시작/종료
 //=========================================
 function startGame() {
+  // 🛒 상점에서 고른 부스터를 이번 판으로 이관 — reset()이 startRound(1)을 즉시 부르므로 반드시 그 전에
+  boostRun = { time: boostPick.time, power: boostPick.power, apple: boostPick.apple };
+  boostPick = { time: false, power: false, apple: false };
+  boostPaid = { time: 0, power: 0, apple: 0 };
   reset();
+  if (typeof renderBoosters === 'function') renderBoosters();
   reviveCount = 0; graceT = 0;
   countdownT = 3; lastCountInt = -1;   // 🔢 3·2·1 카운트다운
   runStartCoins = coins;               // 💰 이번 판 코인 시작값
@@ -2433,7 +2468,7 @@ function quitToStart() {
   document.getElementById('pauseScreen').style.display = 'none';
   document.getElementById('pauseBtn').style.display = 'none';
   document.getElementById('startScreen').style.display = 'flex';
-  renderStartTopRankings(); updateCoinUI(); renderMissions();
+  renderStartTopRankings(); updateCoinUI(); renderBoosters(); renderMissions();
 }
 // 🔄 게임오버/클리어 후 "다시 도전" → 시작화면(난이도 다시 선택)으로 복귀
 function backToStartFromResult() {
@@ -2445,7 +2480,7 @@ function backToStartFromResult() {
   document.getElementById('pauseBtn').style.display = 'none';
   document.getElementById('startScreen').style.display = 'flex';
   if (typeof renderDiffSelect === 'function') renderDiffSelect();
-  renderStartTopRankings(); updateCoinUI(); renderMissions();
+  renderStartTopRankings(); updateCoinUI(); renderBoosters(); renderMissions();
 }
 // 📱 앱이 뒤로 가면 자동 일시정지
 document.addEventListener('visibilitychange', function() {
@@ -2639,6 +2674,66 @@ function renderSkinPreviews() {
     c.restore();
   });
 }
+//=========================================
+// 🛒 시작 부스터 상점 (💰 코인 싱크 + 📺 광고 훅 4점째)
+//=========================================
+function renderBoosters() {
+  const el = document.getElementById('boosterShop');
+  if (!el) return;
+  el.innerHTML = '';
+  for (const key in BOOSTERS) {
+    const b = BOOSTERS[key];
+    const on = boostPick[key];
+    const d = document.createElement('div');
+    d.className = 'bItem' + (on ? ' on' : '') + (!on && coins < b.cost ? ' poor' : '');
+    d.setAttribute('data-boost', key);
+    d.innerHTML = '<div class="bIcon">' + b.icon + '</div>' +
+                  '<div class="bName">' + b.name + '</div>' +
+                  '<div class="bCost">' + (on ? '✅ 장착' : '💰' + b.cost) + '</div>';
+    el.appendChild(d);
+  }
+}
+// 구매/해제. ⭐코인이 부족하면 📺 광고로 이번 판 무료 장착 — 싱크가 광고 훅을 겸한다
+function buyBooster(key) {
+  const b = BOOSTERS[key];
+  if (!b) return;
+  if (boostPick[key]) {                       // 해제 → 실지불분만 환불(광고로 얻은 건 0원이라 환불 없음)
+    boostPick[key] = false;
+    if (boostPaid[key]) { coins += boostPaid[key]; saveCoins(); }
+    boostPaid[key] = 0;
+    tone(400, 0.08, 'sine', 0.12);
+    renderBoosters();
+    return;
+  }
+  if (coins >= b.cost) {
+    coins -= b.cost; saveCoins();
+    boostPick[key] = true; boostPaid[key] = b.cost;
+    tone(880, 0.08, 'square', 0.14);
+    renderBoosters();
+    return;
+  }
+  tone(200, 0.15, 'sawtooth', 0.2, 100);      // 부족 소리
+  showConfirm('코인이 부족해요! 📺 광고 보고 이번 판만 장착할까요?', function() {
+    showRewardAd(function() {
+      boostPick[key] = true; boostPaid[key] = 0;
+      renderBoosters();
+      if (typeof showCombo === 'function') showCombo('📺 ' + b.icon + ' 부스터 장착!');
+    });
+  });
+}
+(function bindBoosterShop() {
+  const el = document.getElementById('boosterShop');
+  if (!el) return;
+  const pick = function(e) {
+    const t = e.target.closest ? e.target.closest('.bItem') : null;
+    if (!t) return;
+    e.preventDefault();
+    buyBooster(t.getAttribute('data-boost'));
+  };
+  el.addEventListener('click', pick);
+  el.addEventListener('touchstart', pick, { passive: false });
+})();
+
 // 🔒 스킨 잠금/가격 표시
 function renderSkinLocks() {
   document.querySelectorAll('.skinOption').forEach(opt => {
@@ -2967,6 +3062,7 @@ reset();
 renderSkinPreviews();
 renderStartTopRankings();
 updateCoinUI();      // 💰 코인 표시
+renderBoosters();    // 🛒 시작 부스터 상점
 checkDailyReward(); // 🎁 일일 출석 보상 체크
 renderMissions();    // 🎯 오늘의 미션
 lastT = performance.now();
