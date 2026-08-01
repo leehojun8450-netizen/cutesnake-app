@@ -489,6 +489,7 @@ const ACHIEVEMENTS = [
   { id:'apple1',   icon:'🍏', name:'첫 사과',      desc:'사과 1개 먹기',   reward:15,  check:()=>stats.apples>=1 },
   { id:'rock1',    icon:'🪨', name:'첫 돌 파괴',   desc:'돌 1개 부수기',   reward:20,  check:()=>stats.rocks>=1 },
   { id:'gate1',    icon:'🏯', name:'첫 광화문',    desc:'광화문 1개 완성', reward:40,  check:()=>stats.gates>=1 },
+  { id:'combo4',   icon:'✨', name:'콤보 입문',    desc:'4연속 콤보',      reward:25,  check:()=>stats.bestCombo>=4 },
   { id:'apple50',  icon:'🍎', name:'사과 사냥꾼',  desc:'사과 50개 먹기',  reward:50,  check:()=>stats.apples>=50 },
   { id:'apple300', icon:'🍏', name:'사과 대장',    desc:'사과 300개 먹기', reward:150, check:()=>stats.apples>=300 },
   { id:'combo8',   icon:'🔥', name:'콤보 마스터',  desc:'8연속 콤보',      reward:80,  check:()=>stats.bestCombo>=8 },
@@ -1148,7 +1149,7 @@ let placedGates = [];   // 🏯 마당에 정착한 광화문들 (배경 장식)
 function POWER_NEED_FOR(R) { return R === 1 ? 3 : 5; }  // 🎯 1라운드는 3개로 낮춰서 첫 광화문 체험 문턱을 낮춤
 function powerNeed() { return POWER_NEED_FOR(round); }
 const POWER_DUR = 5.5;   // 파워 지속(초)
-function rocksGoalForRound(R) { return Math.min(24, Math.round(6 + R * 1.5)); }   // 건설 목표(1R=8 → 초반도 충분히 길게)
+function rocksGoalForRound(R) { return R === 1 ? 5 : Math.min(24, Math.round(6 + R * 1.5)); }   // 🎯 1라운드는 5개로 낮춤(원래 8개) — 20판 실측 결과 파워모드까진 가도 8개를 못 채워 광화문을 아무도 못 봄
 function targetRockCount(R) { return Math.min(32, Math.round((18 + R * 1.5) * 0.8 * dcfg().rock)); } // 판에 깔린 돌 수 × 난이도
 // 🔥 연속 먹기 콤보 (중독성 핵심)
 let eatCombo = 0;        // 연속으로 먹은 사과 수
