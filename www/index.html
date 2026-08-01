@@ -249,8 +249,9 @@
     </div>
     <div id="goCoinMsg" style="color:#FFD700;font-size:15px;font-weight:bold;margin:4px 0">💰 이번 판 +0 · 보유 0</div>
     <div id="goAchMsg" style="color:#FFD700;font-size:14px;font-weight:bold;margin:4px 0"></div>
-    <button id="reviveBtn" class="btnAlt" style="display:none;background:linear-gradient(135deg,#FF6FA5,#FF1493)">💖 한 번 더!</button>
-    <button id="adBoostBtn" class="btnAlt" style="background:linear-gradient(135deg,#7B68EE,#4B0082)">📺 광고 보고 10라운드부터 재시작</button>
+    <button id="reviveAdBtn" class="btnAlt" style="display:none;background:linear-gradient(135deg,#7B68EE,#4B0082)">📺 광고 보고 무료 부활!</button>
+    <button id="reviveBtn" class="btnAlt" style="display:none;background:linear-gradient(135deg,#FF6FA5,#FF1493)">💖 코인으로 부활</button>
+    <button id="adBoostBtn" class="btnAlt" style="background:linear-gradient(135deg,#7B68EE,#4B0082)">📺 광고 보고 점수 2배로 재시작!</button>
     <button id="shareBtn" class="btnAlt">📤 점수 자랑하기</button>
     <button id="restartBtn" class="btn">다시 도전! 🔄</button>
   </div>
@@ -429,7 +430,9 @@ let dailyStreak = 0;
 let pendingBonus = 0; // 다음 게임 시작 시 추가 시간(초)
 try { dailyStreak = parseInt(localStorage.getItem('snake_streak') || '0') || 0; } catch(e) {}
 
-const REVIVE_COST = 50;  // 💖 부활 코인 비용
+// 💖 부활: 판당 최대 3회. 코인 비용은 회차마다 체증(코인 경로 억제 → 📺 광고 경로 유도)
+const REVIVE_COIN_COST = [50, 150, 300];
+const MAX_REVIVE = 3;
 let graceT = 0;          // 부활/시작 직후 무적 시간
 let countdownT = 0;      // 🔢 시작 카운트다운
 let lastCountInt = -1;   // 카운트다운 소리용
@@ -460,6 +463,10 @@ function saveStats() { try { localStorage.setItem('snake_stats', JSON.stringify(
 let achDone = [];
 try { const a = JSON.parse(localStorage.getItem('snake_ach') || 'null'); if (Array.isArray(a)) achDone = a; } catch(e) {}
 const ACHIEVEMENTS = [
+  // 🌱 첫판부터 달성 가능한 '빠른 성취' 3종 — 신규 유저가 첫 세션에 업적을 하나도 못 따는 문제 보완
+  { id:'apple1',   icon:'🍏', name:'첫 사과',      desc:'사과 1개 먹기',   reward:15,  check:()=>stats.apples>=1 },
+  { id:'rock1',    icon:'🪨', name:'첫 돌 파괴',   desc:'돌 1개 부수기',   reward:20,  check:()=>stats.rocks>=1 },
+  { id:'gate1',    icon:'🏯', name:'첫 광화문',    desc:'광화문 1개 완성', reward:40,  check:()=>stats.gates>=1 },
   { id:'apple50',  icon:'🍎', name:'사과 사냥꾼',  desc:'사과 50개 먹기',  reward:50,  check:()=>stats.apples>=50 },
   { id:'apple300', icon:'🍏', name:'사과 대장',    desc:'사과 300개 먹기', reward:150, check:()=>stats.apples>=300 },
   { id:'combo8',   icon:'🔥', name:'콤보 마스터',  desc:'8연속 콤보',      reward:80,  check:()=>stats.bestCombo>=8 },
@@ -475,6 +482,65 @@ function checkAchievements() {
   }
   if (newly.length) { try { localStorage.setItem('snake_ach', JSON.stringify(achDone)); } catch(e) {} }
   return newly;
+}
+
+// 🎯 오늘의 미션 (매일 리셋) — 라운드 완주 없이도 세션 안에서 작은 성취를 자주 주기 위한 장치
+const MISSIONS = [
+  { key:'apple', icon:'🍎', label:'사과 5개 먹기',   goal:5, reward:15 },
+  { key:'rock',  icon:'🪨', label:'돌 2개 부수기',   goal:2, reward:25 },
+  { key:'gate',  icon:'🏯', label:'광화문 1개 완성', goal:1, reward:40 }
+];
+let missionState = { date:'', progress:{}, claimed:{} };
+function loadMissions() {
+  const today = todayStr();
+  if (missionState.date === today) return; // 오늘 이미 로드됨
+  try {
+    const s = JSON.parse(localStorage.getItem('snake_missions') || 'null');
+    if (s && s.date === today) { missionState = s; return; }
+  } catch(e) {}
+  missionState = { date: today, progress:{}, claimed:{} };
+  saveMissions();
+}
+function saveMissions() { try { localStorage.setItem('snake_missions', JSON.stringify(missionState)); } catch(e) {} }
+function bumpMission(key, n) {
+  loadMissions();
+  missionState.progress[key] = (missionState.progress[key] || 0) + n;
+  saveMissions();
+  renderMissions();
+}
+function claimMission(key) {
+  loadMissions();
+  const m = MISSIONS.find(x => x.key === key);
+  if (!m || missionState.claimed[key] || (missionState.progress[key] || 0) < m.goal) return;
+  missionState.claimed[key] = true;
+  saveMissions();
+  addCoins(m.reward);
+  tone(880, 0.1, 'square', 0.15); tone(1318, 0.15, 'square', 0.15, 1318, 0.08);
+  if (typeof showCombo === 'function') showCombo('🎯 미션 완료! +' + m.reward);
+  renderMissions();
+}
+function renderMissions() {
+  loadMissions();
+  const el = document.getElementById('missionBox');
+  if (!el) return;
+  let html = '<div class="mTitle">🎯 오늘의 미션</div>';
+  for (const m of MISSIONS) {
+    const prog = Math.min(m.goal, missionState.progress[m.key] || 0);
+    const done = prog >= m.goal;
+    const claimed = !!missionState.claimed[m.key];
+    html += '<div class="mRow' + (claimed ? ' mGot' : '') + '">' +
+      '<div class="mHead"><span>' + m.icon + ' ' + m.label + '</span><span class="mNum">' + prog + '/' + m.goal + '</span></div>' +
+      '<div class="mBar"><i style="width:' + Math.round(prog / m.goal * 100) + '%"></i></div>' +
+      (claimed ? '<div class="mDone">✅ 코인 +' + m.reward + ' 받음</div>'
+        : done ? '<button class="mBtn" data-key="' + m.key + '">💰 +' + m.reward + ' 받기</button>'
+        : '<div class="mWait">완료 시 💰 +' + m.reward + '</div>') +
+      '</div>';
+  }
+  el.innerHTML = html;
+  el.querySelectorAll('.mBtn').forEach(function(b) {
+    b.addEventListener('click', function(e){ e.preventDefault(); claimMission(b.dataset.key); });
+    b.addEventListener('touchstart', function(e){ e.preventDefault(); claimMission(b.dataset.key); }, {passive:false});
+  });
 }
 
 // 리더보드
@@ -551,6 +617,9 @@ function sfxStart() { [392,523,659,784].forEach((n,i)=>tone(n,0.13,'triangle',0.
 function sfxGameOver() { [659,587,523,440].forEach((n,i)=>tone(n,0.24,'triangle',0.2,n,i*0.16)); }
 function sfxNewBest() { [523,659,784,1047,1318].forEach((n,i)=>tone(n,0.16,'square',0.2,n,i*0.1)); }
 function sfxLevelUp() { tone(659,0.1,'square',0.16); tone(988,0.18,'square',0.16,988,0.08); }
+function sfxCombo() { // 🔥 콤보 배수 상승 - 경쾌한 상승음
+  tone(784,0.08,'square',0.16,1047); tone(1047,0.1,'square',0.14,1319,0.05);
+}
 function sfxPower() { // 🌶️ 파워 획득 - 강렬한 상승
   tone(330,0.1,'sawtooth',0.22,660); tone(440,0.1,'sawtooth',0.22,880,0.06);
   tone(660,0.12,'square',0.2,1320,0.12); tone(880,0.3,'sawtooth',0.18,1760,0.2);
@@ -843,7 +912,7 @@ function startRound(R, startLen) {
 function reset() {
   computeField();
   running = false; dead = false; paused = false;
-  applesEaten = 0; rocksSmashed = 0; score = 0;
+  applesEaten = 0; rocksSmashed = 0; score = 0; scoreMult = 1;
   tongueT = 0; tongueOut = 0; shake = 0;
   placedGates = [];   // 🏯 정착한 광화문 초기화(새 게임)
   startRound(1);
@@ -967,6 +1036,7 @@ function setDir(nx, ny) {
 function eatApple(a, idx) {
   applesEaten++;
   stats.apples++;             // 🏅 통계
+  bumpMission('apple', 1);    // 🎯 오늘의 미션
   addCoins(1);                // 💰 사과당 코인
   haptic(12); // 📳 먹을 때 짧은 진동
   // 🔥 콤보 갱신
@@ -1229,6 +1299,7 @@ function update(dt) {
         // 💥 돌 부수기 (파워 모드)
         obstacles.splice(i, 1);
         rocksSmashed++; smashCombo++; stats.rocks++;  // 🏅 통계
+        bumpMission('rock', 1);                       // 🎯 오늘의 미션
         const smashPts = 25 + (smashCombo - 1) * 10;
         addScore(smashPts, true);
         addCoins(2);                               // 💰 돌당 코인
@@ -1331,12 +1402,14 @@ function updateHUD() {
   const lv = document.getElementById('lenVal'); if (lv) lv.textContent = snakeLen;
 }
 let scorePopTimer = null;
+let scoreMult = 1;   // ✨ 이번 판 점수 배수 (📺 광고 부스트 = 2, reset()에서 1로 복귀)
 function addScore(pts, popup) {
-  score += pts;
+  const gained = Math.round(pts * scoreMult);   // ✨ 광고 부스트 시 2배
+  score += gained;
   document.getElementById('scoreVal').textContent = score;
   if (popup) {
     const el = document.getElementById('scorePop');
-    el.textContent = '+' + pts;
+    el.textContent = '+' + gained;
     el.style.opacity = '1';
     el.style.transform = 'translateY(0)';
     if (scorePopTimer) clearTimeout(scorePopTimer);
@@ -1376,6 +1449,7 @@ function gateComplete() {
   // 💰🏅 라운드 보상 + 통계
   addCoins(round * 5);
   stats.gates++;
+  bumpMission('gate', 1);     // 🎯 오늘의 미션
   if (round > stats.bestRound) stats.bestRound = round;
   saveCoins(); saveStats();
   gateFromX = gateSite.x; gateFromY = gateSite.y;
@@ -2243,7 +2317,7 @@ function loop(t) {
 //=========================================
 function startGame() {
   reset();
-  revivedThisRun = false; graceT = 0;
+  reviveCount = 0; graceT = 0;
   countdownT = 3; lastCountInt = -1;   // 🔢 3·2·1 카운트다운
   runStartCoins = coins;               // 💰 이번 판 코인 시작값
   document.getElementById('startScreen').style.display = 'none';
@@ -2258,7 +2332,7 @@ function startGame() {
 }
 
 let goMyEntry = null; // 게임오버 시 내 엔트리 (미리보기/저장 후)
-let revivedThisRun = false;
+let reviveCount = 0;   // 💖 이번 판 부활 횟수 (0~MAX_REVIVE)
 function gameOver() {
   running = false;
   stopBGM(); // 🎵 배경음악 정지
@@ -2281,14 +2355,22 @@ function gameOver() {
     document.getElementById('bestVal').textContent = best;
     setTimeout(sfxNewBest, 300);
   } else setTimeout(sfxGameOver, 300);
-  // 💖 부활 버튼 (이번 판 미사용이면 노출 — 코인 부족 시 📺 광고 부활로 분기)
+  // 💖 부활 버튼 2개 병렬 노출 — 📺 광고(항상 무료) / 💰 코인(회차별 체증)
+  // ⚠️ 코인 자동차감 금지: 코인이 있어도 광고 선택지를 항상 남겨야 광고 노출이 발생한다
+  const reviveAdBtn = document.getElementById('reviveAdBtn');
   const reviveBtn = document.getElementById('reviveBtn');
+  const canRevive = reviveCount < MAX_REVIVE && finalRound >= 1;
+  if (reviveAdBtn) {
+    reviveAdBtn.style.display = canRevive ? 'inline-block' : 'none';
+    reviveAdBtn.textContent = (canRevive && reviveCount > 0)
+      ? '📺 광고 보고 무료 부활! (' + (reviveCount + 1) + '번째)'
+      : '📺 광고 보고 무료 부활!';
+  }
   if (reviveBtn) {
-    if (!revivedThisRun && finalRound >= 1) {
+    const rCost = REVIVE_COIN_COST[reviveCount];
+    if (canRevive && coins >= rCost) {
       reviveBtn.style.display = 'inline-block';
-      reviveBtn.textContent = (coins >= REVIVE_COST)
-        ? '💖 한 번 더! (코인 ' + REVIVE_COST + ')'
-        : '📺 광고 보고 부활!';
+      reviveBtn.textContent = '💰 코인으로 부활 (' + rCost + ')';
     } else reviveBtn.style.display = 'none';
   }
   // 새 업적 알림
@@ -2330,7 +2412,7 @@ function gameOver() {
 
 // ⏸️ 일시정지 / 재개
 function pauseGame() {
-  if (!running || dead || paused || countdownT > 0) return;
+  if (!running || dead || paused) return;
   paused = true;
   stopBGM();
   document.getElementById('pauseScreen').style.display = 'flex';
@@ -2351,7 +2433,7 @@ function quitToStart() {
   document.getElementById('pauseScreen').style.display = 'none';
   document.getElementById('pauseBtn').style.display = 'none';
   document.getElementById('startScreen').style.display = 'flex';
-  renderStartTopRankings(); updateCoinUI();
+  renderStartTopRankings(); updateCoinUI(); renderMissions();
 }
 // 🔄 게임오버/클리어 후 "다시 도전" → 시작화면(난이도 다시 선택)으로 복귀
 function backToStartFromResult() {
@@ -2363,7 +2445,7 @@ function backToStartFromResult() {
   document.getElementById('pauseBtn').style.display = 'none';
   document.getElementById('startScreen').style.display = 'flex';
   if (typeof renderDiffSelect === 'function') renderDiffSelect();
-  renderStartTopRankings(); updateCoinUI();
+  renderStartTopRankings(); updateCoinUI(); renderMissions();
 }
 // 📱 앱이 뒤로 가면 자동 일시정지
 document.addEventListener('visibilitychange', function() {
@@ -2405,18 +2487,21 @@ function clearAdTrialSkin() {
   adTrialSkin = null;
 }
 
-// 💖 부활: 코인 쓰고(부족하면 📺 광고 보고) 그 자리에서 계속
-function revive() {
-  if (revivedThisRun || !dead) return;
-  if (coins >= REVIVE_COST) {
-    coins -= REVIVE_COST; saveCoins();
-    doRevive();
-  } else {
-    showRewardAd(doRevive);   // 💰 부족 → 광고 시청 후 무료 부활
-  }
+// 📺 광고 부활 — 코인 보유와 무관하게 항상 무료로 선택 가능 (주력 광고 훅)
+function reviveByAd() {
+  if (reviveCount >= MAX_REVIVE || !dead) return;
+  showRewardAd(doRevive);
+}
+// 💰 코인 부활 — 회차별 체증(50→150→300). 비싸질수록 유저는 광고를 택한다
+function reviveByCoin() {
+  if (reviveCount >= MAX_REVIVE || !dead) return;
+  const cost = REVIVE_COIN_COST[reviveCount];
+  if (coins < cost) return;
+  coins -= cost; saveCoins();
+  doRevive();
 }
 function doRevive() {   // 실제 부활 처리 (코인/광고 공통)
-  revivedThisRun = true;
+  reviveCount++;
   dead = false; running = true; paused = false;
   // 머리를 벽 안쪽으로 살짝 들여놓고 주변 위험 제거
   const m = HEAD_R + 20;
@@ -2428,6 +2513,7 @@ function doRevive() {   // 실제 부활 처리 (코인/광고 공통)
   graceT = 2.2;                       // 잠깐 무적
   snapCam();
   document.getElementById('gameOver').style.display = 'none';
+  document.getElementById('pauseBtn').style.display = 'flex';   // ⏸️ 부활 후에도 일시정지 버튼 복원
   startBGM();
   sfxStart();
   showCombo('💖 부활! 계속 가자!');
@@ -2676,13 +2762,16 @@ bindBtn('tutorialOkBtn', function() {
   startGame();
 });
 bindBtn('shareBtn', shareScore);
-bindBtn('reviveBtn', revive);
-// 📺 광고 보고 10라운드 부스트 재시작 (기존 startGame/startRound 재활용)
+bindBtn('reviveAdBtn', reviveByAd);
+bindBtn('reviveBtn', reviveByCoin);
+// 📺 광고 보고 "이번 판 점수 2배" 재시작
+// (구 설계 = 10라운드 점프: 점수는 0 리셋인데 난이도만 2.6배라 광고 시청이 손해였음 → 순수 이득으로 교체)
 bindBtn('adBoostBtn', function() {
   showRewardAd(function() {
     clearAdTrialSkin();   // 새 판 시작 → 체험 스킨 원복
-    startGame();          // reset → 1라운드 세팅 + 오버레이 정리
-    startRound(10);       // 곧바로 10라운드로 덮어쓰기
+    startGame();          // reset → 1라운드 세팅 + scoreMult=1 초기화
+    scoreMult = 2;        // ⚠️ reset() 이후에 설정해야 유지된다
+    showCombo('✨ 점수 2배 모드! 🔥');
   });
 });
 bindBtn('achBtn', function() { renderAchList(); document.getElementById('achScreen').style.display = 'flex'; });
@@ -2879,6 +2968,7 @@ renderSkinPreviews();
 renderStartTopRankings();
 updateCoinUI();      // 💰 코인 표시
 checkDailyReward(); // 🎁 일일 출석 보상 체크
+renderMissions();    // 🎯 오늘의 미션
 lastT = performance.now();
 requestAnimationFrame(loop);
 
