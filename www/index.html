@@ -55,6 +55,11 @@
   .btn:active { transform: scale(0.95); }
   .btnAlt { background: linear-gradient(135deg, #FF69B4, #FF1493); color: white; border: none; padding: 12px 28px; font-size: 16px; font-weight: bold; border-radius: 30px; cursor: pointer; margin: 6px; box-shadow: 0 4px 15px rgba(255,20,147,0.4); font-family: inherit; }
   .btnAlt:active { transform: scale(0.95); }
+  .diffSelect { display: flex; gap: 12px; justify-content: center; margin: 4px 0; }
+  .diffBtn { display: flex; flex-direction: column; align-items: center; gap: 2px; background: rgba(255,255,255,0.15); color: #fff; border: 3px solid transparent; padding: 12px 22px; font-size: 20px; font-weight: bold; border-radius: 20px; cursor: pointer; font-family: inherit; transition: transform 0.1s, border-color 0.15s, background 0.15s; text-shadow: 1px 1px 2px rgba(0,0,0,0.4); }
+  .diffBtn .diffDesc { font-size: 12px; font-weight: normal; opacity: 0.85; }
+  .diffBtn:active { transform: scale(0.95); }
+  .diffBtn.selected { background: linear-gradient(135deg, #FFB300, #FF6F00); border-color: #fff; box-shadow: 0 6px 18px rgba(255,111,0,0.5); }
   #gameOver { display: none; }
   .deathLen { font-size: 64px; color: #FFEB3B; font-weight: bold; text-shadow: 3px 3px 0 #000, 0 0 25px #FFEB3B; line-height: 1; }
   .rank { font-size: 19px; color: #fff; margin: 8px 0; }
@@ -106,6 +111,19 @@
   .tg.on { background: #4CAF50; color: #fff; }
   .tg.off { background: #777; color: #ddd; }
   #streakBox { font-size: 15px; color: #FFA726; font-weight: bold; margin: 4px 0 10px; text-shadow: 1px 1px 0 #000; }
+  /* 🎯 오늘의 미션 (앱인토스 리텐션 골격) */
+  #missionBox { width: 100%; max-width: 340px; margin: 2px auto 12px; }
+  #missionBox .mTitle { font-size: 15px; font-weight: bold; color: #8BC34A; margin-bottom: 6px; text-shadow: 1px 1px 0 #000; }
+  #missionBox .mRow { background: rgba(0,0,0,0.30); border: 1px solid rgba(139,195,74,0.35); border-radius: 12px; padding: 8px 10px; margin-bottom: 6px; }
+  #missionBox .mRow.mGot { opacity: 0.55; }
+  #missionBox .mHead { display: flex; justify-content: space-between; align-items: center; font-size: 13px; font-weight: bold; color: #eee; }
+  #missionBox .mNum { color: #FFD700; }
+  #missionBox .mBar { height: 6px; background: rgba(255,255,255,0.15); border-radius: 4px; margin: 6px 0 4px; overflow: hidden; }
+  #missionBox .mBar i { display: block; height: 100%; background: linear-gradient(90deg,#8BC34A,#FFD700); border-radius: 4px; }
+  #missionBox .mWait { font-size: 11px; color: #aaa; }
+  #missionBox .mDone { font-size: 11px; color: #8BC34A; font-weight: bold; }
+  #missionBox .mBtn { width: 100%; margin-top: 4px; padding: 6px; border: none; border-radius: 10px; font-size: 13px; font-weight: bold;
+    background: linear-gradient(135deg,#FFD700,#FF9800); color: #3E2723; cursor: pointer; }
   #dailyStreakBig { font-size: 36px; color: #FF6D00; font-weight: bold; text-shadow: 2px 2px 0 #000, 0 0 20px #FFA726; margin: 10px 0; animation: pulse 0.7s infinite alternate; }
   #dailyRewardInfo { font-size: 17px; }
   /* 💰 코인 / 🛒 잠금 / 🏅 업적 */
@@ -169,8 +187,18 @@
 
     <div id="streakBox">🔥 <span id="streakDays">0</span>일 연속 출석 중!</div>
 
+    <!-- 🎯 오늘의 미션 (앱인토스 리텐션 골격 — JS renderMissions()가 채움) -->
+    <div id="missionBox"></div>
+
     <div class="charLabel">🏆 명예의 전당 (최고 점수) 🏆</div>
     <div id="startTopRankings"></div>
+
+    <div class="charLabel">🎚️ 난이도 고르기 🎚️</div>
+    <div class="diffSelect" id="diffSelect">
+      <button class="diffBtn" data-diff="easy">🌱 쉬움<span class="diffDesc">천천히·넉넉하게</span></button>
+      <button class="diffBtn" data-diff="hard">🔥 어려움<span class="diffDesc">빠르게·아슬하게</span></button>
+    </div>
+    <div style="height: 8px"></div>
 
     <button id="startBtn" class="btn">시작! 🐍</button>
     <div>
@@ -222,6 +250,7 @@
     <div id="goCoinMsg" style="color:#FFD700;font-size:15px;font-weight:bold;margin:4px 0">💰 이번 판 +0 · 보유 0</div>
     <div id="goAchMsg" style="color:#FFD700;font-size:14px;font-weight:bold;margin:4px 0"></div>
     <button id="reviveBtn" class="btnAlt" style="display:none;background:linear-gradient(135deg,#FF6FA5,#FF1493)">💖 한 번 더!</button>
+    <button id="adBoostBtn" class="btnAlt" style="background:linear-gradient(135deg,#7B68EE,#4B0082)">📺 광고 보고 10라운드부터 재시작</button>
     <button id="shareBtn" class="btnAlt">📤 점수 자랑하기</button>
     <button id="restartBtn" class="btn">다시 도전! 🔄</button>
   </div>
@@ -254,15 +283,15 @@
     <div class="setRow">🎵 배경음악 <button id="tgBgm" class="tg">ON</button></div>
     <div class="setRow">🔊 효과음 <button id="tgSfx" class="tg">ON</button></div>
     <div class="setRow">📳 진동 <button id="tgVibe" class="tg">ON</button></div>
-    <div style="margin-top:14px;font-size:13px;color:#bbb;font-weight:bold">🎬 크리에이터 (트레일러 소재)</div>
-    <div style="font-size:11px;color:#999;margin:2px 0 8px">📸 스크린샷=P · 🎬 녹화=R</div>
-    <button id="shotBtn" class="btnAlt">📸 스크린샷 저장</button>
-    <button id="recBtn" class="btnAlt">🎬 녹화 시작</button>
     <button id="settingsCloseBtn" class="btn">닫기 ✖</button>
   </div>
 
-  <!-- 🔴 녹화 표시 -->
-  <div id="recDot" style="display:none;position:absolute;top:calc(12px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);background:rgba(200,0,0,0.85);color:#fff;font-weight:bold;font-size:13px;padding:4px 12px;border-radius:14px;z-index:30;">🔴 REC</div>
+  <!-- 📺 모의 광고 레이어 (앱인토스 광고 SDK 자리표시) -->
+  <div id="adOverlay" style="display:none;position:absolute;inset:0;background:rgba(0,0,0,0.82);z-index:40;flex-direction:column;align-items:center;justify-content:center;color:#fff;text-align:center">
+    <div style="font-size:22px;font-weight:bold">📺 광고 (모의)</div>
+    <div style="font-size:14px;color:#ccc;margin-top:8px">3초 후 보상이 지급됩니다</div>
+    <div id="adCountdown" style="font-size:56px;font-weight:bold;color:#FFD700;margin-top:14px">3</div>
+  </div>
 
   <!-- ⏸️ 일시정지 -->
   <div id="pauseScreen" class="overlay" style="display:none">
@@ -270,6 +299,14 @@
     <div class="info">잠깐 쉬어가요!</div>
     <button id="resumeBtn" class="btn">▶️ 계속하기</button>
     <button id="pauseQuitBtn" class="btnAlt">🏠 처음으로</button>
+  </div>
+
+  <!-- ❓ 확인 모달 (네이티브 confirm() 대체 — 인앱 웹뷰 호환) -->
+  <div id="confirmScreen" class="overlay" style="display:none">
+    <h1>❓ 확인</h1>
+    <div class="info" id="confirmMsg"></div>
+    <button id="confirmYesBtn" class="btn">확인</button>
+    <button id="confirmNoBtn" class="btnAlt">취소</button>
   </div>
 </div>
 
@@ -365,9 +402,18 @@ let particles = [];
 let round = 1;
 let roundGoalLen = 7;
 let paused = false;
+let settingsPausedGame = false;   // ⚙️ 설정 열면서 게임을 자동 정지시켰는지
 let roundApplesGoal = 3;   // 이번 라운드 먹어야 할 사과 수
 // 라운드별 난이도 파라미터
 let rdSpeed = 130, rdDrain = 0.9, rdRefill = 3.0, rdRotBase = 12, rdBeeSpeed = 60;
+
+// 🎚️ 난이도 선택 (easy = 쉬움 / hard = 어려움)
+let difficulty = localStorage.getItem('snakeDifficulty') || 'easy';
+const DIFF = {
+  easy: { label: '🌱 쉬움', speed: 0.78, drain: 0.65, refill: 1.3, rot: 1.5, beeSpeed: 0.7, bee: 0.4, rock: 0.45, apple: 0.5, startTime: 1.5 },
+  hard: { label: '🔥 어려움', speed: 1.0, drain: 1.0, refill: 1.0, rot: 1.0, beeSpeed: 1.0, bee: 1.0, rock: 1.0, apple: 1.0, startTime: 0.0 },
+};
+function dcfg() { return DIFF[difficulty] || DIFF.easy; }
 let running = false, dead = false;
 let applesEaten = 0;
 let score = 0;            // 💯 누적 점수 (라운드 넘어가도 계속 쌓임)
@@ -396,7 +442,7 @@ const PRAISE = { 2:'좋아! 👍', 3:'멋져! 🌟', 4:'대단해! 💯', 5:'끝
 let coins = 0;
 try { coins = parseInt(localStorage.getItem('snake_coins') || '0') || 0; } catch(e) {}
 function saveCoins() { try { localStorage.setItem('snake_coins', coins); } catch(e) {} updateCoinUI(); }
-function addCoins(n) { coins += n; updateCoinUI(); }  // 표시만, 저장은 안전한 시점에
+function addCoins(n) { coins += n; saveCoins(); }  // 💾 즉시 저장(광고·강제종료 시 유실 방지) — saveCoins가 updateCoinUI까지 호출
 function updateCoinUI() {
   const a = document.getElementById('coinVal'); if (a) a.textContent = coins;
   const b = document.getElementById('coinValStart'); if (b) b.textContent = coins;
@@ -644,6 +690,12 @@ function refreshSettingsUI() {
 updateMuteUI();
 document.getElementById('muteBtn').addEventListener('click', function(e) {
   e.preventDefault(); e.stopPropagation();
+  // 게임 진행 중이면 자동 일시정지 → 설정 조작하는 동안 뱀이 메뉴 뒤에서 죽지 않게
+  if (running && !dead && !paused && countdownT <= 0) {
+    paused = true;
+    stopBGM();
+    settingsPausedGame = true;
+  }
   refreshSettingsUI();
   document.getElementById('settingsScreen').style.display = 'flex';
 });
@@ -727,19 +779,20 @@ function getPointAtDist(d) {
 // 🎯 라운드별 난이도 계산
 //=========================================
 function roundGoalLength(R) { return Math.min(60, 20 + (R - 1) * 2); } // 목표 길이 (1R=20칸 시작)
-function roundStartTime(R) { return Math.max(5.5, 9 - R * 0.03); }    // 시작 시간(초)
+function roundStartTime(R) { return Math.min(9.8, Math.max(5.5, 9 - R * 0.03) + dcfg().startTime); }    // 시작 시간(초) + 난이도 보너스
 function roundRockCount(R) { return Math.min(9, 2 + Math.floor(R / 5)); } // 바위 수 (1R부터 2개, 5R마다 +1, 최대 9개)
-function roundBeeCount(R) { return R < 8 ? 0 : Math.min(5, Math.floor((R - 8) / 10) + 1); }
+function roundBeeCount(R) { const base = R < 8 ? 0 : Math.min(5, Math.floor((R - 8) / 10) + 1); return Math.round(base * dcfg().bee); }
 
 // 🐍 속도 규칙: 항상 140 고정 (파워뱀일 때만 1.2배는 이동 계산에서 적용)
 const SPEED_BASE = 140;
 function computeSpeed() { return SPEED_BASE; }
 function applyRoundDifficulty(R) {
-  rdSpeed = Math.min(300, 150 + R * 2);          // 라운드당 +2 (R1=152, 천천히 시작)
-  rdDrain = Math.min(2.0, 0.85 + R * 0.012);     // 시간 감소
-  rdRefill = Math.max(1.3, 3.0 - R * 0.018);     // 회복량
-  rdRotBase = Math.max(4, 12 - R * 0.09);        // 사과 썩는 시간
-  rdBeeSpeed = 55 + R * 1.5;                     // 벌 속도
+  const d = dcfg();
+  rdSpeed = Math.min(300, 150 + R * 2) * d.speed;          // 라운드당 +2 (R1=152, 천천히 시작) × 난이도
+  rdDrain = Math.min(2.0, 0.85 + R * 0.012) * d.drain;     // 시간 감소 × 난이도
+  rdRefill = Math.max(1.3, 3.0 - R * 0.018) * d.refill;    // 회복량 × 난이도
+  rdRotBase = Math.max(4, 12 - R * 0.09) * d.rot;          // 사과 썩는 시간 × 난이도
+  rdBeeSpeed = (55 + R * 1.5) * d.beeSpeed;                // 벌 속도 × 난이도
 }
 
 function startRound(R, startLen) {
@@ -835,9 +888,10 @@ function spawnApple() {
   apples.push({ x: pos.x, y: pos.y, type: type, t: 0, rotTime: rotTime });
 }
 
-// 목표 사과 개수 (3배! 화면 가득)
+// 목표 사과 개수 (3배! 화면 가득) - 난이도별로 조절
 function targetAppleCount() {
-  return Math.min(48, 32 + Math.floor(snakeLen / 6));
+  const base = Math.min(48, 32 + Math.floor(snakeLen / 6));
+  return Math.max(6, Math.round(base * dcfg().apple));
 }
 function ensureApples() {
   let guard = 0;
@@ -995,7 +1049,7 @@ let placedGates = [];   // 🏯 마당에 정착한 광화문들 (배경 장식)
 const POWER_NEED = 5;    // 사과 5개 먹으면 파워 충전
 const POWER_DUR = 5.5;   // 파워 지속(초)
 function rocksGoalForRound(R) { return Math.min(24, Math.round(6 + R * 1.5)); }   // 건설 목표(1R=8 → 초반도 충분히 길게)
-function targetRockCount(R) { return Math.min(32, Math.round((18 + R * 1.5) * 0.8)); } // 판에 깔린 돌 수 (이전의 80%)
+function targetRockCount(R) { return Math.min(32, Math.round((18 + R * 1.5) * 0.8 * dcfg().rock)); } // 판에 깔린 돌 수 × 난이도
 // 🔥 연속 먹기 콤보 (중독성 핵심)
 let eatCombo = 0;        // 연속으로 먹은 사과 수
 let eatComboT = 0;       // 콤보 유지 남은 시간(초)
@@ -1377,19 +1431,6 @@ function gateFlyPos() {
     sc = 1.15 - ease * 0.65;          // 점점 작아져 착지 크기(0.5)
   }
   return { x: x, y: y, scale: sc };
-}
-
-function openDoor() {
-  doorPhase = true;
-  // 머리에서 적당히 떨어진, 뱀과 겹치지 않는 곳에 문 배치
-  let pos, tries = 0;
-  do { pos = randInField(48); tries++; }
-  while ((Math.hypot(pos.x - headX, pos.y - headY) < 140 || !farFromSnake(pos.x, pos.y, 50)) && tries < 50);
-  door = { x: pos.x, y: pos.y, r: 28, t: 0 };
-  // 돌이 다 모여 광화문 완성 → 비우기(다음 라운드까지 깔끔)
-  obstacles = [];
-  sfxDoorOpen();
-  showCombo('🏯 광화문 완성! +' + lastRoundBonus + '점 · 들어가세요!');
 }
 
 function openDoor() {
@@ -2240,12 +2281,14 @@ function gameOver() {
     document.getElementById('bestVal').textContent = best;
     setTimeout(sfxNewBest, 300);
   } else setTimeout(sfxGameOver, 300);
-  // 💖 부활 버튼 (코인 충분 + 이번 판 미사용)
+  // 💖 부활 버튼 (이번 판 미사용이면 노출 — 코인 부족 시 📺 광고 부활로 분기)
   const reviveBtn = document.getElementById('reviveBtn');
   if (reviveBtn) {
-    if (!revivedThisRun && coins >= REVIVE_COST && finalRound >= 1) {
+    if (!revivedThisRun && finalRound >= 1) {
       reviveBtn.style.display = 'inline-block';
-      reviveBtn.textContent = '💖 한 번 더! (코인 ' + REVIVE_COST + ')';
+      reviveBtn.textContent = (coins >= REVIVE_COST)
+        ? '💖 한 번 더! (코인 ' + REVIVE_COST + ')'
+        : '📺 광고 보고 부활!';
     } else reviveBtn.style.display = 'none';
   }
   // 새 업적 알림
@@ -2304,9 +2347,22 @@ function togglePause() { if (paused) resumeGame(); else pauseGame(); }
 function quitToStart() {
   paused = false; running = false; dead = false;
   stopBGM();
+  clearAdTrialSkin();   // 📺 체험 스킨 원복
   document.getElementById('pauseScreen').style.display = 'none';
   document.getElementById('pauseBtn').style.display = 'none';
   document.getElementById('startScreen').style.display = 'flex';
+  renderStartTopRankings(); updateCoinUI();
+}
+// 🔄 게임오버/클리어 후 "다시 도전" → 시작화면(난이도 다시 선택)으로 복귀
+function backToStartFromResult() {
+  paused = false; running = false; dead = false;
+  stopBGM();
+  clearAdTrialSkin();   // 📺 체험 스킨 원복 (게임오버 후 홈 복귀)
+  document.getElementById('gameOver').style.display = 'none';
+  document.getElementById('gameClear').style.display = 'none';
+  document.getElementById('pauseBtn').style.display = 'none';
+  document.getElementById('startScreen').style.display = 'flex';
+  if (typeof renderDiffSelect === 'function') renderDiffSelect();
   renderStartTopRankings(); updateCoinUI();
 }
 // 📱 앱이 뒤로 가면 자동 일시정지
@@ -2314,53 +2370,52 @@ document.addEventListener('visibilitychange', function() {
   if (document.hidden && running && !dead && !paused) pauseGame();
 });
 
-// 📸🎬 크리에이터: 스크린샷 / 녹화 (트레일러·홍보 소재용)
-let captureN = 1;
-let mediaRec = null, recChunks = [], recording = false;
-function downloadBlobURL(url, filename) {
-  const a = document.createElement('a');
-  a.href = url; a.download = filename;
-  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+//=========================================
+// 📺 보상형 광고 (모의) — 앱인토스 Phase 1 자리표시
+//=========================================
+/* TODO: 앱인토스 광고 SDK로 교체 — 이 함수 본문만 SDK 호출(광고 표시→완료 시 onReward)로 바꾸면 됨 */
+let adShowing = false;
+let adTrialSkin = null;   // 📺 광고 체험 스킨 { id, prev } — 저장 안 함, 판 종료 시 원복
+function showRewardAd(onReward) {
+  if (adShowing) return;
+  adShowing = true;
+  const wasBgm = bgmPlaying;
+  stopBGM();
+  const ov = document.getElementById('adOverlay');
+  const cd = document.getElementById('adCountdown');
+  let remain = 3;
+  if (cd) cd.textContent = remain;
+  if (ov) ov.style.display = 'flex';
+  const timer = setInterval(function() {
+    remain--;
+    if (remain > 0) { if (cd) cd.textContent = remain; return; }
+    clearInterval(timer);
+    if (ov) ov.style.display = 'none';
+    adShowing = false;
+    lastT = performance.now();      // dt 점프 방지 (resumeGame 패턴)
+    if (wasBgm) startBGM();
+    if (typeof onReward === 'function') onReward();
+  }, 1000);
 }
-function captureScreenshot() {
-  try {
-    const url = canvas.toDataURL('image/png');
-    downloadBlobURL(url, 'cutesnake_shot_' + (captureN++) + '.png');
-    flashT = 0.16; tone(1200, 0.06, 'square', 0.12);   // 찰칵 느낌
-  } catch(e) { alert('스크린샷 실패: ' + e.message); }
-}
-function toggleRecord() {
-  if (recording) { stopRecord(); return; }
-  try {
-    const stream = canvas.captureStream(60);
-    const mime = (window.MediaRecorder && MediaRecorder.isTypeSupported('video/webm;codecs=vp9'))
-      ? 'video/webm;codecs=vp9' : 'video/webm';
-    mediaRec = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 8000000 });
-    recChunks = [];
-    mediaRec.ondataavailable = function(e) { if (e.data && e.data.size) recChunks.push(e.data); };
-    mediaRec.onstop = function() {
-      const blob = new Blob(recChunks, { type: 'video/webm' });
-      const url = URL.createObjectURL(blob);
-      downloadBlobURL(url, 'cutesnake_clip_' + (captureN++) + '.webm');
-      setTimeout(function(){ URL.revokeObjectURL(url); }, 3000);
-    };
-    mediaRec.start();
-    recording = true; updateRecUI();
-  } catch(e) { alert('녹화 실패: ' + e.message); }
-}
-function stopRecord() {
-  if (mediaRec && recording) { try { mediaRec.stop(); } catch(e) {} }
-  recording = false; updateRecUI();
-}
-function updateRecUI() {
-  const b = document.getElementById('recBtn'); if (b) b.textContent = recording ? '⏹️ 녹화 정지 (저장)' : '🎬 녹화 시작';
-  const d = document.getElementById('recDot'); if (d) d.style.display = recording ? 'block' : 'none';
+// 📺 체험 스킨 원복 (게임오버 후 새 판/홈 복귀 시)
+function clearAdTrialSkin() {
+  if (!adTrialSkin) return;
+  selectedSkin = isUnlocked(adTrialSkin.prev) ? adTrialSkin.prev : 'green';
+  document.querySelectorAll('.skinOption').forEach(o => o.classList.toggle('selected', o.dataset.skin === selectedSkin));
+  adTrialSkin = null;
 }
 
-// 💖 부활: 코인 쓰고 그 자리에서 계속
+// 💖 부활: 코인 쓰고(부족하면 📺 광고 보고) 그 자리에서 계속
 function revive() {
-  if (revivedThisRun || coins < REVIVE_COST || !dead) return;
-  coins -= REVIVE_COST; saveCoins();
+  if (revivedThisRun || !dead) return;
+  if (coins >= REVIVE_COST) {
+    coins -= REVIVE_COST; saveCoins();
+    doRevive();
+  } else {
+    showRewardAd(doRevive);   // 💰 부족 → 광고 시청 후 무료 부활
+  }
+}
+function doRevive() {   // 실제 부활 처리 (코인/광고 공통)
   revivedThisRun = true;
   dead = false; running = true; paused = false;
   // 머리를 벽 안쪽으로 살짝 들여놓고 주변 위험 제거
@@ -2519,6 +2574,16 @@ function selectSkin(id) {
     } else {
       tone(200, 0.15, 'sawtooth', 0.2, 100); // 부족 소리
       const cb = document.getElementById('coinValStart'); if (cb) { cb.style.color = '#FF5252'; setTimeout(()=>cb.style.color='', 400); }
+      // 📺 코인 부족 → 광고 보고 이번 판만 체험 장착 (저장 안 함, 판 종료 시 원복)
+      showConfirm('코인이 부족해요! 📺 광고 보고 이번 판만 장착해볼까요?', function() {
+        showRewardAd(function() {
+          adTrialSkin = { id: id, prev: selectedSkin };
+          selectedSkin = id;   // localStorage 저장 안 함 — 임시 장착
+          document.querySelectorAll('.skinOption').forEach(o => o.classList.toggle('selected', o.dataset.skin === id));
+          tone(880, 0.08, 'square', 0.12);
+          if (typeof showCombo === 'function') showCombo('📺 체험 장착! 이번 판만 사용');
+        });
+      });
       return;
     }
   }
@@ -2558,6 +2623,19 @@ function bindBtn(id, fn) {
   b.addEventListener('click', function(e){ e.preventDefault(); fn(); });
   b.addEventListener('touchstart', function(e){ e.preventDefault(); fn(); }, {passive:false});
 }
+// ❓ 확인 모달 (네이티브 confirm() 대체 — 인앱 웹뷰에서 alert/confirm이 막히거나 깨지는 경우 대비)
+let _confirmYesCb = null;
+function showConfirm(msg, onYes) {
+  document.getElementById('confirmMsg').textContent = msg;
+  _confirmYesCb = onYes;
+  document.getElementById('confirmScreen').style.display = 'flex';
+}
+function hideConfirm() {
+  document.getElementById('confirmScreen').style.display = 'none';
+  _confirmYesCb = null;
+}
+bindBtn('confirmYesBtn', function(){ const cb = _confirmYesCb; hideConfirm(); if (cb) cb(); });
+bindBtn('confirmNoBtn', hideConfirm);
 // 시작 버튼: 첫 플레이면 튜토리얼 먼저
 function onStartPressed() {
   let done = false;
@@ -2569,9 +2647,28 @@ function onStartPressed() {
   }
 }
 bindBtn('startBtn', onStartPressed);
-bindBtn('restartBtn', startGame);
+
+// 🎚️ 난이도 선택 토글
+function renderDiffSelect() {
+  document.querySelectorAll('#diffSelect .diffBtn').forEach(function(b) {
+    b.classList.toggle('selected', b.getAttribute('data-diff') === difficulty);
+  });
+}
+document.querySelectorAll('#diffSelect .diffBtn').forEach(function(b) {
+  const pick = function() {
+    difficulty = b.getAttribute('data-diff');
+    try { localStorage.setItem('snakeDifficulty', difficulty); } catch(e) {}
+    renderDiffSelect();
+    try { tone(700, 0.08, 'sine', 0.15); } catch(e) {}
+  };
+  b.addEventListener('click', pick);
+  b.addEventListener('touchstart', function(e){ e.preventDefault(); pick(); }, {passive:false});
+});
+renderDiffSelect();
+
+bindBtn('restartBtn', backToStartFromResult);
 bindBtn('saveNameBtn', saveAndContinue);
-bindBtn('clearRestartBtn', startGame);
+bindBtn('clearRestartBtn', backToStartFromResult);
 bindBtn('howToBtn', function() { document.getElementById('tutorial').style.display = 'flex'; });
 bindBtn('tutorialOkBtn', function() {
   try { localStorage.setItem('snake_tutorial_done', '1'); } catch(e) {}
@@ -2580,6 +2677,14 @@ bindBtn('tutorialOkBtn', function() {
 });
 bindBtn('shareBtn', shareScore);
 bindBtn('reviveBtn', revive);
+// 📺 광고 보고 10라운드 부스트 재시작 (기존 startGame/startRound 재활용)
+bindBtn('adBoostBtn', function() {
+  showRewardAd(function() {
+    clearAdTrialSkin();   // 새 판 시작 → 체험 스킨 원복
+    startGame();          // reset → 1라운드 세팅 + 오버레이 정리
+    startRound(10);       // 곧바로 10라운드로 덮어쓰기
+  });
+});
 bindBtn('achBtn', function() { renderAchList(); document.getElementById('achScreen').style.display = 'flex'; });
 bindBtn('achCloseBtn', function() { document.getElementById('achScreen').style.display = 'none'; });
 // ⏸️ 일시정지
@@ -2590,6 +2695,14 @@ bindBtn('pauseQuitBtn', quitToStart);
 bindBtn('settingsCloseBtn', function() {
   document.getElementById('settingsScreen').style.display = 'none';
   updateMuteUI();
+  // 설정 때문에 자동 정지된 게임이면 3·2·1 없이 짧은 카운트다운으로 재개
+  if (settingsPausedGame) {
+    settingsPausedGame = false;
+    paused = false;
+    lastT = performance.now();            // dt 점프 방지
+    countdownT = 1.2; lastCountInt = -1;   // 재개 시 짧은 카운트
+    startBGM();
+  }
 });
 bindBtn('tgBgm', function() {
   bgmOn = !bgmOn; saveAudioPrefs(); refreshSettingsUI(); updateMuteUI();
@@ -2597,15 +2710,6 @@ bindBtn('tgBgm', function() {
 });
 bindBtn('tgSfx', function() { sfxOn = !sfxOn; saveAudioPrefs(); refreshSettingsUI(); updateMuteUI(); if (sfxOn) tone(800,0.1,'sine',0.15); });
 bindBtn('tgVibe', function() { vibeOn = !vibeOn; saveAudioPrefs(); refreshSettingsUI(); if (vibeOn) haptic(30); });
-// 📸🎬 크리에이터
-bindBtn('shotBtn', captureScreenshot);
-bindBtn('recBtn', toggleRecord);
-// 키보드 단축키: P=스크린샷, R=녹화 토글
-window.addEventListener('keydown', function(e) {
-  const k = e.key.toLowerCase();
-  if (k === 'p') { e.preventDefault(); captureScreenshot(); }
-  else if (k === 'r') { e.preventDefault(); toggleRecord(); }
-});
 bindBtn('dailyOkBtn', function() {
   document.getElementById('dailyReward').style.display = 'none';
   tone(523,0.1,'square',0.2); tone(784,0.12,'square',0.2,784,0.06); tone(1318,0.2,'square',0.2,1318,0.12);
