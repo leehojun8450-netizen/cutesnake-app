@@ -1273,7 +1273,7 @@ function update(dt) {
     }
   }
   ensureApples();   // 🍎 사과 항상 채움
-  ensureRocks();    // 🪨 바위 항상 채움
+  if (roundMode === 'rock') ensureRocks();   // 🪨 바위 항상 채움 (1R 사과 라운드엔 돌 없음)
 
   // 방향 전환 적용
   if (pendingDir) { dirX = pendingDir.x; dirY = pendingDir.y; pendingDir = null; sfxTurn(); }
