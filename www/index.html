@@ -902,7 +902,9 @@ function startRound(R, startLen) {
   const initN = Math.ceil((snakeLen + 4) * SEG_SPACING / 4) + 6;
   for (let i = 0; i < initN; i++) path.push({ x: headX - i * 4, y: headY });
   speed = computeSpeed();   // 시작부터 동일한 규칙 적용(첫 사과에 갑자기 안 빨라짐)
-  maxTime = 10;
+  // ⏱️ 시간 상한. 시작 시간(약 9.8초)보다 넉넉히 크게 둬야 사과의 시간 회복이 '실제로' 보인다.
+  //    예전엔 10이라 9.8에서 시작 → 회복량이 전부 상한에 깎여 초록·황금 사과 효과가 없는 것처럼 보였다.
+  maxTime = 14;
   timeLeft = roundStartTime(R);
   // 🎁 1라운드 시작 시 출석 보너스 적용
   if (R === 1 && pendingBonus > 0) {
@@ -2352,6 +2354,11 @@ function render() {
       ? '🍎 ' + curShop().name + ' 짓기 ' + roundApples + '/' + roundApplesGoal + ' (사과 먹기)'
       : '⚡ 파워 충전 ' + powerGauge + '/' + powerNeed() + ' (사과 먹기)';
     let bg = 'rgba(0,0,0,0.55)';
+    // 🔵 파랑 사과 슬로우가 걸려 있으면 그걸 우선 알려준다 (효과가 걸린 줄 모르는 문제 보완)
+    if (speedBoostT > 0) {
+      txt = '🔵 천천히! ' + speedBoostT.toFixed(1) + '초';
+      bg = 'rgba(21,101,192,0.75)';
+    }
     ctx.font = 'bold 18px sans-serif'; ctx.textAlign = 'center';
     const tw = ctx.measureText(txt).width + 24;
     const py = H - 44 - safeIn.bottom;
