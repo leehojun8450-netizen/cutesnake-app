@@ -1627,14 +1627,9 @@ function enterDoor() {
   for (let i = 0; i < 30; i++) particles.push({ x: door.x, y: door.y, vx:(Math.random()-0.5)*9, vy:-Math.random()*6-1, life:30, max:30, color: i%2?'#FFD700':'#8BC34A', size:Math.random()*3+2 });
   sfxTeleport();
   haptic([30, 40]);
-  // 🏪 들어간 가게는 마당 가장자리로 옮겨져 '내 마을'로 남는다
-  //    (가운데는 다음 라운드에 새로 지을 가게 자리라 비워야 한다)
-  const slotN = placedGates.length;
-  placedGates.push({
-    x: field.x + 50 + (slotN % 4) * ((field.w - 100) / 3),
-    y: field.y + 44 + Math.floor(slotN / 4) * 60,
-    scale: 0.5, shop: curShop()
-  });
+  // 🏪 들어간 가게는 위쪽에 '내 마을'로 남는다. 좌표는 저장하지 않고 그릴 때 다시 배치한다
+  //    (개수가 늘어도 항상 정돈되게 — drawTown 참조)
+  placedGates.push({ shop: curShop() });
   doorPhase = false; gateReady = false; door = null;
   startRound(nextR, carry);
   startBGM();   // 🎵 다음 라운드 음악
@@ -2154,8 +2149,34 @@ function drawDoor() {
   ctx.textAlign = 'left';
 }
 
-// 🏯 완성된 광화문 — 중심(cx,cy), 크기 scale, (noGlow: 정착한 건 후광 생략)
-// 🏯 가벼운 광화문 (마당에 쌓인 장식용 — 그라데이션 없이 단순 도형, 성능↑)
+// 🏘️ 내 마을 — 지은 가게들을 판 맨 위에 작게 한 줄로 정돈해 늘어놓는다.
+//     좌표를 저장하지 않고 매번 다시 배치하므로 개수가 늘어도 겹치거나 벽을 뚫지 않는다.
+const TOWN_MAX_SHOWN = 6;    // 이보다 많으면 최근 것만 보여주고 "+N"으로 표기
+const TOWN_SCALE = 0.28;
+function drawTown() {
+  const n = placedGates.length;
+  if (!n) return;
+  const shown = Math.min(n, TOWN_MAX_SHOWN);
+  const y = field.y + 32;                       // 벽 안쪽으로 충분히 내려서 안 잘리게
+  const usable = field.w - 40;
+  const step = usable / shown;
+  const startX = field.x + 20 + step / 2;
+  // 최근에 지은 것부터 보여준다
+  for (let i = 0; i < shown; i++) {
+    const pg = placedGates[n - shown + i];
+    drawMiniGate(startX + i * step, y, TOWN_SCALE, pg.shop);
+  }
+  if (n > shown) {   // 나머지는 개수로만 표시 (화면이 집으로 뒤덮이지 않게)
+    ctx.save();
+    ctx.font = 'bold 12px sans-serif'; ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+    ctx.strokeStyle = 'rgba(0,0,0,0.5)'; ctx.lineWidth = 3;
+    const t = '🏘️ +' + (n - shown);
+    ctx.strokeText(t, field.x + field.w - 12, y);
+    ctx.fillStyle = '#fff'; ctx.fillText(t, field.x + field.w - 12, y);
+    ctx.restore();
+  }
+}
+// 🏪 가벼운 가게 (마을 장식용 — 그라데이션 없이 단순 도형, 성능↑)
 function drawMiniGate(cx, cy, scale, shop) {
   shop = shop || SHOPS[0];
   ctx.save();
@@ -2273,8 +2294,7 @@ function render() {
   const vL = cam.x - 40, vR = cam.x + W + 40, vT = cam.y - 40, vB = cam.y + H + 40;
   function vis(x, y, m) { m = m || 40; return x > vL - m && x < vR + m && y > vT - m && y < vB + m; }
   for (const tn of tunnels) { drawTunnel(tn.a, tn); drawTunnel(tn.b, tn); }
-  // 🏯 마당에 정착한 광화문들 (가벼운 장식 — 성능)
-  for (const pg of placedGates) if (vis(pg.x, pg.y, 70)) drawMiniGate(pg.x, pg.y, pg.scale, pg.shop);
+  drawTown();   // 🏘️ 위쪽에 정돈해 늘어놓은 '내 마을'
   if (!gateFly && !gateReady) drawGateConstruction();   // 🏯 지어지는 광화문 (완성 전)
   // 🚪 들어갈 광화문 강조 (완성·정착 후, 게임 진행 중)
   if (gateReady && door) {
