@@ -162,7 +162,7 @@
       <div id="scoreBig">⭐ 점수<br><span id="scoreVal">0</span></div>
       <div id="bestBox">🏆 BEST<br><span id="bestVal">0</span></div>
     </div>
-    <div id="subRow">🏁 <b><span id="roundVal">1</span></b>R · 🏯 <b><span id="buildVal">0</span>/<span id="buildGoalVal">8</span></b> · 🐍 <b><span id="lenVal">4</span></b> · ⚡ <span id="powerVal">0/5</span> · 💰 <span id="coinVal">0</span></div>
+    <div id="subRow">🏁 <b><span id="roundVal">1</span></b>R · <span id="buildIcon">🍎</span> <b><span id="buildVal">0</span>/<span id="buildGoalVal">6</span></b> · 🐍 <b><span id="lenVal">4</span></b> · <span id="powerWrap">⚡ <span id="powerVal">0/5</span> · </span>💰 <span id="coinVal">0</span></div>
   </div>
   <div id="scorePop"></div>
   <div id="miniRank"></div>
@@ -271,13 +271,13 @@
 
   <!-- 📖 튜토리얼 (첫 1회) -->
   <div id="tutorial" class="overlay" style="display:none">
-    <h1>🐍 게임 방법 🏯</h1>
+    <h1>🐍 게임 방법 🏪</h1>
     <div class="info" style="font-size:15px; line-height:2.0">
-      🎯 <b>목표: 돌을 깨서 광화문을 짓자!</b><br>
-      ① 🍎 <b>사과 먹기</b> → ⚡ <b>파워 충전</b> (5개)<br>
-      ② ⚡ 파워일 때 🪨 <b>돌에 부딪혀 부수기</b><br>
-      ③ 🧱 깬 돌이 쌓여 <b>🏯 광화문 완성!</b> → 문으로 다음 라운드<br>
-      ④ 📱 <b>가고 싶은 쪽을 누르거나 끌기</b> / ⌨️ PC는 방향키<br>
+      🎯 <b>목표: 가게를 지어 내 마을을 키우자!</b><br>
+      ① 📱 <b>가고 싶은 쪽을 누르거나 끌기</b> / ⌨️ PC는 방향키<br>
+      ② 🍎 <b>1라운드: 사과 6개</b> 먹으면 첫 가게 완성!<br>
+      ③ 🪨 <b>2라운드부터</b>: 사과로 ⚡파워 충전 → 돌 부수기 → 가게 건설<br>
+      ④ 🏪 완성된 가게 <b>문으로 들어가면 다음 라운드</b> (가게는 마당에 남아요)<br>
       ⑤ ⏱️ 시간 다 되면 끝! · ⚠️ 벽·자기 꼬리·파워 없을 때 돌은 위험!
     </div>
     <button id="tutorialOkBtn" class="btn">알겠어요! 🐍</button>
@@ -488,15 +488,15 @@ const ACHIEVEMENTS = [
   // 🌱 첫판부터 달성 가능한 '빠른 성취' 3종 — 신규 유저가 첫 세션에 업적을 하나도 못 따는 문제 보완
   { id:'apple1',   icon:'🍏', name:'첫 사과',      desc:'사과 1개 먹기',   reward:15,  check:()=>stats.apples>=1 },
   { id:'rock1',    icon:'🪨', name:'첫 돌 파괴',   desc:'돌 1개 부수기',   reward:20,  check:()=>stats.rocks>=1 },
-  { id:'gate1',    icon:'🏯', name:'첫 광화문',    desc:'광화문 1개 완성', reward:40,  check:()=>stats.gates>=1 },
+  { id:'gate1',    icon:'🏪', name:'첫 가게',      desc:'가게 1개 완성',   reward:40,  check:()=>stats.gates>=1 },
   { id:'combo4',   icon:'✨', name:'콤보 입문',    desc:'4연속 콤보',      reward:25,  check:()=>stats.bestCombo>=4 },
   { id:'apple50',  icon:'🍎', name:'사과 사냥꾼',  desc:'사과 50개 먹기',  reward:50,  check:()=>stats.apples>=50 },
   { id:'apple300', icon:'🍏', name:'사과 대장',    desc:'사과 300개 먹기', reward:150, check:()=>stats.apples>=300 },
   { id:'combo8',   icon:'🔥', name:'콤보 마스터',  desc:'8연속 콤보',      reward:80,  check:()=>stats.bestCombo>=8 },
-  { id:'round5',   icon:'🏯', name:'광화문 건축가', desc:'5라운드 도달',    reward:100, check:()=>stats.bestRound>=5 },
+  { id:'round5',   icon:'🏘️', name:'마을 건축가',  desc:'5라운드 도달',    reward:100, check:()=>stats.bestRound>=5 },
   { id:'round15',  icon:'👑', name:'궁궐의 주인',  desc:'15라운드 도달',   reward:300, check:()=>stats.bestRound>=15 },
   { id:'rock100',  icon:'💥', name:'돌 파괴자',    desc:'돌 100개 부수기', reward:120, check:()=>stats.rocks>=100 },
-  { id:'gate10',   icon:'🎉', name:'광화문 10채',  desc:'광화문 10개 완성', reward:200, check:()=>stats.gates>=10 }
+  { id:'gate10',   icon:'🎉', name:'번화가 사장님', desc:'가게 10개 완성',  reward:200, check:()=>stats.gates>=10 }
 ];
 function checkAchievements() {
   let newly = [];
@@ -511,7 +511,7 @@ function checkAchievements() {
 const MISSIONS = [
   { key:'apple', icon:'🍎', label:'사과 5개 먹기',   goal:5, reward:15 },
   { key:'rock',  icon:'🪨', label:'돌 2개 부수기',   goal:2, reward:25 },
-  { key:'gate',  icon:'🏯', label:'광화문 1개 완성', goal:1, reward:40 }
+  { key:'gate',  icon:'🏪', label:'가게 1개 완성',   goal:1, reward:40 }
 ];
 let missionState = { date:'', progress:{}, claimed:{} };
 function loadMissions() {
@@ -918,7 +918,10 @@ function startRound(R, startLen) {
   eatCombo = 0; eatComboT = 0;                // 🔥 콤보 초기화
   doorPhase = false; door = null; gateReady = false;   // 🚪 문 초기화
   themeIndex = (R - 1) % THEMES.length;       // 🎨 라운드별 판 테마
-  // 🏯 광화문 건설 목표 + 짓는 자리(상단 중앙 고정)
+  // 🏪 가게 건설 목표 + 짓는 자리(상단 중앙 고정)
+  roundMode = roundModeFor(R);
+  roundApples = 0;
+  roundApplesGoal = applesGoalForRound(R);
   rocksGoal = rocksGoalForRound(R);
   rocksBuilt = 0; powerGauge = 0;
   flyingStones = []; gateFly = false; gateFlyT = 0;
@@ -928,8 +931,8 @@ function startRound(R, startLen) {
   if (R === 1 && boostRun.power) powerT = POWER_DUR;   // 🛒 부스터: 파워 달고 시작
   // 돌 배치(많이) + 벌
   snapCam();   // 🎥 카메라를 뱀 중앙으로
-  ensureRocks();
-  const beeN = roundBeeCount(R);
+  if (roundMode === 'rock') ensureRocks();   // 🍎 1R(사과 모으기)엔 돌을 아예 깔지 않는다
+  const beeN = roundMode === 'apple' ? 0 : roundBeeCount(R);   // 1R은 벌도 없이 온전히 사과만
   for (let i = 0; i < beeN; i++) spawnBee();
   // 터널 1쌍 (라운드 3부터)
   if (R >= 3) spawnTunnel();
@@ -1106,23 +1109,38 @@ function eatApple(a, idx) {
     if (mult >= 4) flashT = 0.18;          // 번쩍
     if (mult >= 5) { slowmoT = 0.35; shake = Math.max(shake, 10); } // 슬로우모션
   }
+  // 혀 날름 + 사과 제거 (⚠️ 아래 roundClear로 빠지기 전에 반드시 먼저 처리)
+  tongueOut = 1;
+  apples.splice(idx, 1);
+  ensureApples();
+  speed = computeSpeed();   // 동일 규칙 (라운드 기본 + 길이 보너스 캡)
+  // 🍎 사과 모으기 라운드: 목표치를 채우면 가게 완성 → 다음 라운드
+  if (roundMode === 'apple') {
+    roundApples++;
+    // 사과가 벽돌처럼 가게 자리로 날아가 쌓이는 연출 (돌깨기 라운드와 같은 건설감)
+    for (let k = 0; k < 3; k++) {
+      flyingStones.push({
+        x: a.x + (Math.random()-0.5)*10, y: a.y + (Math.random()-0.5)*10,
+        tx: gateSite.x + (Math.random()-0.5)*40, ty: gateSite.y + 20 - Math.random()*30,
+        t: 0, dur: 0.45 + Math.random()*0.15
+      });
+    }
+    updateHUD();
+    if (roundApples >= roundApplesGoal) { roundClear(); return; }
+    return;
+  }
   // ⚡ 사과로 파워 게이지 충전 (고추 아니고, 파워 중이 아닐 때)
   if (a.type !== 'power' && powerT <= 0) {
     powerGauge++;
     if (powerGauge >= powerNeed()) activatePower();
   }
-  // 혀 날름
-  tongueOut = 1;
-  apples.splice(idx, 1);
-  ensureApples();
-  speed = computeSpeed();   // 동일 규칙 (라운드 기본 + 길이 보너스 캡)
   updateHUD();
 }
 // ⚡ 파워 충전 (사과를 충분히 먹거나 고추를 먹으면)
 function activatePower() {
   powerT = POWER_DUR; smashCombo = 0; powerGauge = 0;
   sfxPower(); haptic([30, 40, 30]);
-  showCombo('⚡ 파워 충전! 돌을 부숴 광화문을 지어요! 🏯');
+  showCombo('⚡ 파워 충전! 돌을 부숴 ' + curShop().name + '을 지어요! ' + curShop().icon);
   spawnParticles(headX, headY, '#FFD700', 26);
 }
 function getRefill() {
@@ -1135,8 +1153,25 @@ let lowTimePulseT = 0;
 let powerT = 0;          // ⚡ 파워 모드 남은 시간 (돌 부수기)
 let rocksSmashed = 0;    // 총 부순 돌 개수
 let smashCombo = 0;      // 파워 모드 중 연속 부수기 콤보
-// 🏯 광화문 건설 시스템: 사과→파워→돌깨기→건설→다음라운드
-let rocksGoal = 4;       // 이번 라운드 광화문 완성에 필요한 돌
+// 🏪 꼬마뱀 마을 건설 시스템: 사과→파워→돌깨기→가게 건설→다음라운드
+// 라운드마다 다른 가게를 짓는다(반복감 제거). 지은 가게는 마당에 남아 '내 마을'이 커진다.
+const SHOPS = [
+  { name:'사과가게',   icon:'🍎', wall:'#FFCDD2', roof:'#E53935', sign:'#B71C1C' },
+  { name:'아이스크림', icon:'🍦', wall:'#B3E5FC', roof:'#29B6F6', sign:'#01579B' },
+  { name:'붕어빵',     icon:'🐟', wall:'#FFE0B2', roof:'#FB8C00', sign:'#E65100' },
+  { name:'꽃집',       icon:'🌷', wall:'#F8BBD0', roof:'#EC407A', sign:'#880E4F' },
+  { name:'빵집',       icon:'🥐', wall:'#FFF3E0', roof:'#8D6E63', sign:'#4E342E' },
+  { name:'분식집',     icon:'🍜', wall:'#FFCCBC', roof:'#D84315', sign:'#BF360C' },
+  { name:'카페',       icon:'☕', wall:'#D7CCC8', roof:'#5D4037', sign:'#3E2723' },
+  { name:'문구점',     icon:'✏️', wall:'#C8E6C9', roof:'#43A047', sign:'#1B5E20' }
+];
+function shopForRound(R) { return SHOPS[(R - 1) % SHOPS.length]; }
+function curShop() { return shopForRound(round); }
+// 🎯 라운드 방식: 1R은 '사과 모으기'(돌·파워 없이 첫 가게를 확실히 완성) → 2R부터 돌깨기 건설
+function roundModeFor(R) { return R === 1 ? 'apple' : 'rock'; }
+let roundMode = 'apple';
+let roundApples = 0;     // 이번 라운드에 먹은 사과 수 (apple 모드 진행도)
+let rocksGoal = 4;       // 이번 라운드 가게 완성에 필요한 돌
 let rocksBuilt = 0;      // 이번 라운드 깬(쌓은) 돌
 let powerGauge = 0;      // 파워까지 먹은 사과 수
 let gateSite = { x: 0, y: 0 }; // 🏯 광화문 짓는 자리(고정)
@@ -1146,10 +1181,13 @@ let gateFly = false, gateFlyT = 0;
 const GATE_FLY_DUR = 2.4;
 let gateFromX = 0, gateFromY = 0, gateToX = 0, gateToY = 0;
 let placedGates = [];   // 🏯 마당에 정착한 광화문들 (배경 장식)
-function POWER_NEED_FOR(R) { return R === 1 ? 3 : 5; }  // 🎯 1라운드는 3개로 낮춰서 첫 광화문 체험 문턱을 낮춤
+function POWER_NEED_FOR(R) { return R <= 2 ? 3 : 5; }   // 🎯 첫 돌깨기 라운드(2R)는 파워도 3개로 완화
 function powerNeed() { return POWER_NEED_FOR(round); }
 const POWER_DUR = 5.5;   // 파워 지속(초)
-function rocksGoalForRound(R) { return R === 1 ? 5 : Math.min(24, Math.round(6 + R * 1.5)); }   // 🎯 1라운드는 5개로 낮춤(원래 8개) — 20판 실측 결과 파워모드까진 가도 8개를 못 채워 광화문을 아무도 못 봄
+// 🍎 1R(사과 모으기) 목표 — 첫 가게는 돌·파워 없이 사과만으로 확실히 완성시킨다
+function applesGoalForRound(R) { return 6; }
+// 🪨 2R부터 돌깨기 건설. 2R=5개로 시작해 완만히 증가(예전엔 1R부터 8개라 아무도 못 채웠음)
+function rocksGoalForRound(R) { return Math.min(24, Math.round(2 + R * 1.5)); }
 function targetRockCount(R) { return Math.min(32, Math.round((18 + R * 1.5) * 0.8 * dcfg().rock)); } // 판에 깔린 돌 수 × 난이도
 // 🔥 연속 먹기 콤보 (중독성 핵심)
 let eatCombo = 0;        // 연속으로 먹은 사과 수
@@ -1426,8 +1464,14 @@ function showCombo(text) {
 
 function updateHUD() {
   document.getElementById('roundVal').textContent = round;
-  document.getElementById('buildVal').textContent = rocksBuilt;
-  document.getElementById('buildGoalVal').textContent = rocksGoal;
+  // 🏪 진행도: 사과 라운드는 사과 수, 돌깨기 라운드는 쌓은 돌 수
+  const appleMode = roundMode === 'apple';
+  document.getElementById('buildVal').textContent = appleMode ? roundApples : rocksBuilt;
+  document.getElementById('buildGoalVal').textContent = appleMode ? roundApplesGoal : rocksGoal;
+  const bi = document.getElementById('buildIcon'); if (bi) bi.textContent = appleMode ? '🍎' : curShop().icon;
+  // ⚡ 파워 칸은 돌깨기 라운드에서만 의미가 있다
+  const pw = document.getElementById('powerWrap');
+  if (pw) pw.style.display = appleMode ? 'none' : 'inline';
   document.getElementById('powerVal').textContent = (powerT > 0 ? '파워!' : powerGauge + '/' + powerNeed());
   document.getElementById('scoreVal').textContent = score;
   const lv = document.getElementById('lenVal'); if (lv) lv.textContent = snakeLen;
@@ -1491,7 +1535,7 @@ function gateComplete() {
   stopBGM();              // 🎵 BGM 멈추고
   sfxGateComplete();      // 🎵 팡파레!
   flashT = 0.18; slowmoT = 0.4;   // ✨ 번쩍 + 슬로우모션
-  showCombo('🏯 광화문 완성! +' + lastRoundBonus + '점');
+  showCombo(curShop().icon + ' ' + curShop().name + ' 완성! +' + lastRoundBonus + '점');
   // 화려한 폭죽
   for (let i = 0; i < 55; i++) particles.push({ x: gateSite.x, y: gateSite.y, vx:(Math.random()-0.5)*13, vy:-Math.random()*10-2, life:48, max:48, color: i%3===0?'#FFD700':(i%3===1?'#FF1493':'#8BC34A'), size:Math.random()*4+2 });
 }
@@ -1513,9 +1557,9 @@ function updateGateFly(dt) {
     // 🏯 정착 → 게임 진행하며 언제든 들어갈 수 있는 입구로
     door = { x: gateToX, y: gateToY, r: 32, t: 0 };
     gateReady = true;
-    timeLeft = Math.max(timeLeft, 8);   // 광화문까지 갈 최소 시간 보장
+    timeLeft = Math.max(timeLeft, 8);   // 가게까지 갈 최소 시간 보장
     startBGM();                          // 🎵 음악 계속 (게임 진행)
-    showCombo('🏯 광화문으로 들어가세요! ⏱️');
+    showCombo(curShop().icon + ' ' + curShop().name + '으로 들어가세요! ⏱️');
   }
 }
 // 광화문 비행 경로: 솟아올랐다가 → 마당 착지 자리로 내려앉음
@@ -1545,10 +1589,10 @@ function openDoor() {
   do { pos = randInField(48); tries++; }
   while ((Math.hypot(pos.x - headX, pos.y - headY) < 140 || !farFromSnake(pos.x, pos.y, 50)) && tries < 50);
   door = { x: pos.x, y: pos.y, r: 28, t: 0 };
-  // 돌이 다 모여 광화문 완성 → 비우기(다음 라운드까지 깔끔)
+  // 돌이 다 모여 가게 완성 → 비우기(다음 라운드까지 깔끔)
   obstacles = [];
   sfxDoorOpen();
-  showCombo('🏯 광화문 완성! +' + lastRoundBonus + '점 · 들어가세요!');
+  showCombo(curShop().icon + ' ' + curShop().name + ' 완성! +' + lastRoundBonus + '점 · 들어가세요!');
 }
 
 function updateDoorPhase(dt) {
@@ -1589,8 +1633,8 @@ function enterDoor() {
   for (let i = 0; i < 30; i++) particles.push({ x: door.x, y: door.y, vx:(Math.random()-0.5)*9, vy:-Math.random()*6-1, life:30, max:30, color: i%2?'#FFD700':'#8BC34A', size:Math.random()*3+2 });
   sfxTeleport();
   haptic([30, 40]);
-  // 🏯 들어간 광화문은 마당에 영구 장식으로 남음
-  placedGates.push({ x: door.x, y: door.y, scale: 0.6 });
+  // 🏪 들어간 가게는 마당에 영구히 남아 '내 마을'이 된다 (어떤 가게였는지 함께 기록)
+  placedGates.push({ x: door.x, y: door.y, scale: 0.6, shop: curShop() });
   doorPhase = false; gateReady = false; door = null;
   startRound(nextR, carry);
   startBGM();   // 🎵 다음 라운드 음악
@@ -2008,9 +2052,58 @@ function drawBestMarker() {
 }
 
 // 🏯 광화문 스타일 문
+// 📢 가게 간판 — ⭐ 나중에 '실제 광고'를 붙일 자리. 여기만 갈아끼우면 광고판이 된다.
+//    adBanner에 이미지를 넣어두면 가게 이름 대신 그 배너가 그려진다(스폰서 간판).
+let adBanner = null;   // 예: new Image(); adBanner.src = '...';  (아직 미사용)
+function drawShopSign(shop, w, h, cy, fontSize) {
+  ctx.fillStyle = shop.sign;
+  roundRect(-w/2, cy - h/2, w, h, 3); ctx.fill();
+  ctx.strokeStyle = '#FFD700'; ctx.lineWidth = 1.5;
+  roundRect(-w/2, cy - h/2, w, h, 3); ctx.stroke();
+  if (adBanner && adBanner.complete) {          // 🔜 광고 배너가 있으면 간판 자리에 그대로 출력
+    ctx.save(); ctx.beginPath();
+    roundRect(-w/2, cy - h/2, w, h, 3); ctx.clip();
+    ctx.drawImage(adBanner, -w/2, cy - h/2, w, h);
+    ctx.restore();
+    return;
+  }
+  ctx.fillStyle = '#FFF8E1';
+  ctx.font = 'bold ' + fontSize + 'px sans-serif';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(shop.name, 0, cy);
+}
+// 🏪 가게 본체 (간판 + 차양 + 벽 + 창문). 문은 호출한 쪽에서 따로 그린다.
+function drawShopBody(shop) {
+  // 간판 (광고 자리)
+  drawShopSign(shop, 92, 18, -47, 12);
+  // 줄무늬 차양
+  ctx.fillStyle = shop.roof;
+  ctx.beginPath();
+  ctx.moveTo(-52, -36); ctx.lineTo(52, -36); ctx.lineTo(44, -22); ctx.lineTo(-44, -22);
+  ctx.closePath(); ctx.fill();
+  ctx.fillStyle = 'rgba(255,255,255,0.55)';
+  for (let i = -48; i < 48; i += 16) {
+    ctx.beginPath();
+    ctx.moveTo(i, -36); ctx.lineTo(i + 8, -36); ctx.lineTo(i + 7, -22); ctx.lineTo(i - 1, -22);
+    ctx.closePath(); ctx.fill();
+  }
+  // 벽
+  ctx.fillStyle = shop.wall;
+  roundRect(-42, -22, 84, 52, 5); ctx.fill();
+  ctx.strokeStyle = 'rgba(0,0,0,0.18)'; ctx.lineWidth = 1;
+  roundRect(-42, -22, 84, 52, 5); ctx.stroke();
+  // 진열창 (가게 아이콘)
+  ctx.fillStyle = 'rgba(255,255,255,0.85)';
+  roundRect(-38, -16, 20, 20, 3); ctx.fill();
+  roundRect(18, -16, 20, 20, 3); ctx.fill();
+  ctx.font = '14px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(shop.icon, -28, -6);
+  ctx.fillText(shop.icon, 28, -6);
+}
 function drawDoor() {
   const x = door.x, y = door.y;
   const pulse = Math.sin(door.t * 5) * 2;
+  const shop = curShop();
   ctx.save();
   ctx.translate(x, y);
 
@@ -2019,87 +2112,55 @@ function drawDoor() {
   gl.addColorStop(0, 'rgba(255,224,102,0.55)'); gl.addColorStop(1, 'rgba(255,224,102,0)');
   ctx.fillStyle = gl; ctx.beginPath(); ctx.arc(0, 0, 62 + pulse, 0, Math.PI*2); ctx.fill();
 
-  // 석축(돌담 받침)
-  ctx.fillStyle = '#D8CCB0';
-  roundRect(-40, -22, 80, 52, 6); ctx.fill();
-  ctx.strokeStyle = 'rgba(120,100,70,0.45)'; ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.moveTo(-40, -4); ctx.lineTo(40, -4);
-  ctx.moveTo(-40, 14); ctx.lineTo(40, 14);
-  ctx.moveTo(-15, -22); ctx.lineTo(-15, 30);
-  ctx.moveTo(15, -22); ctx.lineTo(15, 30);
-  ctx.stroke();
+  drawShopBody(shop);
 
-  // 홍예문(아치 입구) - 빛나는 포털
-  const ag = ctx.createLinearGradient(0, -22, 0, 30);
+  // 열린 출입문 - 빛나는 포털
+  const ag = ctx.createLinearGradient(0, -12, 0, 30);
   ag.addColorStop(0, '#FFF8D0'); ag.addColorStop(0.5, '#FFD54F'); ag.addColorStop(1, '#FF9800');
   ctx.fillStyle = ag;
   ctx.beginPath();
-  ctx.moveTo(-15, 30); ctx.lineTo(-15, -4);
-  ctx.arc(0, -4, 15, Math.PI, 0);
-  ctx.lineTo(15, 30); ctx.closePath(); ctx.fill();
+  ctx.moveTo(-14, 30); ctx.lineTo(-14, -2);
+  ctx.arc(0, -2, 14, Math.PI, 0);
+  ctx.lineTo(14, 30); ctx.closePath(); ctx.fill();
   ctx.fillStyle = 'rgba(255,255,255,0.5)';
-  ctx.beginPath(); ctx.ellipse(-6, 4, 3, 9, 0, 0, Math.PI*2); ctx.fill();
-
-  // 지붕(기와, 처마 위로 들림)
-  ctx.fillStyle = '#3C4E78';
-  ctx.beginPath();
-  ctx.moveTo(-50, -22);
-  ctx.quadraticCurveTo(-55, -31, -46, -33);
-  ctx.lineTo(-30, -48); ctx.lineTo(30, -48); ctx.lineTo(46, -33);
-  ctx.quadraticCurveTo(55, -31, 50, -22);
-  ctx.closePath(); ctx.fill();
-  // 용마루
-  ctx.fillStyle = '#2A3A5E';
-  roundRect(-32, -53, 64, 8, 4); ctx.fill();
-  // 기와 줄
-  ctx.strokeStyle = 'rgba(255,255,255,0.12)'; ctx.lineWidth = 1;
-  for (let i = -26; i <= 26; i += 8) { ctx.beginPath(); ctx.moveTo(i, -45); ctx.lineTo(i*1.5, -24); ctx.stroke(); }
-  // 단청 띠(색동)
-  ctx.fillStyle = '#2E8B57'; ctx.fillRect(-45, -24, 90, 5);
-  ctx.fillStyle = '#C0392B';
-  for (let i = -42; i < 45; i += 12) ctx.fillRect(i, -24, 5, 5);
-
-  // 현판(다음 라운드 번호)
-  ctx.fillStyle = '#2A1A0A';
-  roundRect(-16, -19, 32, 15, 3); ctx.fill();
-  ctx.strokeStyle = '#FFD700'; ctx.lineWidth = 1.5; roundRect(-16, -19, 32, 15, 3); ctx.stroke();
-  ctx.fillStyle = '#FFD700';
-  ctx.font = 'bold 12px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.fillText((round + 1) + 'R', 0, -11);
+  ctx.beginPath(); ctx.ellipse(-5, 6, 3, 9, 0, 0, Math.PI*2); ctx.fill();
+  // 다음 라운드 표시
+  ctx.fillStyle = '#7A4B00';
+  ctx.font = 'bold 11px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText((round + 1) + 'R', 0, 18);
 
   ctx.restore();
   // 머리 위 안내
   ctx.font = 'bold 13px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
   ctx.strokeStyle = 'rgba(0,0,0,0.55)'; ctx.lineWidth = 3;
-  ctx.strokeText('🏯 광화문으로 들어가기!', x, y - 58);
+  const guide = shop.icon + ' ' + shop.name + ' 들어가기!';
+  ctx.strokeText(guide, x, y - 66);
   ctx.fillStyle = '#fff';
-  ctx.fillText('🏯 광화문으로 들어가기!', x, y - 58);
+  ctx.fillText(guide, x, y - 66);
   ctx.textAlign = 'left';
 }
 
 // 🏯 완성된 광화문 — 중심(cx,cy), 크기 scale, (noGlow: 정착한 건 후광 생략)
 // 🏯 가벼운 광화문 (마당에 쌓인 장식용 — 그라데이션 없이 단순 도형, 성능↑)
-function drawMiniGate(cx, cy, scale) {
+function drawMiniGate(cx, cy, scale, shop) {
+  shop = shop || SHOPS[0];
   ctx.save();
-  ctx.globalAlpha = 0.7;
+  ctx.globalAlpha = 0.75;
   ctx.translate(cx, cy);
   ctx.scale(scale, scale);
-  // 석축
-  ctx.fillStyle = '#D8CCB0';
+  // 벽
+  ctx.fillStyle = shop.wall;
   ctx.fillRect(-40, -22, 80, 52);
-  // 홍예문
+  // 출입문
   ctx.fillStyle = '#8D6E63';
-  ctx.beginPath(); ctx.arc(0, 18, 13, Math.PI, 0); ctx.rect(-13, 18, 26, 12); ctx.fill();
-  // 지붕
-  ctx.fillStyle = '#3C4E78';
+  ctx.beginPath(); ctx.arc(0, 18, 12, Math.PI, 0); ctx.rect(-12, 18, 24, 12); ctx.fill();
+  // 차양
+  ctx.fillStyle = shop.roof;
   ctx.beginPath();
-  ctx.moveTo(-48, -22); ctx.lineTo(-28, -40); ctx.lineTo(28, -40); ctx.lineTo(48, -22); ctx.closePath(); ctx.fill();
-  ctx.fillStyle = '#5C6BC0';
-  ctx.fillRect(-32, -45, 64, 6);
-  // 현판
-  ctx.fillStyle = '#1B3A2F';
-  ctx.fillRect(-16, -18, 32, 13);
+  ctx.moveTo(-50, -34); ctx.lineTo(50, -34); ctx.lineTo(42, -22); ctx.lineTo(-42, -22); ctx.closePath(); ctx.fill();
+  // 간판
+  ctx.fillStyle = shop.sign;
+  ctx.fillRect(-40, -46, 80, 12);
   ctx.restore();
   ctx.globalAlpha = 1;
 }
@@ -2114,76 +2175,54 @@ function drawGwanghwamun(cx, cy, scale, alpha, noGlow) {
     gl.addColorStop(0, 'rgba(255,224,102,0.6)'); gl.addColorStop(1, 'rgba(255,224,102,0)');
     ctx.fillStyle = gl; ctx.beginPath(); ctx.arc(0, 0, 64, 0, Math.PI*2); ctx.fill();
   }
-  // 석축
-  ctx.fillStyle = '#D8CCB0'; roundRect(-40, -22, 80, 52, 6); ctx.fill();
-  ctx.strokeStyle = 'rgba(120,100,70,0.45)'; ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.moveTo(-40, -4); ctx.lineTo(40, -4); ctx.moveTo(-40, 14); ctx.lineTo(40, 14);
-  ctx.moveTo(-15, -22); ctx.lineTo(-15, 30); ctx.moveTo(15, -22); ctx.lineTo(15, 30);
-  ctx.stroke();
-  // 홍예문
-  const ag = ctx.createLinearGradient(0, -22, 0, 30);
-  ag.addColorStop(0, '#FFF8D0'); ag.addColorStop(0.5, '#FFD54F'); ag.addColorStop(1, '#FF9800');
-  ctx.fillStyle = ag;
-  ctx.beginPath(); ctx.moveTo(-15, 30); ctx.lineTo(-15, -4); ctx.arc(0, -4, 15, Math.PI, 0); ctx.lineTo(15, 30); ctx.closePath(); ctx.fill();
-  // 지붕
-  ctx.fillStyle = '#3C4E78';
-  ctx.beginPath();
-  ctx.moveTo(-50, -22); ctx.quadraticCurveTo(-55, -31, -46, -33);
-  ctx.lineTo(-30, -48); ctx.lineTo(30, -48); ctx.lineTo(46, -33);
-  ctx.quadraticCurveTo(55, -31, 50, -22); ctx.closePath(); ctx.fill();
-  ctx.fillStyle = '#2A3A5E'; roundRect(-32, -53, 64, 8, 4); ctx.fill();
-  ctx.strokeStyle = 'rgba(255,255,255,0.12)'; ctx.lineWidth = 1;
-  for (let i = -26; i <= 26; i += 8) { ctx.beginPath(); ctx.moveTo(i, -45); ctx.lineTo(i*1.5, -24); ctx.stroke(); }
-  // 단청
-  ctx.fillStyle = '#2E8B57'; ctx.fillRect(-45, -24, 90, 5);
-  ctx.fillStyle = '#C0392B';
-  for (let i = -42; i < 45; i += 12) ctx.fillRect(i, -24, 5, 5);
-  // 현판
-  ctx.fillStyle = '#2A1A0A'; roundRect(-16, -19, 32, 15, 3); ctx.fill();
-  ctx.strokeStyle = '#FFD700'; ctx.lineWidth = 1.5; roundRect(-16, -19, 32, 15, 3); ctx.stroke();
-  ctx.fillStyle = '#FFD700';
-  ctx.font = 'bold 12px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.fillText('光化門', 0, -11);
+  drawShopBody(curShop());
+  // 닫힌 출입문 (아직 들어갈 수 없는 상태 — 착지 후 drawDoor가 빛나는 문으로 바꿔 그린다)
+  ctx.fillStyle = '#8D6E63';
+  ctx.beginPath(); ctx.moveTo(-14, 30); ctx.lineTo(-14, -2); ctx.arc(0, -2, 14, Math.PI, 0); ctx.lineTo(14, 30); ctx.closePath(); ctx.fill();
   ctx.restore();
 }
 
 // 🏯 지어지는 중인 광화문 (깬 돌 수만큼 돌담이 쌓임)
 function drawGateConstruction() {
   const x = gateSite.x, baseY = gateSite.y + 28;
-  const p = Math.min(1, rocksBuilt / rocksGoal);
+  const shop = curShop();
+  const appleMode = roundMode === 'apple';
+  const built = appleMode ? roundApples : rocksBuilt;
+  const goal  = appleMode ? roundApplesGoal : rocksGoal;
+  const p = Math.min(1, built / goal);
   ctx.save();
   // 공사 터
   ctx.fillStyle = 'rgba(0,0,0,0.12)';
   ctx.beginPath(); ctx.ellipse(x, baseY + 6, 50, 9, 0, 0, Math.PI*2); ctx.fill();
-  // 쌓인 돌담 블록 (rocksBuilt 만큼)
+  // 쌓인 벽돌 (사과 라운드는 사과가, 돌깨기 라운드는 돌이 벽돌이 된다)
   const cols = 6, bw = 15, bh = 9;
   const startX = x - (cols * bw) / 2;
-  for (let b = 0; b < rocksBuilt; b++) {
+  for (let b = 0; b < built; b++) {
     const rr = Math.floor(b / cols), cc = b % cols;
     const bx = startX + cc * bw;
     const by = baseY - (rr + 1) * bh;
-    ctx.fillStyle = (b % 2) ? '#CFC3A8' : '#E0D4B8';
+    ctx.fillStyle = (b % 2) ? shop.wall : '#FFFFFF';
     ctx.fillRect(bx + 1, by + 1, bw - 2, bh - 2);
     ctx.strokeStyle = 'rgba(110,90,60,0.45)'; ctx.lineWidth = 1;
     ctx.strokeRect(bx + 1, by + 1, bw - 2, bh - 2);
   }
-  // 거의 완성되면 지붕 미리보기(반투명)
-  if (p >= 0.75) {
-    ctx.globalAlpha = (p - 0.75) / 0.25 * 0.85;
-    const topY = baseY - Math.ceil(rocksGoal / cols) * bh - 4;
-    ctx.fillStyle = '#3C4E78';
+  // 거의 완성되면 차양+간판 미리보기(반투명)
+  if (p >= 0.7) {
+    ctx.globalAlpha = (p - 0.7) / 0.3 * 0.85;
+    const topY = baseY - Math.ceil(goal / cols) * bh - 4;
+    ctx.fillStyle = shop.roof;
     ctx.beginPath();
-    ctx.moveTo(x - 48, topY); ctx.quadraticCurveTo(x - 52, topY - 8, x - 44, topY - 10);
-    ctx.lineTo(x - 28, topY - 22); ctx.lineTo(x + 28, topY - 22); ctx.lineTo(x + 44, topY - 10);
-    ctx.quadraticCurveTo(x + 52, topY - 8, x + 48, topY); ctx.closePath(); ctx.fill();
+    ctx.moveTo(x - 50, topY - 12); ctx.lineTo(x + 50, topY - 12);
+    ctx.lineTo(x + 42, topY); ctx.lineTo(x - 42, topY); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = shop.sign;
+    ctx.fillRect(x - 44, topY - 25, 88, 13);
     ctx.globalAlpha = 1;
   }
   // 진행 라벨
   ctx.font = 'bold 13px sans-serif'; ctx.textAlign = 'center';
   ctx.strokeStyle = 'rgba(0,0,0,0.5)'; ctx.lineWidth = 3;
-  const lab = '🏯 ' + rocksBuilt + '/' + rocksGoal;
-  ctx.strokeText(lab, x, gateSite.y - 36); ctx.fillStyle = '#fff'; ctx.fillText(lab, x, gateSite.y - 36);
+  const lab = (appleMode ? '🍎 ' : shop.icon + ' ') + shop.name + ' ' + built + '/' + goal;
+  ctx.strokeText(lab, x, gateSite.y - 44); ctx.fillStyle = '#fff'; ctx.fillText(lab, x, gateSite.y - 44);
   ctx.textAlign = 'left';
   ctx.restore();
 }
@@ -2216,7 +2255,7 @@ function render() {
   function vis(x, y, m) { m = m || 40; return x > vL - m && x < vR + m && y > vT - m && y < vB + m; }
   for (const tn of tunnels) { drawTunnel(tn.a, tn); drawTunnel(tn.b, tn); }
   // 🏯 마당에 정착한 광화문들 (가벼운 장식 — 성능)
-  for (const pg of placedGates) if (vis(pg.x, pg.y, 70)) drawMiniGate(pg.x, pg.y, pg.scale);
+  for (const pg of placedGates) if (vis(pg.x, pg.y, 70)) drawMiniGate(pg.x, pg.y, pg.scale, pg.shop);
   if (!gateFly && !gateReady) drawGateConstruction();   // 🏯 지어지는 광화문 (완성 전)
   // 🚪 들어갈 광화문 강조 (완성·정착 후, 게임 진행 중)
   if (gateReady && door) {
@@ -2260,16 +2299,20 @@ function render() {
   ctx.restore();
   // 완성 배너 (화면 고정)
   if (gateFly) {
+    const bn = curShop().icon + ' ' + curShop().name + ' 완성! 🎉';
     ctx.font = 'bold 26px sans-serif'; ctx.textAlign = 'center';
     ctx.strokeStyle = 'rgba(0,0,0,0.5)'; ctx.lineWidth = 4;
-    ctx.strokeText('🏯 광화문 완성! 🎉', W/2, H * 0.5);
+    ctx.strokeText(bn, W/2, H * 0.5);
     ctx.fillStyle = '#FFD700';
-    ctx.fillText('🏯 광화문 완성! 🎉', W/2, H * 0.5);
+    ctx.fillText(bn, W/2, H * 0.5);
     ctx.textAlign = 'left';
   }
-  // 하단 파워 표시 (충전 중일 때만 — 파워 중엔 머리 위에 표시)
-  if (running && !dead && powerT <= 0) {
-    let txt = '⚡ 파워 충전 ' + powerGauge + '/' + powerNeed() + ' (사과 먹기)', bg = 'rgba(0,0,0,0.55)';
+  // 하단 안내 — 사과 라운드는 사과 진행도, 돌깨기 라운드는 파워 충전도
+  if (running && !dead && (roundMode === 'apple' || powerT <= 0)) {
+    let txt = roundMode === 'apple'
+      ? '🍎 ' + curShop().name + ' 짓기 ' + roundApples + '/' + roundApplesGoal + ' (사과 먹기)'
+      : '⚡ 파워 충전 ' + powerGauge + '/' + powerNeed() + ' (사과 먹기)';
+    let bg = 'rgba(0,0,0,0.55)';
     ctx.font = 'bold 18px sans-serif'; ctx.textAlign = 'center';
     const tw = ctx.measureText(txt).width + 24;
     const py = H - 44 - safeIn.bottom;
