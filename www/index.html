@@ -932,7 +932,7 @@ function startRound(R, startLen) {
   // 돌 배치(많이) + 벌
   snapCam();   // 🎥 카메라를 뱀 중앙으로
   if (roundMode === 'rock') ensureRocks();   // 🍎 1R(사과 모으기)엔 돌을 아예 깔지 않는다
-  const beeN = roundMode === 'apple' ? 0 : roundBeeCount(R);   // 1R은 벌도 없이 온전히 사과만
+  const beeN = R <= 2 ? 0 : roundBeeCount(R);   // 1~2R은 방해물 전혀 없이, 3R부터 벌만 등장(돌은 6R부터)
   for (let i = 0; i < beeN; i++) spawnBee();
   // 터널 1쌍 (라운드 3부터)
   if (R >= 3) spawnTunnel();
@@ -1116,17 +1116,21 @@ function eatApple(a, idx) {
   speed = computeSpeed();   // 동일 규칙 (라운드 기본 + 길이 보너스 캡)
   // 🍎 사과 모으기 라운드: 목표치를 채우면 가게 완성 → 다음 라운드
   if (roundMode === 'apple') {
-    roundApples++;
-    // 사과가 벽돌처럼 가게 자리로 날아가 쌓이는 연출 (돌깨기 라운드와 같은 건설감)
-    for (let k = 0; k < 3; k++) {
-      flyingStones.push({
-        x: a.x + (Math.random()-0.5)*10, y: a.y + (Math.random()-0.5)*10,
-        tx: gateSite.x + (Math.random()-0.5)*40, ty: gateSite.y + 20 - Math.random()*30,
-        t: 0, dur: 0.45 + Math.random()*0.15
-      });
+    // ⚠️ 가게가 이미 완성된 뒤(gateFly/gateReady)엔 더 세지 않는다. 안 그러면 문으로 가는 동안
+    //    사과를 먹을 때마다 roundClear가 다시 불려 가게가 반복 완성된다 (돌깨기 경로의 !gateReady 가드와 동일)
+    if (!gateFly && !gateReady) {
+      roundApples++;
+      // 사과가 가게로 날아가 색을 칠하는 연출
+      for (let k = 0; k < 3; k++) {
+        flyingStones.push({
+          x: a.x + (Math.random()-0.5)*10, y: a.y + (Math.random()-0.5)*10,
+          tx: gateSite.x + (Math.random()-0.5)*40, ty: gateSite.y + 20 - Math.random()*30,
+          t: 0, dur: 0.45 + Math.random()*0.15
+        });
+      }
+      updateHUD();
+      if (roundApples >= roundApplesGoal) { roundClear(); return; }
     }
-    updateHUD();
-    if (roundApples >= roundApplesGoal) { roundClear(); return; }
     return;
   }
   // ⚡ 사과로 파워 게이지 충전 (고추 아니고, 파워 중이 아닐 때)
@@ -1167,8 +1171,9 @@ const SHOPS = [
 ];
 function shopForRound(R) { return SHOPS[(R - 1) % SHOPS.length]; }
 function curShop() { return shopForRound(round); }
-// 🎯 라운드 방식: 1R은 '사과 모으기'(돌·파워 없이 첫 가게를 확실히 완성) → 2R부터 돌깨기 건설
-function roundModeFor(R) { return R === 1 ? 'apple' : 'rock'; }
+// 🎯 라운드 방식: 1~5R은 '사과 모으기'(돌 없이 편하게 가게 짓기) → 6R부터 돌깨기 건설
+const APPLE_ROUNDS = 5;
+function roundModeFor(R) { return R <= APPLE_ROUNDS ? 'apple' : 'rock'; }
 let roundMode = 'apple';
 let roundApples = 0;     // 이번 라운드에 먹은 사과 수 (apple 모드 진행도)
 let rocksGoal = 4;       // 이번 라운드 가게 완성에 필요한 돌
@@ -1178,16 +1183,16 @@ let gateSite = { x: 0, y: 0 }; // 🏯 광화문 짓는 자리(고정)
 let flyingStones = [];   // 깨진 돌이 광화문으로 날아가는 연출
 // ✈️ 광화문 완성 → 하늘로 떴다가 마당에 정착하는 연출
 let gateFly = false, gateFlyT = 0;
-const GATE_FLY_DUR = 2.4;
+const GATE_FLY_DUR = 1.3;   // 제자리 완성 연출이라 짧게(예전엔 날아가느라 2.4초)
 let gateFromX = 0, gateFromY = 0, gateToX = 0, gateToY = 0;
 let placedGates = [];   // 🏯 마당에 정착한 광화문들 (배경 장식)
-function POWER_NEED_FOR(R) { return R <= 2 ? 3 : 5; }   // 🎯 첫 돌깨기 라운드(2R)는 파워도 3개로 완화
+function POWER_NEED_FOR(R) { return R <= APPLE_ROUNDS + 1 ? 3 : 5; }   // 🎯 첫 돌깨기 라운드(6R)는 파워도 3개로 완화
 function powerNeed() { return POWER_NEED_FOR(round); }
 const POWER_DUR = 5.5;   // 파워 지속(초)
-// 🍎 1R(사과 모으기) 목표 — 첫 가게는 돌·파워 없이 사과만으로 확실히 완성시킨다
-function applesGoalForRound(R) { return 6; }
-// 🪨 2R부터 돌깨기 건설. 2R=5개로 시작해 완만히 증가(예전엔 1R부터 8개라 아무도 못 채웠음)
-function rocksGoalForRound(R) { return Math.min(24, Math.round(2 + R * 1.5)); }
+// 🍎 1~5R(사과 모으기) 목표 — 6개부터 라운드마다 하나씩 늘어난다 (R1=6 … R5=10)
+function applesGoalForRound(R) { return 5 + R; }
+// 🪨 6R부터 돌깨기 건설. 첫 돌 라운드(6R)를 5개로 시작해 완만히 증가
+function rocksGoalForRound(R) { return Math.min(24, Math.max(5, R - 1)); }
 function targetRockCount(R) { return Math.min(32, Math.round((18 + R * 1.5) * 0.8 * dcfg().rock)); } // 판에 깔린 돌 수 × 난이도
 // 🔥 연속 먹기 콤보 (중독성 핵심)
 let eatCombo = 0;        // 연속으로 먹은 사과 수
@@ -1494,7 +1499,7 @@ function addScore(pts, popup) {
 
 let lastRoundBonus = 0;
 function roundClear() {
-  if (gateFly) return; // 이미 완성 연출 중
+  if (gateFly || gateReady) return; // 이미 완성 연출 중이거나 완성된 가게가 열려 있음(중복 완성 방지)
   // 🎁 라운드 클리어 보너스: 라운드×100 + 남은 시간×10
   const clearBonus = round * 100;
   const timeBonus = Math.floor(timeLeft * 10);
@@ -1527,11 +1532,9 @@ function gateComplete() {
   bumpMission('gate', 1);     // 🎯 오늘의 미션
   if (round > stats.bestRound) stats.bestRound = round;
   saveCoins(); saveStats();
+  // 🏪 가게는 날아가지 않는다 — 지은 자리(가운데)에 큰 크기 그대로 남아 문이 열린다
   gateFromX = gateSite.x; gateFromY = gateSite.y;
-  // 🏯 마당 한쪽(위쪽 가장자리)에 정착할 자리 선택 — 이미 놓인 것과 안 겹치게
-  const slotN = placedGates.length;
-  gateToX = field.x + 50 + (slotN % 4) * ((field.w - 100) / 3);
-  gateToY = field.y + 44 + Math.floor(slotN / 4) * 60;
+  gateToX = gateSite.x;   gateToY = gateSite.y;
   stopBGM();              // 🎵 BGM 멈추고
   sfxGateComplete();      // 🎵 팡파레!
   flashT = 0.18; slowmoT = 0.4;   // ✨ 번쩍 + 슬로우모션
@@ -1554,32 +1557,20 @@ function updateGateFly(dt) {
     gateFly = false;
     spawnParticles(gateToX, gateToY + 14, '#D8CCB0', 16);
     tone(200, 0.2, 'sine', 0.18, 90); // 쿵(착지)
-    // 🏯 정착 → 게임 진행하며 언제든 들어갈 수 있는 입구로
-    door = { x: gateToX, y: gateToY, r: 32, t: 0 };
+    // 🏪 지은 자리에 큰 가게 그대로 → 문이 열려 언제든 들어갈 수 있다
+    door = { x: gateToX, y: gateToY, r: 40, t: 0 };
     gateReady = true;
     timeLeft = Math.max(timeLeft, 8);   // 가게까지 갈 최소 시간 보장
     startBGM();                          // 🎵 음악 계속 (게임 진행)
     showCombo(curShop().icon + ' ' + curShop().name + '으로 들어가세요! ⏱️');
   }
 }
-// 광화문 비행 경로: 솟아올랐다가 → 마당 착지 자리로 내려앉음
+// 🏪 완성 연출: 제자리에서 통통 튀며 커졌다 제 크기로 (자리 이동·축소 없음)
 function gateFlyPos() {
   const f = Math.min(1, gateFlyT / GATE_FLY_DUR);
-  // 1단계(0~0.4): 하늘로 솟음 / 2단계(0.4~1): 착지 자리로 이동하며 내려앉음
-  let x, y, sc;
-  if (f < 0.4) {
-    const a = f / 0.4;
-    x = gateFromX;
-    y = gateFromY - a * 80;          // 위로 솟음
-    sc = 1.0 + a * 0.15;
-  } else {
-    const a = (f - 0.4) / 0.6;
-    const ease = a * a * (3 - 2 * a); // smoothstep
-    x = gateFromX + (gateToX - gateFromX) * ease;
-    y = (gateFromY - 80) + (gateToY - (gateFromY - 80)) * ease - Math.sin(ease * Math.PI) * 40;
-    sc = 1.15 - ease * 0.65;          // 점점 작아져 착지 크기(0.5)
-  }
-  return { x: x, y: y, scale: sc };
+  const pop = Math.sin(f * Math.PI) * 0.22;          // 0 → 0.22 → 0
+  const bob = -Math.sin(f * Math.PI) * 10;           // 살짝 떠올랐다 내려앉음
+  return { x: gateSite.x, y: gateSite.y + bob, scale: 1 + pop };
 }
 
 function openDoor() {
@@ -1633,8 +1624,14 @@ function enterDoor() {
   for (let i = 0; i < 30; i++) particles.push({ x: door.x, y: door.y, vx:(Math.random()-0.5)*9, vy:-Math.random()*6-1, life:30, max:30, color: i%2?'#FFD700':'#8BC34A', size:Math.random()*3+2 });
   sfxTeleport();
   haptic([30, 40]);
-  // 🏪 들어간 가게는 마당에 영구히 남아 '내 마을'이 된다 (어떤 가게였는지 함께 기록)
-  placedGates.push({ x: door.x, y: door.y, scale: 0.6, shop: curShop() });
+  // 🏪 들어간 가게는 마당 가장자리로 옮겨져 '내 마을'로 남는다
+  //    (가운데는 다음 라운드에 새로 지을 가게 자리라 비워야 한다)
+  const slotN = placedGates.length;
+  placedGates.push({
+    x: field.x + 50 + (slotN % 4) * ((field.w - 100) / 3),
+    y: field.y + 44 + Math.floor(slotN / 4) * 60,
+    scale: 0.5, shop: curShop()
+  });
   doorPhase = false; gateReady = false; door = null;
   startRound(nextR, carry);
   startBGM();   // 🎵 다음 라운드 음악
@@ -2100,6 +2097,17 @@ function drawShopBody(shop) {
   ctx.fillText(shop.icon, -28, -6);
   ctx.fillText(shop.icon, 28, -6);
 }
+// 🩶 흑백 밑그림용 — 색만 회색으로 바꾼 같은 가게
+function grayShop(shop) {
+  return { name: shop.name, icon: shop.icon, wall: '#C4C4C4', roof: '#9A9A9A', sign: '#7A7A7A' };
+}
+// 🚪 닫힌 출입문 (건설 중 / 완성 직후 연출용)
+function drawShopDoorClosed(color) {
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(-14, 30); ctx.lineTo(-14, -2); ctx.arc(0, -2, 14, Math.PI, 0); ctx.lineTo(14, 30);
+  ctx.closePath(); ctx.fill();
+}
 function drawDoor() {
   const x = door.x, y = door.y;
   const pulse = Math.sin(door.t * 5) * 2;
@@ -2176,9 +2184,8 @@ function drawGwanghwamun(cx, cy, scale, alpha, noGlow) {
     ctx.fillStyle = gl; ctx.beginPath(); ctx.arc(0, 0, 64, 0, Math.PI*2); ctx.fill();
   }
   drawShopBody(curShop());
-  // 닫힌 출입문 (아직 들어갈 수 없는 상태 — 착지 후 drawDoor가 빛나는 문으로 바꿔 그린다)
-  ctx.fillStyle = '#8D6E63';
-  ctx.beginPath(); ctx.moveTo(-14, 30); ctx.lineTo(-14, -2); ctx.arc(0, -2, 14, Math.PI, 0); ctx.lineTo(14, 30); ctx.closePath(); ctx.fill();
+  // 닫힌 출입문 (완성 연출 중 — 끝나면 drawDoor가 빛나는 문으로 바꿔 그린다)
+  drawShopDoorClosed('#8D6E63');
   ctx.restore();
 }
 
@@ -2191,38 +2198,44 @@ function drawGateConstruction() {
   const goal  = appleMode ? roundApplesGoal : rocksGoal;
   const p = Math.min(1, built / goal);
   ctx.save();
-  // 공사 터
+  // 공사 터 그림자
   ctx.fillStyle = 'rgba(0,0,0,0.12)';
-  ctx.beginPath(); ctx.ellipse(x, baseY + 6, 50, 9, 0, 0, Math.PI*2); ctx.fill();
-  // 쌓인 벽돌 (사과 라운드는 사과가, 돌깨기 라운드는 돌이 벽돌이 된다)
-  const cols = 6, bw = 15, bh = 9;
-  const startX = x - (cols * bw) / 2;
-  for (let b = 0; b < built; b++) {
-    const rr = Math.floor(b / cols), cc = b % cols;
-    const bx = startX + cc * bw;
-    const by = baseY - (rr + 1) * bh;
-    ctx.fillStyle = (b % 2) ? shop.wall : '#FFFFFF';
-    ctx.fillRect(bx + 1, by + 1, bw - 2, bh - 2);
-    ctx.strokeStyle = 'rgba(110,90,60,0.45)'; ctx.lineWidth = 1;
-    ctx.strokeRect(bx + 1, by + 1, bw - 2, bh - 2);
-  }
-  // 거의 완성되면 차양+간판 미리보기(반투명)
-  if (p >= 0.7) {
-    ctx.globalAlpha = (p - 0.7) / 0.3 * 0.85;
-    const topY = baseY - Math.ceil(goal / cols) * bh - 4;
-    ctx.fillStyle = shop.roof;
+  ctx.beginPath(); ctx.ellipse(x, baseY + 6, 52, 10, 0, 0, Math.PI*2); ctx.fill();
+
+  ctx.save();
+  ctx.translate(x, gateSite.y);
+  // ① 흑백 밑그림 — 처음부터 '무엇을 짓는지' 실제 크기로 보여준다
+  ctx.globalAlpha = 0.32;
+  drawShopBody(grayShop(shop));
+  drawShopDoorClosed('#9E9E9E');
+  ctx.globalAlpha = 1;
+
+  // ② 아래에서 위로 색이 차오름 — 먹을수록 가게에 색이 칠해진다
+  if (p > 0) {
+    const TOP = -60, BOT = 34, HGT = BOT - TOP;
+    const fillH = HGT * p;
+    ctx.save();
     ctx.beginPath();
-    ctx.moveTo(x - 50, topY - 12); ctx.lineTo(x + 50, topY - 12);
-    ctx.lineTo(x + 42, topY); ctx.lineTo(x - 42, topY); ctx.closePath(); ctx.fill();
-    ctx.fillStyle = shop.sign;
-    ctx.fillRect(x - 44, topY - 25, 88, 13);
-    ctx.globalAlpha = 1;
+    ctx.rect(-70, BOT - fillH, 140, fillH);
+    ctx.clip();
+    drawShopBody(shop);
+    drawShopDoorClosed('#8D6E63');
+    ctx.restore();
+    // 색이 차오르는 경계선 반짝임
+    if (p < 1) {
+      const lineY = BOT - fillH;
+      const lg = ctx.createLinearGradient(0, lineY - 6, 0, lineY + 2);
+      lg.addColorStop(0, 'rgba(255,235,59,0)'); lg.addColorStop(1, 'rgba(255,235,59,0.85)');
+      ctx.fillStyle = lg; ctx.fillRect(-56, lineY - 6, 112, 8);
+    }
   }
+  ctx.restore();
+
   // 진행 라벨
-  ctx.font = 'bold 13px sans-serif'; ctx.textAlign = 'center';
-  ctx.strokeStyle = 'rgba(0,0,0,0.5)'; ctx.lineWidth = 3;
+  ctx.font = 'bold 14px sans-serif'; ctx.textAlign = 'center';
+  ctx.strokeStyle = 'rgba(0,0,0,0.55)'; ctx.lineWidth = 3;
   const lab = (appleMode ? '🍎 ' : shop.icon + ' ') + shop.name + ' ' + built + '/' + goal;
-  ctx.strokeText(lab, x, gateSite.y - 44); ctx.fillStyle = '#fff'; ctx.fillText(lab, x, gateSite.y - 44);
+  ctx.strokeText(lab, x, gateSite.y - 68); ctx.fillStyle = '#fff'; ctx.fillText(lab, x, gateSite.y - 68);
   ctx.textAlign = 'left';
   ctx.restore();
 }
