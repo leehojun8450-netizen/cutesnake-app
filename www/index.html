@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>🐍 꼬마 뱀의 사과 모험 🍎</title>
+<title>🐍 꼬마뱀 세계여행 🌍</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
   html, body { width: 100%; height: 100%; overflow: hidden; }
@@ -24,6 +24,12 @@
   #scoreRow { margin-top: 8px; display: flex; justify-content: space-between; align-items: flex-start; color: white; font-weight: bold; }
   #scoreBig { font-size: 16px; color: #fff; text-shadow: 2px 2px 0 #000; line-height: 1; }
   #scoreVal { font-size: 40px; color: #FFEB3B; text-shadow: 2px 2px 0 #000, 0 0 15px rgba(255,235,59,0.6); }
+  /* 💰 코인 — 점수 못지않게 잘 보이도록 중앙 크게 (2026-08-03) */
+  #coinBig { font-size: 16px; color: #FFD700; text-shadow: 2px 2px 0 #000; line-height: 1; text-align: center; }
+  #coinBig span { font-size: 32px; font-weight: bold; text-shadow: 2px 2px 0 #000, 0 0 12px rgba(255,215,0,0.6); }
+  /* 🏁 라운드 — 코인 옆에 크게 (2026-08-03) */
+  #roundBig { font-size: 14px; max-width: 92px; white-space: nowrap; color: #8BC34A; text-shadow: 2px 2px 0 #000; line-height: 1; text-align: center; }
+  #roundBig span { font-size: 32px; font-weight: bold; color: #C5E1A5; text-shadow: 2px 2px 0 #000, 0 0 12px rgba(139,195,74,0.5); }
   #bestBox { font-size: 14px; background: rgba(0,0,0,0.5); padding: 5px 12px; border-radius: 18px; border: 2px solid #FFD700; color: #FFD700; text-align: right; }
   #subRow { margin-top: 4px; color: #fff; font-size: 15px; font-weight: bold; text-shadow: 1px 1px 0 #000; opacity: 0.95; }
   #subRow b { color: #8BC34A; }
@@ -55,11 +61,6 @@
   .btn:active { transform: scale(0.95); }
   .btnAlt { background: linear-gradient(135deg, #FF69B4, #FF1493); color: white; border: none; padding: 12px 28px; font-size: 16px; font-weight: bold; border-radius: 30px; cursor: pointer; margin: 6px; box-shadow: 0 4px 15px rgba(255,20,147,0.4); font-family: inherit; }
   .btnAlt:active { transform: scale(0.95); }
-  .diffSelect { display: flex; gap: 12px; justify-content: center; margin: 4px 0; }
-  .diffBtn { display: flex; flex-direction: column; align-items: center; gap: 2px; background: rgba(255,255,255,0.15); color: #fff; border: 3px solid transparent; padding: 12px 22px; font-size: 20px; font-weight: bold; border-radius: 20px; cursor: pointer; font-family: inherit; transition: transform 0.1s, border-color 0.15s, background 0.15s; text-shadow: 1px 1px 2px rgba(0,0,0,0.4); }
-  .diffBtn .diffDesc { font-size: 12px; font-weight: normal; opacity: 0.85; }
-  .diffBtn:active { transform: scale(0.95); }
-  .diffBtn.selected { background: linear-gradient(135deg, #FFB300, #FF6F00); border-color: #fff; box-shadow: 0 6px 18px rgba(255,111,0,0.5); }
   #gameOver { display: none; }
   .deathLen { font-size: 64px; color: #FFEB3B; font-weight: bold; text-shadow: 3px 3px 0 #000, 0 0 25px #FFEB3B; line-height: 1; }
   .rank { font-size: 19px; color: #fff; margin: 8px 0; }
@@ -160,9 +161,11 @@
     <div id="timeBarWrap"><div id="timeBar"></div></div>
     <div id="scoreRow">
       <div id="scoreBig">⭐ 점수<br><span id="scoreVal">0</span></div>
+      <div id="roundBig">🏁 <span id="countryName">중국</span><br><span id="roundVal">1</span></div>
+      <div id="coinBig">💰 코인<br><span id="coinVal">0</span></div>
       <div id="bestBox">🏆 BEST<br><span id="bestVal">0</span></div>
     </div>
-    <div id="subRow">🏁 <b><span id="roundVal">1</span></b>R · <span id="buildIcon">🍎</span> <b><span id="buildVal">0</span>/<span id="buildGoalVal">6</span></b> · 🐍 <b><span id="lenVal">4</span></b> · <span id="powerWrap">⚡ <span id="powerVal">0/5</span> · </span>💰 <span id="coinVal">0</span></div>
+    <div id="subRow"><span id="buildIcon">🍎</span> <b><span id="buildVal">0</span>/<span id="buildGoalVal">6</span></b> · 🐍 <b><span id="lenVal">4</span></b><span id="powerWrap" style="display:none">⚡ <span id="powerVal">0/5</span></span></div>
   </div>
   <div id="scorePop"></div>
   <div id="miniRank"></div>
@@ -179,8 +182,8 @@
   </div>
 
   <div id="startScreen" class="overlay">
-    <h1>🐍 꼬마 뱀 🍎</h1>
-    <h2>100라운드 사과 대모험!</h2>
+    <h1>🐍 꼬마뱀 세계여행 🌍</h1>
+    <h2>100개 나라 먹거리 대모험!</h2>
 
     <div id="coinBoxStart">💰 <span id="coinValStart">0</span></div>
 
@@ -205,13 +208,6 @@
 
     <div class="charLabel">🏆 명예의 전당 (최고 점수) 🏆</div>
     <div id="startTopRankings"></div>
-
-    <div class="charLabel">🎚️ 난이도 고르기 🎚️</div>
-    <div class="diffSelect" id="diffSelect">
-      <button class="diffBtn" data-diff="easy">🌱 쉬움<span class="diffDesc">천천히·넉넉하게</span></button>
-      <button class="diffBtn" data-diff="hard">🔥 어려움<span class="diffDesc">빠르게·아슬하게</span></button>
-    </div>
-    <div style="height: 8px"></div>
 
     <button id="startBtn" class="btn">시작! 🐍</button>
     <div>
@@ -258,13 +254,12 @@
     <div id="goRankList"></div>
     <div class="info" style="font-size:13px">
       🏁 <b><span id="finalRound">1</span>라운드</b> 도달 ·
-      🍎 사과 <b><span id="applesEaten">0</span></b> · 💥 돌 <b><span id="rocksSmashedShow">0</span></b>
+      🍎 사과 <b><span id="applesEaten">0</span></b>개
     </div>
     <div id="goCoinMsg" style="color:#FFD700;font-size:15px;font-weight:bold;margin:4px 0">💰 이번 판 +0 · 보유 0</div>
     <div id="goAchMsg" style="color:#FFD700;font-size:14px;font-weight:bold;margin:4px 0"></div>
     <button id="reviveAdBtn" class="btnAlt" style="display:none;background:linear-gradient(135deg,#7B68EE,#4B0082)">📺 광고 보고 무료 부활!</button>
     <button id="reviveBtn" class="btnAlt" style="display:none;background:linear-gradient(135deg,#FF6FA5,#FF1493)">💖 코인으로 부활</button>
-    <button id="adBoostBtn" class="btnAlt" style="background:linear-gradient(135deg,#7B68EE,#4B0082)">📺 광고 보고 점수 2배로 재시작!</button>
     <button id="shareBtn" class="btnAlt">📤 점수 자랑하기</button>
     <button id="restartBtn" class="btn">다시 도전! 🔄</button>
   </div>
@@ -275,10 +270,10 @@
     <div class="info" style="font-size:15px; line-height:2.0">
       🎯 <b>목표: 가게를 지어 내 마을을 키우자!</b><br>
       ① 📱 <b>가고 싶은 쪽을 누르거나 끌기</b> / ⌨️ PC는 방향키<br>
-      ② 🍎 <b>1라운드: 사과 6개</b> 먹으면 첫 가게 완성!<br>
-      ③ 🪨 <b>2라운드부터</b>: 사과로 ⚡파워 충전 → 돌 부수기 → 가게 건설<br>
-      ④ 🏪 완성된 가게 <b>문으로 들어가면 다음 라운드</b> (가게는 마당에 남아요)<br>
-      ⑤ ⏱️ 시간 다 되면 끝! · ⚠️ 벽·자기 꼬리·파워 없을 때 돌은 위험!
+      ② 🍜 <b>그 나라 음식을 목표만큼</b> 먹으면 랜드마크 완성! (라운드마다 조금씩 늘어나요)<br>
+      ③ 🏪 완성된 가게 <b>문으로 들어가면 다음 라운드</b> (가게는 마당에 남아요)<br>
+      ④ 🪨 <b>2라운드부터 돌</b>이 깔려요 · 🦅 <b>3라운드부터 천적</b>이 쫓아와요!<br>
+      ⑤ ⏱️ 시간 다 되면 끝! · ⚠️ 벽·자기 꼬리·돌·천적 모두 위험!
     </div>
     <button id="tutorialOkBtn" class="btn">알겠어요! 🐍</button>
   </div>
@@ -408,6 +403,8 @@ let timeLeft = 8, maxTime = 10;
 let apples = [];
 let obstacles = [];
 let bees = [];            // 움직이는 장애물
+let predators = [];       // 🦅 천적 — 뱀 머리를 느리게 추격 (3R부터)
+let predatorRespawnQueue = [];   // ⚡ 파워뱀에게 처치된 천적의 재등장 타이머(초)
 let tunnels = [];         // 🌀 텔레포트 터널 [{a:{x,y}, b:{x,y}, color, t}]
 let teleCooldown = 0;     // 순간이동 직후 재진입 방지
 let particles = [];
@@ -421,13 +418,8 @@ let roundApplesGoal = 3;   // 이번 라운드 먹어야 할 사과 수
 // 라운드별 난이도 파라미터
 let rdSpeed = 130, rdDrain = 0.9, rdRefill = 3.0, rdRotBase = 12, rdBeeSpeed = 60;
 
-// 🎚️ 난이도 선택 (easy = 쉬움 / hard = 어려움)
-let difficulty = localStorage.getItem('snakeDifficulty') || 'easy';
-const DIFF = {
-  easy: { label: '🌱 쉬움', speed: 0.78, drain: 0.65, refill: 1.3, rot: 1.5, beeSpeed: 0.7, bee: 0.4, rock: 0.45, apple: 0.5, startTime: 1.5 },
-  hard: { label: '🔥 어려움', speed: 1.0, drain: 1.0, refill: 1.0, rot: 1.0, beeSpeed: 1.0, bee: 1.0, rock: 1.0, apple: 1.0, startTime: 0.0 },
-};
-function dcfg() { return DIFF[difficulty] || DIFF.easy; }
+// 🎚️ 난이도 통합 (2026-08-03: 쉬움/어려움 구분이 라운드 스케일링에 묻혀 체감 차이가 없어 단일값으로 통합 — 두 값의 중간)
+// (2026-08-03: 난이도 배율 시스템 완전 제거 — 모든 수치는 applyRoundDifficulty·targetRockCount 등에서 라운드 기반으로 직접 계산)
 let running = false, dead = false;
 let applesEaten = 0;
 let score = 0;            // 💯 누적 점수 (라운드 넘어가도 계속 쌓임)
@@ -444,8 +436,8 @@ let pendingBonus = 0; // 다음 게임 시작 시 추가 시간(초)
 try { dailyStreak = parseInt(localStorage.getItem('snake_streak') || '0') || 0; } catch(e) {}
 
 // 💖 부활: 판당 최대 3회. 코인 비용은 회차마다 체증(코인 경로 억제 → 📺 광고 경로 유도)
-const REVIVE_COIN_COST = [50, 150, 300];
-const MAX_REVIVE = 3;
+const REVIVE_COIN_COST = [1000, 1000, 1000, 1000, 1000];   // 2026-08-03 대표님 지시: 전 회차 1000 통일 — 코인 부활은 확실한 사치재, 광고가 기본 경로
+const MAX_REVIVE = 5;   // 2026-08-03 대표님 지시: 판당 부활 5회까지 (광고+코인 합산)
 // 🛒 시작 부스터 — 판마다 소비되는 코인 싱크(스킨은 1회성이라 싱크가 못 된다)
 const BOOSTERS = {
   time:  { icon: '⏱️', name: '시작시간<br>+3초',  cost: 60,  bonus: 3 },
@@ -487,7 +479,7 @@ try { const a = JSON.parse(localStorage.getItem('snake_ach') || 'null'); if (Arr
 const ACHIEVEMENTS = [
   // 🌱 첫판부터 달성 가능한 '빠른 성취' 3종 — 신규 유저가 첫 세션에 업적을 하나도 못 따는 문제 보완
   { id:'apple1',   icon:'🍏', name:'첫 사과',      desc:'사과 1개 먹기',   reward:15,  check:()=>stats.apples>=1 },
-  { id:'rock1',    icon:'🪨', name:'첫 돌 파괴',   desc:'돌 1개 부수기',   reward:20,  check:()=>stats.rocks>=1 },
+  { id:'round2',   icon:'🚪', name:'문 통과',      desc:'2라운드 도달',    reward:20,  check:()=>stats.bestRound>=2 },
   { id:'gate1',    icon:'🏪', name:'첫 가게',      desc:'가게 1개 완성',   reward:40,  check:()=>stats.gates>=1 },
   { id:'combo4',   icon:'✨', name:'콤보 입문',    desc:'4연속 콤보',      reward:25,  check:()=>stats.bestCombo>=4 },
   { id:'apple50',  icon:'🍎', name:'사과 사냥꾼',  desc:'사과 50개 먹기',  reward:50,  check:()=>stats.apples>=50 },
@@ -495,7 +487,7 @@ const ACHIEVEMENTS = [
   { id:'combo8',   icon:'🔥', name:'콤보 마스터',  desc:'8연속 콤보',      reward:80,  check:()=>stats.bestCombo>=8 },
   { id:'round5',   icon:'🏘️', name:'마을 건축가',  desc:'5라운드 도달',    reward:100, check:()=>stats.bestRound>=5 },
   { id:'round15',  icon:'👑', name:'궁궐의 주인',  desc:'15라운드 도달',   reward:300, check:()=>stats.bestRound>=15 },
-  { id:'rock100',  icon:'💥', name:'돌 파괴자',    desc:'돌 100개 부수기', reward:120, check:()=>stats.rocks>=100 },
+  { id:'gate5',    icon:'🏬', name:'상점가 시작',   desc:'가게 5개 완성',   reward:120, check:()=>stats.gates>=5 },
   { id:'gate10',   icon:'🎉', name:'번화가 사장님', desc:'가게 10개 완성',  reward:200, check:()=>stats.gates>=10 }
 ];
 function checkAchievements() {
@@ -510,7 +502,7 @@ function checkAchievements() {
 // 🎯 오늘의 미션 (매일 리셋) — 라운드 완주 없이도 세션 안에서 작은 성취를 자주 주기 위한 장치
 const MISSIONS = [
   { key:'apple', icon:'🍎', label:'사과 5개 먹기',   goal:5, reward:15 },
-  { key:'rock',  icon:'🪨', label:'돌 2개 부수기',   goal:2, reward:25 },
+  { key:'round', icon:'🚪', label:'2라운드 도달',    goal:1, reward:25 },
   { key:'gate',  icon:'🏪', label:'가게 1개 완성',   goal:1, reward:40 }
 ];
 let missionState = { date:'', progress:{}, claimed:{} };
@@ -631,30 +623,43 @@ function noise(dur, vol, freq) {
   src.connect(filt); filt.connect(g); g.connect(c2.destination);
   src.start(); src.stop(c2.currentTime + dur + 0.02);
 }
-function sfxEat() { tone(523, 0.06, 'square', 0.16); tone(784, 0.1, 'square', 0.16, 784, 0.05); tone(1047, 0.12, 'triangle', 0.12, 1047, 0.1); }
+// 🎼 2026-08-03: 효과음 전면 재조율 — 전부 BGM과 같은 C장조 5음계(도레미솔라)로 통일해
+//    어떤 효과음이 음악 위에 겹쳐도 화음이 되게 한다. 효과음 자체가 멜로디의 일부가 되는 설계.
+const SFX_SCALE = [523.25, 587.33, 659.25, 783.99, 880.00, 1046.5, 1174.66, 1318.51, 1567.98, 1760.00]; // C5 D5 E5 G5 A5 C6 D6 E6 G6 A6
+function sfxEat() {
+  // 🍎 연속으로 먹을수록 '도레미솔라도…' 계단 상승 — 플레이어가 직접 멜로디를 연주하게 된다 (콤보 끊기면 도부터 다시)
+  const idx = Math.min(SFX_SCALE.length - 1, Math.max(0, eatCombo - 1));
+  const n = SFX_SCALE[idx];
+  tone(n, 0.10, 'square', 0.15);
+  tone(n * 2, 0.07, 'sine', 0.045, n * 2, 0.04);   // 옥타브 위 반짝임
+}
 function sfxGolden() { [523,659,784,1047,1318].forEach((n,i)=>tone(n,0.1,'square',0.18,n,i*0.05)); }
-function sfxTurn() { tone(300, 0.04, 'sine', 0.06); }
-function sfxLowTime() { tone(180, 0.08, 'sine', 0.22); tone(180, 0.08, 'sine', 0.18, 180, 0.12); }
-function sfxCrash() { tone(200, 0.35, 'sawtooth', 0.25, 50); noise(0.4, 0.2, 700); }
+function sfxTurn() { tone(587, 0.03, 'sine', 0.035); }   // 레(D5) 아주 짧게 — 조작음도 조성 안에
+function sfxLowTime() { tone(392, 0.08, 'sine', 0.2); tone(392, 0.08, 'sine', 0.16, 392, 0.12); }  // 솔(G4) 경고 펄스
+function sfxCrash() {
+  // 💥 충돌도 '라솔미도' 하강 프레이즈 — 아프지만 노래처럼
+  [880, 784, 659, 523].forEach((n, i) => tone(n, 0.15, 'triangle', 0.2, n * 0.97, i * 0.08));
+  noise(0.3, 0.14, 600);
+}
 function sfxStart() { [392,523,659,784].forEach((n,i)=>tone(n,0.13,'triangle',0.2,n,i*0.07)); }
 function sfxGameOver() { [659,587,523,440].forEach((n,i)=>tone(n,0.24,'triangle',0.2,n,i*0.16)); }
 function sfxNewBest() { [523,659,784,1047,1318].forEach((n,i)=>tone(n,0.16,'square',0.2,n,i*0.1)); }
-function sfxLevelUp() { tone(659,0.1,'square',0.16); tone(988,0.18,'square',0.16,988,0.08); }
+function sfxLevelUp() { tone(659,0.1,'square',0.16); tone(1047,0.18,'square',0.16,1047,0.08); }   // 미→도(높은) 상승
 function sfxCombo() { // 🔥 콤보 배수 상승 - 경쾌한 상승음
   tone(784,0.08,'square',0.16,1047); tone(1047,0.1,'square',0.14,1319,0.05);
 }
-function sfxPower() { // 🌶️ 파워 획득 - 강렬한 상승
-  tone(330,0.1,'sawtooth',0.22,660); tone(440,0.1,'sawtooth',0.22,880,0.06);
-  tone(660,0.12,'square',0.2,1320,0.12); tone(880,0.3,'sawtooth',0.18,1760,0.2);
-  noise(0.25,0.12,1800);
+function sfxPower() { // 🌶️ 파워 획득 - 도미솔라도 팡파레 상승
+  [523,659,784,880,1047].forEach((n,i)=>tone(n,0.1,'square',0.2,n*1.02,i*0.05));
+  tone(1047,0.3,'sawtooth',0.15,2093,0.25);
+  noise(0.2,0.1,1800);
 }
-function sfxSmash() { // 💥 돌 부수기
-  tone(150,0.18,'sawtooth',0.25,40); noise(0.25,0.22,500);
-  tone(400,0.08,'square',0.15,200,0.02);
+function sfxSmash() { // 💥 돌 부수기 - 타격감 유지, 음정만 조성(도)에 맞춤
+  tone(131,0.18,'sawtooth',0.25,40); noise(0.25,0.22,500);
+  tone(523,0.08,'square',0.14,262,0.02);
 }
-function sfxTeleport() { // 🌀 순간이동 - 휘리릭
-  tone(400,0.1,'sine',0.18,1600); tone(1600,0.12,'triangle',0.15,400,0.08);
-  tone(800,0.15,'sine',0.12,2400,0.14);
+function sfxTeleport() { // 🌀 순간이동 - 도→높은도 글리산도 휘리릭
+  tone(523,0.1,'sine',0.18,2093); tone(2093,0.12,'triangle',0.15,523,0.08);
+  tone(1047,0.15,'sine',0.12,2093,0.14);
 }
 function sfxDoorOpen() { // 🚪 문 열림 - 반짝 차임
   tone(523,0.12,'sine',0.18,784); tone(784,0.14,'sine',0.16,1047,0.1);
@@ -681,30 +686,24 @@ const NOTE = {
   'C5':523.25,'D5':587.33,'E5':659.25,'F5':698.46,'G5':783.99,'A5':880.00,'B5':987.77,
   'C6':1046.50,'D6':1174.66,'E6':1318.51, 0:0
 };
-// 경쾌한 멜로디 (16스텝 × 4마디 = 64스텝 루프) — 밝은 장조
-// 🎵 5음계(도·레·미·솔·라) 동요풍 — 4도·7도를 빼서 어떤 음끼리 겹쳐도 부딪히지 않는다.
-//    8분음표 간격에 쉼표를 넉넉히 둬서, 오래 들어도 지치지 않게 여백을 준다.
+// 🎵 2026-08-03 개작: 경쾌·흥얼거림 목표 — 도왑 진행(C→Am→F→G) + 묻고답하는 AABA' 후크
+//    16스텝 × 4마디 = 64스텝 루프. 마지막 B4→C5 해결로 "돌아온 느낌"을 줘서 무한루프에도 안 지친다.
 const BGM_MELODY = [
-  // 마디 1 — 부드럽게 올라갔다 내려옴
-  'E5',0,'G5',0, 'A5',0,'G5',0, 'E5',0,'D5',0, 'E5',0,0,0,
-  // 마디 2 — 낮게 시작해 다시 피어남
-  'C5',0,'D5',0, 'E5',0,'G5',0, 'A5',0,'G5',0, 'E5',0,0,0,
-  // 마디 3 — 가장 높이 (후렴 느낌)
-  'G5',0,'A5',0, 'C6',0,'A5',0, 'G5',0,'E5',0, 'G5',0,0,0,
-  // 마디 4 — 집으로 돌아와 쉼
-  'A5',0,'G5',0, 'E5',0,'D5',0, 'C5',0,0,0, 'C5',0,0,0
+  // 마디 1 (C) — 후크: 통통 뛰어오르는 질문
+  'E5',0,'G5',0, 'C6',0,'G5',0, 'A5',0,'G5',0, 'E5',0,'C5',0,
+  // 마디 2 (Am) — 같은 후크를 한 번 더 (반복이 흥얼거림을 만든다)
+  'A5',0,'C6',0, 'A5',0,'G5',0, 'E5',0,'G5',0, 'A5',0,0,0,
+  // 마디 3 (F) — 브릿지: 새로운 색으로 살짝 벗어남
+  'F5',0,'A5',0, 'C6',0,'A5',0, 'G5',0,'F5',0, 'E5',0,'D5',0,
+  // 마디 4 (G→C) — 응답: 시원하게 해결하고 처음으로
+  'D5',0,'E5',0, 'F5',0,'D5',0, 'B4',0,'D5',0, 'C5',0,0,0
 ];
-// 베이스 라인 (코드 루트, 8스텝마다 변경)
-// 베이스도 5음계 안에서만 (C - Am - G - C). 8스텝마다 코드 변경
+// 🎸 붐-빠 베이스 (루트↔5도 교대) — 4스텝(8분음표)마다 한 번, 통통 튀는 워킹감
 const BGM_BASS = [
-  'C4','C4','C4','C4','C4','C4','C4','C4',
-  'A4','A4','A4','A4','A4','A4','A4','A4',
-  'G4','G4','G4','G4','G4','G4','G4','G4',
-  'C4','C4','C4','C4','C4','C4','C4','C4',
-  'C4','C4','C4','C4','C4','C4','C4','C4',
-  'A4','A4','A4','A4','A4','A4','A4','A4',
-  'G4','G4','G4','G4','G4','G4','G4','G4',
-  'C4','C4','C4','C4','C4','C4','C4','C4'
+  'C4','G4','C4','G4',   // C
+  'A4','E4','A4','E4',   // Am
+  'F4','C4','F4','C4',   // F
+  'G4','D4','G4','D4'    // G
 ];
 
 function bgmNote(freq, dur, type, vol, attack) {
@@ -741,19 +740,23 @@ function bgmDrum(kind) {
   }
 }
 
-const BGM_TEMPO = 104; // BPM (동요풍 — 느긋하게)
+const BGM_TEMPO = 128; // BPM (경쾌하게 — 2026-08-03 상향)
 function bgmTick() {
   const len = BGM_MELODY.length;
   const m = BGM_MELODY[bgmStep % len];
-  const b = BGM_BASS[bgmStep % BGM_BASS.length];
-  // 멜로디 — 부드러운 삼각파로 길게 울리게 (동요풍)
-  if (m && NOTE[m]) bgmNote(NOTE[m], 0.34, 'triangle', 0.085, 0.02);
-  // 한 옥타브 위로 아주 옅게 겹쳐 반짝임만 (앞의 square 대신)
-  if (m && NOTE[m]) bgmNote(NOTE[m] * 2, 0.22, 'sine', 0.018, 0.02);
-  // 베이스 — 길고 낮게 깔아 자장가 느낌
-  if (b && NOTE[b]) bgmNote(NOTE[b] / 2, 0.40, 'sine', 0.075, 0.02);
-  // 드럼 — 8스텝에 한 번 약한 킥만. 하이햇은 뺐다(잔잔한 곡엔 방해)
+  // 멜로디 — 스타카토 사각파(칩튠 톤)로 또랑또랑, 옥타브 위 반짝임 살짝
+  if (m && NOTE[m]) {
+    bgmNote(NOTE[m], 0.17, 'square', 0.055, 0.008);
+    bgmNote(NOTE[m] * 2, 0.12, 'sine', 0.02, 0.008);
+  }
+  // 붐-빠 베이스 — 8분음표마다 루트↔5도 교대로 통통
+  if (bgmStep % 4 === 0) {
+    const b = BGM_BASS[Math.floor(bgmStep / 4) % BGM_BASS.length];
+    if (b && NOTE[b]) bgmNote(NOTE[b] / 2, 0.20, 'triangle', 0.10, 0.008);
+  }
+  // 드럼 — 킥은 정박(1·3박), 하이햇은 엇박에서 통통 튀는 스윙감
   if (bgmStep % 8 === 0) bgmDrum('kick');
+  if (bgmStep % 8 === 4) bgmDrum('hat');
   bgmStep++;
 }
 function startBGM() {
@@ -806,9 +809,14 @@ function drawSnakeHead(c, px, py, angle, skinKey, scale) {
   c.rotate(angle);
   c.scale(scale, scale);
   const R = 13; // 머리 그림 기준 크기 (충돌용 HEAD_R과 분리)
-  // 머리 (둥근)
-  const g = c.createRadialGradient(-4, -5, 3, 0, 0, R + 4);
-  g.addColorStop(0, '#FFFFFF'); g.addColorStop(0.25, lighten(headColor, 30)); g.addColorStop(1, headColor);
+  // 머리 (둥근) — 그라디언트는 색상별 1회만 생성 (매 프레임 생성 금지)
+  if (!drawSnakeHead._gc) drawSnakeHead._gc = {};
+  let g = drawSnakeHead._gc[headColor];
+  if (!g) {
+    g = c.createRadialGradient(-4, -5, 3, 0, 0, R + 4);
+    g.addColorStop(0, '#FFFFFF'); g.addColorStop(0.25, lighten(headColor, 30)); g.addColorStop(1, headColor);
+    drawSnakeHead._gc[headColor] = g;
+  }
   c.fillStyle = g;
   c.beginPath(); c.arc(0, 0, R + 3, 0, Math.PI*2); c.fill();
   // 볼터치
@@ -873,24 +881,29 @@ function getPointAtDist(d) {
 // 🎯 라운드별 난이도 계산
 //=========================================
 function roundGoalLength(R) { return Math.min(60, 20 + (R - 1) * 2); } // 목표 길이 (1R=20칸 시작)
-function roundStartTime(R) { return Math.min(9.8, Math.max(5.5, 9 - R * 0.03) + dcfg().startTime); }    // 시작 시간(초) + 난이도 보너스
-function roundRockCount(R) { return Math.min(9, 2 + Math.floor(R / 5)); } // 바위 수 (1R부터 2개, 5R마다 +1, 최대 9개)
-function roundBeeCount(R) { const base = R < 8 ? 0 : Math.min(5, Math.floor((R - 8) / 10) + 1); return Math.round(base * dcfg().bee); }
+// ⏱️ 시작 시간: R1≈9.5초 → R100=6.5초 바닥 (2026-08-03 100R 커브 개편)
+function roundStartTime(R) { return Math.max(6.5, 9.5 - R * 0.03); }
+// 🐝 벌: R8 1마리 → R20 2마리 → R40 3마리 상한
+function roundBeeCount(R) { return R < 8 ? 0 : (R < 20 ? 1 : (R < 40 ? 2 : 3)); }
 
-// 🐍 속도 규칙: 항상 140 고정 (파워뱀일 때만 1.2배는 이동 계산에서 적용)
+// 🐍 속도 규칙: 항상 140 고정 (안정성 — 절대 흔들지 않는다)
 const SPEED_BASE = 140;
 function computeSpeed() { return SPEED_BASE; }
+// 🎉 축제 라운드(10의 배수): 황금사과 2배·돌 30% 감소 — 10라운드마다 쉬어가는 리듬
+let festivalRound = false;
+// 📈 2026-08-03 100R 커브: 시간 경제는 R60에 상한 도달 후 고정(인내 구간), 이후는 실수 누적과의 싸움
 function applyRoundDifficulty(R) {
-  const d = dcfg();
-  rdSpeed = Math.min(300, 150 + R * 2) * d.speed;          // 라운드당 +2 (R1=152, 천천히 시작) × 난이도
-  rdDrain = Math.min(2.0, 0.85 + R * 0.012) * d.drain;     // 시간 감소 × 난이도
-  rdRefill = Math.max(1.3, 3.0 - R * 0.018) * d.refill;    // 회복량 × 난이도
-  rdRotBase = Math.max(4, 12 - R * 0.09) * d.rot;          // 사과 썩는 시간 × 난이도
-  rdBeeSpeed = (55 + R * 1.5) * d.beeSpeed;                // 벌 속도 × 난이도
+  rdSpeed = SPEED_BASE;                            // 이동 속도 고정
+  // 초당 시간 감소: R1~5 완화 계수(0.82→1.0)로 초반 진입장벽↓ (2026-08-03 봇 10판 실측: R1 아사 다발 → 완화)
+  rdDrain = Math.min(1.6, (0.75 + R * 0.014) * Math.min(1, 0.82 + (R - 1) * 0.045));
+  rdRefill = Math.max(1.8, 3.2 - R * 0.023);       // 사과당 회복: R1=3.2초 → R60=1.8초 바닥
+  rdRotBase = Math.max(6, 15 - R * 0.15);          // 썩는 시간: 15초 → R60에 6초 바닥
+  rdBeeSpeed = Math.min(120, 55 + R * 1.2);        // 벌 속도: 뱀(140)보다 항상 느리게
 }
 
 function startRound(R, startLen) {
   round = R;
+  festivalRound = (R % 10 === 0);   // 🎉 10의 배수 = 축제 라운드 (황금사과 2배·돌 30%↓)
   applyRoundDifficulty(R);
   roundGoalLen = roundGoalLength(R);
   computeField();
@@ -908,6 +921,7 @@ function startRound(R, startLen) {
   //    예전엔 10이라 9.8에서 시작 → 회복량이 전부 상한에 깎여 초록·황금 사과 효과가 없는 것처럼 보였다.
   maxTime = 14;
   timeLeft = roundStartTime(R);
+  if (R === 2) bumpMission('round', 1);   // 🎯 오늘의 미션: 2라운드 도달
   // 🎁 1라운드 시작 시 출석 보너스 적용
   if (R === 1 && pendingBonus > 0) {
     timeLeft = Math.min(maxTime, timeLeft + pendingBonus);
@@ -917,29 +931,35 @@ function startRound(R, startLen) {
     maxTime += BOOSTERS.time.bonus;
     timeLeft = Math.min(maxTime, timeLeft + BOOSTERS.time.bonus);
   }
-  apples = []; bees = []; obstacles = []; tunnels = []; particles = [];
+  apples = []; bees = []; predators = []; predatorRespawnQueue = []; obstacles = []; tunnels = []; particles = [];
   powerT = 0; teleCooldown = 0; smashCombo = 0;
   eatCombo = 0; eatComboT = 0;                // 🔥 콤보 초기화
   doorPhase = false; door = null; gateReady = false;   // 🚪 문 초기화
-  themeIndex = (R - 1) % THEMES.length;       // 🎨 라운드별 판 테마
+  // 🎨 테마는 curTheme()이 라운드(국가) 기반으로 직접 계산 (구 themeIndex/THEMES 폐지)
   // 🏪 가게 건설 목표 + 짓는 자리(상단 중앙 고정)
   roundMode = roundModeFor(R);
   roundApples = 0;
   roundApplesGoal = applesGoalForRound(R);
-  rocksGoal = rocksGoalForRound(R);
-  rocksBuilt = 0; powerGauge = 0;
+  powerGauge = 0;
   flyingStones = []; gateFly = false; gateFlyT = 0;
   gateSite = { x: field.x + field.w / 2, y: field.y + field.h * 0.26 };
   // 🎁 7일 연속 출석 보너스: 1라운드에 파워로 시작
   if (R === 1 && pendingBonus > 0 && dailyStreak % 7 === 0) powerT = POWER_DUR;
   if (R === 1 && boostRun.power) powerT = POWER_DUR;   // 🛒 부스터: 파워 달고 시작
-  // 돌 배치(많이) + 벌
   snapCam();   // 🎥 카메라를 뱀 중앙으로
-  if (roundMode === 'rock') ensureRocks();   // 🍎 1R(사과 모으기)엔 돌을 아예 깔지 않는다
-  const beeN = R <= 2 ? 0 : roundBeeCount(R);   // 1~2R은 방해물 전혀 없이, 3R부터 벌만 등장(돌은 6R부터)
-  for (let i = 0; i < beeN; i++) spawnBee();
+  if (R > ROCK_FROM_ROUND) ensureRocks();       // 🪨 2R부터 돌 장애물, 라운드마다 증가
+  // 🐝 벌 폐지 (2026-08-03 대표님 지시: 벌은 뱀의 천적이 아니다 — 위협은 천적으로 일원화)
+  if (R > PREDATOR_FROM_ROUND) {                // 🦅 3R부터 천적: 1마리 → R15 2마리 → R30 3마리
+    const pn = R >= 30 ? 3 : (R >= 15 ? 2 : 1);
+    for (let i = 0; i < pn; i++) spawnPredator();
+  }
   // 터널 1쌍 (라운드 3부터)
   if (R >= 3) spawnTunnel();
+  // 👑 R100 피날레 — 천적·벌 1마리로 줄여 '완주의 기쁨' 연출 (돌 절반은 targetRockCount가 처리)
+  if (R === 100) {
+    if (predators.length > 1) predators.length = 1;
+    if (bees.length > 1) bees.length = 1;
+  }
   ensureApples();
   updateHUD();
   document.getElementById('timeBar').style.width = '100%';
@@ -948,6 +968,7 @@ function startRound(R, startLen) {
 function reset() {
   computeField();
   running = false; dead = false; paused = false;
+  wipeY = null; wipeSwitched = false;   // 🎬 전환 커튼 중단(새 게임)
   applesEaten = 0; rocksSmashed = 0; score = 0; scoreMult = 1;
   tongueT = 0; tongueOut = 0; shake = 0;
   placedGates = [];   // 🏯 정착한 광화문 초기화(새 게임)
@@ -975,14 +996,15 @@ function farFromSnake(x, y, minD) {
 function spawnApple() {
   let pos, tries = 0;
   do { pos = randInField(24); tries++; } while (!farFromSnake(pos.x, pos.y, 30) && tries < 40);
-  // 사과 종류 (확률)
+  // 사과 종류 (확률) — 🎉 축제 라운드는 황금 확률 2배(7%→14%)
   const r = Math.random();
+  const goldenTo = festivalRound ? 0.21 : 0.14;
   let type;
-  if (r < 0.07) type = 'power';       // 🌶️ 파워 고추 (돌 부수기!) - 희귀
-  else if (r < 0.14) type = 'golden'; // 황금 (+3칸, 시간 많이)
-  else if (r < 0.24) type = 'blue';   // 파랑 (잠깐 느리게)
-  else if (r < 0.34) type = 'green';  // 초록 (시간만 회복)
-  else type = 'red';                  // 빨강 (기본)
+  if (r < 0.07) type = 'power';            // 🌶️ 파워 고추 (돌 부수기!) - 희귀
+  else if (r < goldenTo) type = 'golden';  // 황금 (+3칸, 시간 많이)
+  else if (r < goldenTo + 0.10) type = 'blue';   // 파랑 (점수 보너스)
+  else if (r < goldenTo + 0.20) type = 'green';  // 초록 (시간만 회복)
+  else type = 'red';                       // 빨강 (기본)
   // 🌶️ 파워 고추는 부술 바위가 있을 때만 등장 (없으면 일반 사과로)
   if (type === 'power' && obstacles.length === 0) type = 'red';
   // 썩는 시간: 라운드 난이도(rdRotBase) 기준, 파워/황금은 더 빨리 사라짐
@@ -995,9 +1017,10 @@ function spawnApple() {
 
 // 목표 사과 개수 (3배! 화면 가득) - 난이도별로 조절
 function targetAppleCount() {
-  const base = Math.min(48, 32 + Math.floor(snakeLen / 6));
+  // 📱 2026-08-03: 초반엔 적게(7개), 라운드마다 +2개씩 늘어 34개 상한 — 초반 화면 정돈 + 그리기 부하도 감소
+  const base = Math.min(34, 7 + (round - 1) * 2 + Math.floor(snakeLen / 8));
   const bm = boostRun.apple ? BOOSTERS.apple.mult : 1;   // 🛒 부스터: 사과 2배 등장
-  return Math.max(6, Math.round(base * dcfg().apple * bm));
+  return Math.max(6, Math.round(base * bm));
 }
 function ensureApples() {
   let guard = 0;
@@ -1039,6 +1062,55 @@ function spawnBee() {
     r: 12, wing: 0
   });
 }
+// 🦅 천적 — 뱀보다 느리게 추격한다. 잡히면 죽지만 계속 도망치면 따돌릴 수 있는 속도로 맞춤
+const PREDATORS = ['🦅', '🦉', '🐗'];
+function spawnPredator() {
+  let pos, tries = 0;
+  do { pos = randInField(40); tries++; }
+  while (Math.hypot(pos.x - headX, pos.y - headY) < 260 && tries < 50);   // 뱀에서 멀리 등장
+  predators.push({
+    x: pos.x, y: pos.y, vx: 0, vy: 0, r: 15, t: 0,
+    icon: PREDATORS[Math.floor(Math.random() * PREDATORS.length)]
+  });
+}
+function predatorSpeed() {
+  // 뱀의 절반 이하로 느리게(2026-08-03 하향) — 라운드가 올라도 뱀 속도의 58%를 넘지 않는다
+  const base = speed * (0.40 + Math.min(0.18, (round - PREDATOR_FROM_ROUND) * 0.008));
+  return Math.min(speed * 0.58, base);
+}
+function updatePredators(dt) {
+  const sp = predatorSpeed();
+  for (const p of predators) {
+    p.t += dt;
+    const dx = headX - p.x, dy = headY - p.y;
+    const d = Math.hypot(dx, dy) || 1;
+    p.vx = (dx / d) * sp; p.vy = (dy / d) * sp;
+    p.x += p.vx * dt; p.y += p.vy * dt;
+    p.x = Math.max(field.x + p.r, Math.min(field.x + field.w - p.r, p.x));
+    p.y = Math.max(field.y + p.r, Math.min(field.y + field.h - p.r, p.y));
+  }
+}
+function drawPredator(p) {
+  ctx.save();
+  ctx.translate(p.x, p.y);
+  const bob = Math.sin(p.t * 6) * 3;
+  // 위협 표시: 붉은 맥동 후광 (캐시 스프라이트 — 매 프레임 그라디언트 생성 금지)
+  const pulse = 0.22 + Math.sin(p.t * 5) * 0.10;
+  ctx.globalAlpha = pulse;
+  const gs = glowSprite('#FF1744'), GD = p.r * 3.8;
+  ctx.drawImage(gs, -GD / 2, -GD / 2, GD, GD);
+  ctx.globalAlpha = 1;
+  // 바닥 그림자
+  ctx.fillStyle = 'rgba(0,0,0,0.25)';
+  ctx.beginPath(); ctx.ellipse(0, p.r * 0.9, p.r * 0.6, p.r * 0.22, 0, 0, Math.PI*2); ctx.fill();
+  // 천적 그림 (진행 방향으로 좌우 반전) — 고해상도 스프라이트로 또렷하게
+  ctx.translate(0, bob);
+  if (p.vx < 0) ctx.scale(-1, 1);
+  const sp = emojiSprite(p.icon);
+  const D = p.r * 2.5;
+  ctx.drawImage(sp, -D / 2, -D / 2, D, D);
+  ctx.restore();
+}
 
 // 🌀 터널 한 쌍 생성 (입구 A ↔ 출구 B, 서로 멀리) — 다양한 모양/색깔
 const TUNNEL_COLORS = [
@@ -1074,7 +1146,7 @@ function eatApple(a, idx) {
   applesEaten++;
   stats.apples++;             // 🏅 통계
   bumpMission('apple', 1);    // 🎯 오늘의 미션
-  addCoins(1);                // 💰 사과당 코인
+  // 💰 2026-08-03: 사과당 +1 코인 폐지 — 코인이 무한히 쌓여 광고·소모 경제가 죽는 원인. 코인은 라운드 클리어/미션/업적에서만
   haptic(12); // 📳 먹을 때 짧은 진동
   // 🔥 콤보 갱신
   eatCombo++; eatComboT = COMBO_WINDOW;
@@ -1090,9 +1162,10 @@ function eatApple(a, idx) {
     sfxGolden(); showCombo('🌟 황금 사과!');
     spawnParticles(a.x, a.y, '#FFD700', 25);
   } else if (a.type === 'blue') {
+    // 2026-08-03: 슬로우 효과 폐지(속도 불안정 원인) → 점수 보너스 아이템으로 전환
     snakeLen += 1; timeLeft = Math.min(maxTime, timeLeft + getRefill());
-    speedBoostT = 2.5; base = 15;
-    sfxEat(); showCombo('🔵 슬로우!');
+    base = 25;
+    sfxEat(); showCombo('🔵 보너스 +25!');
     spawnParticles(a.x, a.y, '#42A5F5', 18);
   } else if (a.type === 'green') {
     timeLeft = Math.min(maxTime, timeLeft + getRefill() + 2); base = 10;
@@ -1156,32 +1229,32 @@ function getRefill() {
   return Math.max(1.2, rdRefill - snakeLen * 0.015);
 }
 
-let speedBoostT = 0;
 let lowTimePulseT = 0;
 let powerT = 0;          // ⚡ 파워 모드 남은 시간 (돌 부수기)
 let rocksSmashed = 0;    // 총 부순 돌 개수
 let smashCombo = 0;      // 파워 모드 중 연속 부수기 콤보
 // 🏪 꼬마뱀 마을 건설 시스템: 사과→파워→돌깨기→가게 건설→다음라운드
 // 라운드마다 다른 가게를 짓는다(반복감 제거). 지은 가게는 마당에 남아 '내 마을'이 커진다.
-const SHOPS = [
-  { name:'사과가게',   icon:'🍎', wall:'#FFCDD2', roof:'#E53935', sign:'#B71C1C' },
-  { name:'아이스크림', icon:'🍦', wall:'#B3E5FC', roof:'#29B6F6', sign:'#01579B' },
-  { name:'붕어빵',     icon:'🐟', wall:'#FFE0B2', roof:'#FB8C00', sign:'#E65100' },
-  { name:'꽃집',       icon:'🌷', wall:'#F8BBD0', roof:'#EC407A', sign:'#880E4F' },
-  { name:'빵집',       icon:'🥐', wall:'#FFF3E0', roof:'#8D6E63', sign:'#4E342E' },
-  { name:'분식집',     icon:'🍜', wall:'#FFCCBC', roof:'#D84315', sign:'#BF360C' },
-  { name:'카페',       icon:'☕', wall:'#D7CCC8', roof:'#5D4037', sign:'#3E2723' },
-  { name:'문구점',     icon:'✏️', wall:'#C8E6C9', roof:'#43A047', sign:'#1B5E20' }
-];
-function shopForRound(R) { return SHOPS[(R - 1) % SHOPS.length]; }
+// 🏛️ 짓는 건물 = 그 나라 랜드마크 (2026-08-03 대표님 지시: 가게 → 상징물). 먹는 건 대표음식 그대로
+function shopForRound(R) {
+  const c = COUNTRIES[(R - 1) % COUNTRIES.length];
+  const hex = c[5] || '#8D6E63';
+  return { name: c[1], icon: c[2],
+    wall: mixColor(hex, '#FFFFFF', 0.72), roof: hex, sign: mixColor(hex, '#000000', 0.4) };
+}
+function curFood() { return curCountry()[4]; }   // 🍜 이번 나라 대표 음식(먹이)
+// 국기 이모지는 Windows 캔버스에서 글자로 깨져 보인다 → 텍스트에는 이름만 쓴다
+function countryNameOf(idx) { return COUNTRIES[idx % COUNTRIES.length][0].split(' ').slice(1).join(' '); }
+function foodNameOf(idx) { return COUNTRIES[idx % COUNTRIES.length][3].replace(/(가게|하우스|집)$/, ''); }
 function curShop() { return shopForRound(round); }
 // 🎯 라운드 방식: 1~5R은 '사과 모으기'(돌 없이 편하게 가게 짓기) → 6R부터 돌깨기 건설
 const APPLE_ROUNDS = 5;
-function roundModeFor(R) { return R <= APPLE_ROUNDS ? 'apple' : 'rock'; }
+// 2026-08-03: 가게 건설을 전부 "사과 먹기"로 통일 — 돌 부수기 방식 폐지(모든 라운드 'apple')
+function roundModeFor(R) { return 'apple'; }
+const ROCK_FROM_ROUND = 1;       // 🪨 2라운드부터 돌 장애물 등장 (2026-08-03 대표님 지시로 앞당김, 구 5)
+const PREDATOR_FROM_ROUND = 2;   // 🦅 3라운드부터 천적 추격 시작 (2026-08-03 대표님 지시로 앞당김, 구 10)
 let roundMode = 'apple';
 let roundApples = 0;     // 이번 라운드에 먹은 사과 수 (apple 모드 진행도)
-let rocksGoal = 4;       // 이번 라운드 가게 완성에 필요한 돌
-let rocksBuilt = 0;      // 이번 라운드 깬(쌓은) 돌
 let powerGauge = 0;      // 파워까지 먹은 사과 수
 let gateSite = { x: 0, y: 0 }; // 🏯 광화문 짓는 자리(고정)
 let flyingStones = [];   // 깨진 돌이 광화문으로 날아가는 연출
@@ -1189,16 +1262,23 @@ let flyingStones = [];   // 깨진 돌이 광화문으로 날아가는 연출
 let gateFly = false, gateFlyT = 0;
 const GATE_FLY_DUR = 1.3;   // 제자리 완성 연출이라 짧게(예전엔 날아가느라 2.4초)
 const SHOP_DONE_SCALE = 1.45;  // 🏪 완성된 가게는 짓는 중보다 더 크게 — 성취감·목표 가시성
+// 🎬 라운드 전환 커튼 (아래→위 스윕) — 커튼이 화면을 덮는 순간 다음 라운드로 교체 (2026-08-03)
+let wipeY = null, wipeSwitched = false, wipeNextR = 0, wipeCarry = 0;
+let wipeHold = 0, wipeHoldMax = 1.8;   // 🗺️ 지도를 멈춰 보여주는 시간(초) — 너무 빨라 안 보인다는 피드백 반영
 let gateFromX = 0, gateFromY = 0, gateToX = 0, gateToY = 0;
 let placedGates = [];   // 🏯 마당에 정착한 광화문들 (배경 장식)
 function POWER_NEED_FOR(R) { return R <= APPLE_ROUNDS + 1 ? 3 : 5; }   // 🎯 첫 돌깨기 라운드(6R)는 파워도 3개로 완화
 function powerNeed() { return POWER_NEED_FOR(round); }
 const POWER_DUR = 5.5;   // 파워 지속(초)
-// 🍎 1~5R(사과 모으기) 목표 — 6개부터 라운드마다 하나씩 늘어난다 (R1=6 … R5=10)
-function applesGoalForRound(R) { return 5 + R; }
-// 🪨 6R부터 돌깨기 건설. 첫 돌 라운드(6R)를 5개로 시작해 완만히 증가
-function rocksGoalForRound(R) { return Math.min(24, Math.max(5, R - 1)); }
-function targetRockCount(R) { return Math.min(32, Math.round((18 + R * 1.5) * 0.8 * dcfg().rock)); } // 판에 깔린 돌 수 × 난이도
+// 🍎 매 라운드 사과 목표 — R1=6개, 완만히 늘어 R30에 24개 상한 (구 5+R은 R25에 30개로 너무 가팔랐다)
+function applesGoalForRound(R) { return Math.min(24, 6 + Math.floor(R * 0.6)); }
+// 🪨 2R부터 등장. R2=2개 → R30에 22개 상한. 🎉 축제 라운드는 30% 감소, 👑 R100은 다시 절반
+function targetRockCount(R) {
+  let n = Math.min(22, Math.round(1.5 + (R - 1) * 0.7));
+  if (festivalRound) n = Math.round(n * 0.7);
+  if (R >= 100) n = Math.ceil(n / 2);
+  return n;
+}
 // 🔥 연속 먹기 콤보 (중독성 핵심)
 let eatCombo = 0;        // 연속으로 먹은 사과 수
 let eatComboT = 0;       // 콤보 유지 남은 시간(초)
@@ -1207,20 +1287,177 @@ function comboMult() { return Math.min(5, 1 + Math.floor(eatCombo / 2)); } // x1
 let doorPhase = false;   // 🚪 (구) 안전 이동 단계 — 더는 사용 안 함
 let gateReady = false;   // 🏯 광화문 완성·정착 → 게임 진행 중 들어갈 수 있는 상태
 let door = null;         // 🚪 문/광화문 입구 {x,y,r,t}
-let themeIndex = 0;      // 🎨 라운드별 판 테마
 
 // 🎨 라운드마다 바뀌는 판 테마 (배경/판/벽 색)
-const THEMES = [
-  { name:'잔디',   sky1:'#2E7D32', sky2:'#1B5E20', board:'#3D9140', wall1:'#8D6E63', wall2:'#A1887F' },
-  { name:'사막',   sky1:'#C9A86A', sky2:'#9C7A3C', board:'#D4B483', wall1:'#8B6F47', wall2:'#C9A86A' },
-  { name:'얼음',   sky1:'#4A90B8', sky2:'#2C5F7C', board:'#7EC8E3', wall1:'#B0E0E6', wall2:'#E0F7FF' },
-  { name:'사탕',   sky1:'#E91E8C', sky2:'#9C1458', board:'#FF8FC7', wall1:'#FF69B4', wall2:'#FFD1E8' },
-  { name:'밤하늘', sky1:'#1A1A3E', sky2:'#0D0D24', board:'#2A2A5C', wall1:'#6A6AAF', wall2:'#9C9CDF' },
-  { name:'용암',   sky1:'#4A1010', sky2:'#2A0808', board:'#6B2020', wall1:'#FF6B35', wall2:'#FFA500' },
-  { name:'바다',   sky1:'#006994', sky2:'#003D5C', board:'#2A9DC8', wall1:'#80DEEA', wall2:'#B2EBF2' },
-  { name:'숲',     sky1:'#1B4332', sky2:'#0D2818', board:'#2D6A4F', wall1:'#95D5B2', wall2:'#74C69D' }
+// 🌍 100라운드 세계여행 (2026-08-03) — 라운드 = 국가. [국기+이름, 랜드마크, 워터마크, 가게이름, 대표음식]
+//    R100 = 대한민국 피날레. 색은 황금각(137.5°) 회전으로 100라운드 전부 다른 색.
+const COUNTRIES = [
+  ['🇨🇳 중국','만리장성','🏯','만두가게','🥟','#DE2910','🐉|🐼'],
+  ['🇲🇳 몽골','게르','⛺','허르헉집','🍖','#0066B3','🏹|🐎'],
+  ['🇰🇿 카자흐스탄','바이테렉 타워','🗼','베쉬바르막집','🍜','#00AFCA','🚀|🐎'],
+  ['🇺🇿 우즈베키스탄','레기스탄','🕌','플로프집','🍚','#0099B5','🧵|🍉'],
+  ['🇵🇰 파키스탄','바드샤히 모스크','🕌','사모사집','🥟','#115740','🏏|🏔️'],
+  ['🇮🇳 인도','타지마할','🕌','카레집','🍛','#FF9933','🐘|🪷'],
+  ['🇱🇰 스리랑카','시기리야','⛰️','호퍼집','🥞','#8D2029','🍵|🐘'],
+  ['🇳🇵 네팔','에베레스트','🏔️','모모집','🥟','#C8102E','🙏|🏔️'],
+  ['🇧🇹 부탄','탁상 사원','🛕','에마다치집','🌶️','#FF7415','🐉|🙏'],
+  ['🇧🇩 방글라데시','순다르반스','🌳','생선카레집','🐟','#F42A41','🐅|🛺'],
+  ['🇲🇲 미얀마','쉐다곤 파고다','🛕','모힝가집','🍜','#FECB00','☸️|🌸'],
+  ['🇹🇭 태국','왓 아룬','🛕','똠얌꿍집','🍤','#241D4F','🐘|🛺'],
+  ['🇱🇦 라오스','루앙프라방','🛕','찹쌀밥집','🍚','#002868','🐘|🛶'],
+  ['🇰🇭 캄보디아','앙코르와트','🛕','아목집','🐟','#E00025','🐒|🌴'],
+  ['🇻🇳 베트남','하롱베이','⛵','쌀국수집','🍜','#DA251D','🎋|🛶'],
+  ['🇮🇷 이란','페르세폴리스','🏛️','페르시안케밥','🍢','#239F40','🏺|🌹'],
+  ['🇦🇿 아제르바이잔','불의 탑','🔥','플로프집','🍚','#00B5E2','🫖|🍇'],
+  ['🇬🇪 조지아','카즈베기','🏔️','힌칼리집','🥟','#E8112D','🍇|⛪'],
+  ['🇦🇲 아르메니아','아라라트산','🏔️','라바시집','🫓','#F2A800','🍑|⛪'],
+  ['🇹🇷 튀르키예','아야소피아','🕌','케밥집','🥙','#E30A17','🎈|🫖'],
+  ['🇨🇾 키프로스','아프로디테 해변','🏖️','할루미집','🧀','#D57800','🏺|🫒'],
+  ['🇮🇱 이스라엘','예루살렘 구시가','🕍','후무스집','🧆','#0038B8','🕎|🫒'],
+  ['🇸🇦 사우디','메카','🕋','캅사집','🍚','#165D31','🐪|🕌'],
+  ['🇦🇪 아랍에미리트','부르즈 할리파','🏙️','샤와르마집','🥙','#C9A227','🏎️|🌴'],
+  ['🇪🇬 이집트','피라미드','🔺','코샤리집','🍚','#C7A44A','🏺|☀️'],
+  ['🇪🇹 에티오피아','랄리벨라','⛪','인제라집','🫓','#FCDD09','☕|🦁'],
+  ['🇰🇪 케냐','사바나','🦁','냐마초마집','🍖','#BE3A34','🦒|🏃'],
+  ['🇺🇬 우간다','빅토리아호','🦍','마토케집','🍌','#FCDC04','🌊|🐊'],
+  ['🇹🇿 탄자니아','킬리만자로','🏔️','필라우집','🍚','#1EB53A','🐆|🦓'],
+  ['🇲🇬 마다가스카르','바오밥거리','🌳','바닐라가게','🍦','#FC3D32','🦎|🐒'],
+  ['🇲🇺 모리셔스','르몬산','🏝️','돌푸리집','🫓','#1A206D','🦤|🏖️'],
+  ['🇿🇼 짐바브웨','빅토리아폭포','💦','옥수수죽집','🌽','#006400','🐘|🌈'],
+  ['🇿🇦 남아공','테이블마운틴','⛰️','브라이집','🍖','#FFB612','🐧|💎'],
+  ['🇬🇭 가나','케이프코스트','🏰','푸푸집','🍲','#FCD116','🍫|🥁'],
+  ['🇳🇬 나이지리아','라고스','🏙️','졸로프집','🍚','#008751','🎬|🥁'],
+  ['🇸🇳 세네갈','고레섬','⛵','티에부딘집','🐟','#00853F','🦁|🎶'],
+  ['🇲🇦 모로코','마라케시','🕌','타진집','🍲','#C1272D','🐫|🫖'],
+  ['🇩🇿 알제리','사하라','🐫','쿠스쿠스집','🍚','#006233','🌙|🐫'],
+  ['🇹🇳 튀니지','카르타고','🏛️','브릭집','🥟','#E70013','🫒|⛵'],
+  ['🇲🇹 몰타','발레타','🏰','파스티치집','🥧','#CF142B','⚔️|🛡️'],
+  ['🇬🇷 그리스','파르테논','🏛️','수블라키집','🍢','#0D5EAF','⛵|🫒'],
+  ['🇧🇬 불가리아','릴라 수도원','⛪','요거트가게','🥛','#00966E','🌹|🍯'],
+  ['🇷🇴 루마니아','브란성','🏰','사르말레집','🥬','#FCD116','🧛|🐺'],
+  ['🇺🇦 우크라이나','성 소피아 성당','⛪','바레니키집','🥟','#0057B7','🌻|🌾'],
+  ['🇷🇺 러시아','크렘린','🏰','보르시집','🍲','#D52B1E','🪆|❄️'],
+  ['🇫🇮 핀란드','오로라','🌌','시나몬롤집','🥯','#002F6C','🧖|❄️'],
+  ['🇪🇪 에스토니아','탈린 구시가','🏰','흑빵집','🍞','#0072CE','💻|🌲'],
+  ['🇱🇻 라트비아','리가 구시가','⛪','파이가게','🥧','#9E3039','🎶|🌲'],
+  ['🇵🇱 폴란드','바벨성','🏰','피에로기집','🥟','#DC143C','⚔️|🦅'],
+  ['🇨🇿 체코','프라하성','🏰','굴라시집','🍲','#11457E','🍺|🕰️'],
+  ['🇸🇰 슬로바키아','브라티슬라바성','🏰','할루슈키집','🍝','#EE1C25','🐺|⛰️'],
+  ['🇭🇺 헝가리','국회의사당','🏛️','랑고시집','🍞','#436F4D','🌶️|♨️'],
+  ['🇭🇷 크로아티아','두브로브니크','🏰','해산물집','🦑','#C6363C','⛵|🏖️'],
+  ['🇸🇮 슬로베니아','블레드 호수','🏞️','케이크가게','🍰','#005DA4','🐉|🐝'],
+  ['🇦🇹 오스트리아','쇤브룬 궁전','🏰','슈니첼집','🍖','#ED2939','🎻|🎼'],
+  ['🇩🇪 독일','노이슈반슈타인성','🏰','소시지집','🌭','#F7C600','🍺|🥨'],
+  ['🇩🇰 덴마크','인어공주상','🧜‍♀️','페이스트리집','🥐','#C8102E','👑|🍪'],
+  ['🇳🇴 노르웨이','피오르','🏔️','연어가게','🐟','#00205B','🎿|🐟'],
+  ['🇸🇪 스웨덴','감라스탄','🏰','미트볼집','🧆','#006AA7','🛶|🌲'],
+  ['🇮🇸 아이슬란드','화산','🌋','랍스터수프집','🦞','#003897','♨️|🐋'],
+  ['🇮🇪 아일랜드','모허 절벽','🍀','스튜집','🍲','#169B62','🍀|🐑'],
+  ['🇬🇧 영국','빅벤','🎡','피시앤칩스','🍟','#012169','💂|👑'],
+  ['🇳🇱 네덜란드','풍차마을','🌷','치즈가게','🧀','#FF7A00','🚲|🌷'],
+  ['🇧🇪 벨기에','그랑플라스','🏛️','와플가게','🧇','#FDDA24','🍫|🍺'],
+  ['🇱🇺 룩셈부르크','구시가지','🏰','와인가게','🥂','#00A2E1','🏦|💶'],
+  ['🇫🇷 프랑스','에펠탑','🗼','크루아상집','🥐','#0055A4','🎨|🍷'],
+  ['🇲🇨 모나코','몬테카를로','🎰','컵케이크가게','🧁','#CE1126','🏎️|👑'],
+  ['🇨🇭 스위스','마터호른','🏔️','퐁뒤집','🫕','#DA291C','🐄|⛷️'],
+  ['🇮🇹 이탈리아','콜로세움','🏛️','피자가게','🍕','#009246','🍝|🛵'],
+  ['🇪🇸 스페인','사그라다 파밀리아','⛪','파에야집','🥘','#C60B1E','💃|🐂'],
+  ['🇵🇹 포르투갈','벨렝탑','⛵','에그타르트집','🥧','#046A38','🚋|⚓'],
+  ['🇧🇷 브라질','예수상','⛰️','슈하스코집','🥩','#FFDF00','⚽|🦜'],
+  ['🇺🇾 우루과이','콜로니아','⛵','초리판집','🌭','#418FDE','⚽|🐄'],
+  ['🇦🇷 아르헨티나','오벨리스크','🏛️','마테차집','🧉','#75AADB','⚽|🌞'],
+  ['🇨🇱 칠레','모아이','🗿','엠파나다집','🥟','#0039A6','🍇|⛰️'],
+  ['🇧🇴 볼리비아','우유니 소금사막','🧂','살테냐집','🥧','#007934','🎩|🦙'],
+  ['🇵🇾 파라과이','이과수','💦','치파집','🥖','#D52B1E','🧉|🌳'],
+  ['🇵🇪 페루','마추픽추','⛰️','세비체집','🐟','#D91023','🦙|🌽'],
+  ['🇪🇨 에콰도르','갈라파고스','🐢','바나나가게','🍌','#FFDD00','🍫|🦜'],
+  ['🇨🇴 콜롬비아','커피농장','☕','커피하우스','☕','#FCD116','🦋|💎'],
+  ['🇻🇪 베네수엘라','앙헬폭포','💦','아레파집','🫓','#CF142B','⚾|🌴'],
+  ['🇵🇦 파나마','파나마 운하','🚢','새우세비체집','🦐','#DA121A','🐸|🌴'],
+  ['🇨🇷 코스타리카','열대우림','🦜','갈로핀토집','🍚','#002B7F','🦥|🌋'],
+  ['🇬🇹 과테말라','티칼','🛕','토르티야집','🫓','#4997D0','🧵|🌋'],
+  ['🇲🇽 멕시코','치첸이트사','🌵','타코가게','🌮','#006847','🦎|🎸'],
+  ['🇨🇺 쿠바','아바나 올드타운','🚗','샌드위치집','🥪','#002A8F','🎷|🕺'],
+  ['🇯🇲 자메이카','블루마운틴','⛰️','저크치킨집','🍗','#FED100','🎵|🏃'],
+  ['🇩🇴 도미니카공화국','카리브 해변','🏖️','망고가게','🥭','#002D62','⚾|🌴'],
+  ['🇺🇸 미국','자유의 여신상','🗽','햄버거집','🍔','#3C3B6E','🦅|🏈'],
+  ['🇨🇦 캐나다','나이아가라 폭포','🍁','팬케이크집','🥞','#D80621','🐻|🏒'],
+  ['🇫🇯 피지','산호초','🏝️','코코넛가게','🥥','#68BFE5','🌺|🐚'],
+  ['🇳🇿 뉴질랜드','밀포드사운드','⛰️','양고기집','🍖','#00247D','🥝|🏉'],
+  ['🇦🇺 호주','오페라하우스','🎭','미트파이집','🥧','#00247D','🦘|🐨'],
+  ['🇮🇩 인도네시아','보로부두르','🛕','나시고렝집','🍳','#BE0027','🌋|🏄'],
+  ['🇸🇬 싱가포르','머라이언','🦁','치킨라이스집','🍗','#EF3340','🌃|🎢'],
+  ['🇲🇾 말레이시아','페트로나스 타워','🏙️','나시레막집','🍚','#010066','🦋|🌴'],
+  ['🇵🇭 필리핀','초콜릿 힐','⛰️','아도보집','🍗','#0038A8','🏝️|🚌'],
+  ['🇹🇼 대만','타이베이101','🏙️','버블티가게','🧋','#D7000F','🏮|🛵'],
+  ['🇯🇵 일본','후지산','⛩️','초밥집','🍣','#BC002D','🗻|🌸'],
+  ['🇰🇷 대한민국','경복궁','🏯','비빔밥집','🍲','#CD2E3A','🎵|🥋']   // 👑 R100 피날레 = 우리나라!
 ];
-function curTheme() { return THEMES[themeIndex % THEMES.length]; }
+function curCountry() { return COUNTRIES[(round - 1) % COUNTRIES.length]; }
+function countryHue(R) { return (R * 137.508) % 360; }   // 황금각 — 어떤 두 라운드도 색이 겹치지 않는다
+function hsl(h, s, l) { return 'hsl(' + Math.round(h) + ',' + s + '%,' + l + '%)'; }
+function curTheme() {
+  // 🎨 국가 상징색([5] hex) 기반 팔레트 — 하늘은 어둡게, 놀이판·벽은 밝게 파생 (2026-08-03)
+  const hex = curCountry()[5] || '#2E7D32';
+  return { name: curCountry()[0],
+    sky1: mixColor(hex, '#000000', 0.35), sky2: mixColor(hex, '#000000', 0.62),
+    board: mixColor(hex, '#FFFFFF', 0.30),
+    wall1: mixColor(hex, '#FFFFFF', 0.50), wall2: mixColor(hex, '#FFFFFF', 0.75) };
+}
+// 🗺️ 국가별 지도 좌표 (경도,위도 근사 — COUNTRIES와 같은 순서)
+const COUNTRY_LL = [
+  [116,40],[104,47],[67,48],[64,41],[69,30],[78,21],[81,7],[84,28],[90,27],[90,24],
+  [96,21],[100,15],[103,18],[105,12],[106,16],[53,32],[48,40],[43,42],[45,40],[35,39],
+  [33,35],[35,31],[45,24],[54,24],[30,27],[39,9],[38,0],[32,1],[35,-6],[47,-19],
+  [57,-20],[30,-19],[25,-29],[-1,8],[8,9],[-14,15],[-6,32],[3,28],[9,34],[14,36],
+  [22,39],[25,43],[25,46],[31,49],[90,60],[26,64],[26,59],[24,57],[19,52],[15,50],
+  [19,48],[19,47],[16,45],[15,46],[14,47],[10,51],[10,56],[8,61],[15,62],[-19,65],
+  [-8,53],[-1,52],[5,52],[4,50],[6,50],[2,47],[7,44],[8,47],[12,42],[-4,40],
+  [-8,39],[-52,-10],[-56,-33],[-64,-34],[-71,-33],[-65,-17],[-58,-23],[-76,-10],[-78,-2],[-74,4],
+  [-66,7],[-80,9],[-84,10],[-90,15],[-102,23],[-80,22],[-77,18],[-70,19],[-98,39],[-106,56],
+  [178,-18],[172,-42],[134,-25],[113,-2],[104,1],[102,4],[122,13],[121,24],[139,36],[127,37]
+];
+// 경위도 → 지도 정규좌표(0~1, 등장방형)
+function countryXY(idx) {
+  const ll = COUNTRY_LL[idx % COUNTRY_LL.length];
+  return [(ll[0] + 180) / 360, (90 - ll[1]) / 180 * 0.78 + 0.06];   // 남극 여백 잘라 보기 좋게
+}
+// 🗺️ 대륙 해안선 (경위도 폴리곤 — 우리가 흔히 보는 세계지도 형태, 2026-08-03 정밀화)
+//    countryXY와 같은 투영을 쓰므로 국가 점과 정확히 정렬된다
+const CONT_LL = [
+  // 북미 (알래스카~중미)
+  [[-166,66],[-155,71],[-130,70],[-110,72],[-90,69],[-75,62],[-58,52],[-55,47],[-65,44],[-70,42],[-75,35],[-81,31],[-80,25],[-82,30],[-90,29],[-97,28],[-97,21],[-90,21],[-87,16],[-84,10],[-78,7],[-83,9],[-88,13],[-95,16],[-105,23],[-110,31],[-114,32],[-117,33],[-124,40],[-124,48],[-130,55],[-140,60],[-150,59],[-160,58]],
+  // 그린란드
+  [[-46,60],[-55,67],[-50,74],[-35,77],[-25,72],[-32,66],[-42,61]],
+  // 남미
+  [[-78,7],[-75,10],[-72,12],[-63,10],[-52,5],[-44,-3],[-35,-8],[-39,-13],[-41,-22],[-48,-28],[-53,-34],[-58,-39],[-65,-41],[-65,-47],[-69,-52],[-71,-54],[-73,-50],[-73,-44],[-72,-37],[-70,-30],[-70,-18],[-75,-14],[-81,-6],[-80,0],[-77,4]],
+  // 아프리카
+  [[-6,35],[3,37],[10,37],[19,32],[30,31],[34,28],[43,11],[51,12],[48,5],[40,-3],[40,-10],[35,-20],[32,-29],[27,-34],[20,-35],[18,-32],[15,-27],[12,-18],[13,-12],[9,-1],[9,4],[4,6],[-8,4],[-13,9],[-17,15],[-16,20],[-10,26]],
+  // 마다가스카르
+  [[49,-12],[50,-16],[47,-25],[44,-24],[44,-17]],
+  // 유라시아 (이베리아~스칸디나비아~시베리아~한반도~인도차이나~인도~아라비아~지중해)
+  [[-9,37],[-9,43],[-2,44],[-5,48],[0,50],[4,53],[8,55],[8,58],[5,61],[12,65],[20,69],[28,71],[33,69],[40,67],[55,69],[70,73],[90,75],[115,74],[140,72],[160,69],[179,66],[179,62],[170,60],[160,53],[155,58],[143,54],[135,44],[129,40],[129,35],[126,34],[126,38],[122,40],[118,39],[122,32],[117,23],[108,20],[109,13],[105,9],[100,13],[99,7],[103,1],[101,5],[98,10],[94,16],[91,22],[88,21],[85,19],[80,13],[77,8],[72,18],[68,23],[66,25],[61,25],[57,26],[59,22],[55,17],[52,13],[45,12],[39,21],[35,29],[34,32],[36,36],[42,41],[33,42],[28,41],[26,40],[23,40],[20,40],[19,42],[14,45],[12,44],[14,41],[17,40],[16,38],[12,38],[10,44],[7,44],[3,41],[0,39],[-2,37],[-5,36]],
+  // 영국 / 아일랜드 / 아이슬란드
+  [[-5,50],[-3,53],[-4,58],[-1,57],[0,52],[-2,50]],
+  [[-10,52],[-8,55],[-6,54],[-7,52]],
+  [[-24,64],[-18,66],[-14,65],[-18,63]],
+  // 일본 열도
+  [[130,33],[133,35],[137,36],[140,38],[141,42],[143,44],[140,43],[138,37],[134,34],[130,31]],
+  // 스리랑카
+  [[80,9],[82,7],[80,6]],
+  // 인도네시아(수마트라·자바) / 보르네오 / 필리핀 / 뉴기니
+  [[95,5],[106,-7],[115,-9],[114,-6],[103,-2],[96,3]],
+  [[109,1],[117,4],[119,-1],[114,-4],[109,-2]],
+  [[120,18],[122,14],[125,7],[122,8],[120,13]],
+  [[131,-1],[141,-3],[147,-6],[143,-8],[135,-4]],
+  // 호주 / 뉴질랜드
+  [[113,-25],[115,-34],[124,-33],[131,-32],[136,-35],[140,-38],[146,-39],[150,-37],[153,-30],[153,-25],[146,-19],[142,-11],[136,-12],[132,-11],[126,-14],[122,-18],[114,-22]],
+  [[167,-45],[170,-43],[174,-38],[176,-38],[174,-41],[170,-46]],
+  // 쿠바
+  [[-84,22],[-78,21],[-75,20],[-80,23]]
+];
+// 경위도 → 정규좌표 (countryXY와 동일 투영)
+function ll2xy(lon, lat) { return [(lon + 180) / 360, (90 - lat) / 180 * 0.78 + 0.06]; }
 
 // 📳 진동(햅틱) - 모바일 손맛
 function haptic(ms) {
@@ -1240,12 +1477,37 @@ function update(dt) {
 
   if (!running || dead || paused) return;
 
+  // 🎬 라운드 전환 3단계: ① 패널 상승·덮기 → ② 지도 홀드(경로·비행 감상) → ③ 위로 걷히며 새 라운드 공개
+  if (wipeY !== null) {
+    if (wipeY > 0) {
+      wipeY -= dt * H * 2.4;              // ① 빠르게 올라와 덮는다
+      if (wipeY <= 0) {
+        wipeY = 0;
+        if (!wipeSwitched) {              // 덮인 순간 뒤에서 라운드 교체
+          wipeSwitched = true;
+          startRound(wipeNextR, wipeCarry);
+          startBGM();
+          graceT = Math.max(graceT, 0.6);
+          showCombo(festivalRound
+            ? '🎉 ' + wipeNextR + 'R 축제! 황금사과 잔치 🌟'
+            : '🏁 ' + wipeNextR + '번째 나라 · ' + countryNameOf(wipeNextR - 1) + '!');
+        }
+      }
+    } else if (wipeHold > 0) {
+      wipeHold -= dt;                     // ② 지도 정지 화면 — 비행기가 경로를 그린다
+    } else {
+      wipeY -= dt * H * 1.6;              // ③ 걷히며 새 나라 공개
+      if (wipeY < -H) wipeY = null;
+    }
+    return;
+  }
+
   // 🔢 시작 카운트다운 (움직임/시간 정지)
   if (countdownT > 0) {
     const ci = Math.ceil(countdownT);
     if (ci !== lastCountInt) { lastCountInt = ci; tone(660, 0.12, 'square', 0.18); }
     countdownT -= dt;
-    if (countdownT <= 0) { tone(990, 0.2, 'square', 0.2); graceT = Math.max(graceT, 0.8); }
+    if (countdownT <= 0) { tone(1047, 0.2, 'square', 0.2); graceT = Math.max(graceT, 0.8); }   // 출발음 = 높은 도
     return;
   }
 
@@ -1283,15 +1545,13 @@ function update(dt) {
     }
   }
   ensureApples();   // 🍎 사과 항상 채움
-  if (roundMode === 'rock') ensureRocks();   // 🪨 바위 항상 채움 (1R 사과 라운드엔 돌 없음)
+  if (round > ROCK_FROM_ROUND) ensureRocks();   // 🪨 6R부터 판에 돌 수 유지
 
   // 방향 전환 적용
   if (pendingDir) { dirX = pendingDir.x; dirY = pendingDir.y; pendingDir = null; sfxTurn(); }
 
-  // 속도 (파랑사과 슬로우)
-  let curSpeed = speed;
-  if (speedBoostT > 0) { speedBoostT -= dt; curSpeed *= 0.55; }
-  if (powerT > 0) curSpeed *= 1.2;   // ⚡ 파워뱀 1.2배
+  // 속도 — 항상 일정 (2026-08-03: 파랑 슬로우 ×0.55·파워 ×1.2 가속 제거 → "속도 불안정" 체감 원인이었다)
+  const curSpeed = speed;
 
   // 머리 이동
   headX += dirX * curSpeed * dt;
@@ -1353,10 +1613,14 @@ function update(dt) {
   } else lowTimePulseT = 0;
 
   // 벽 충돌 (벽에 닿으면 바로 죽음 - 머리 반지름 + 여유)
-  if (graceT > 0) graceT -= dt;  // 💖 부활 무적
   const WALLM = HEAD_R + 5;
-  if (graceT <= 0 && (headX <= field.x + WALLM || headX >= field.x + field.w - WALLM ||
-      headY <= field.y + WALLM || headY >= field.y + field.h - WALLM)) {
+  if (graceT > 0) {
+    graceT -= dt;  // 💖 부활 무적
+    // 🚧 무적 중에도 벽은 '통과'가 아니라 미끄러진다 — 안 막으면 벽 밖으로 나갔다가 무적 끝나는 순간 급사 (2026-08-03 버그픽스)
+    headX = Math.max(field.x + WALLM, Math.min(field.x + field.w - WALLM, headX));
+    headY = Math.max(field.y + WALLM, Math.min(field.y + field.h - WALLM, headY));
+  } else if (headX <= field.x + WALLM || headX >= field.x + field.w - WALLM ||
+      headY <= field.y + WALLM || headY >= field.y + field.h - WALLM) {
     die('wall'); return;
   }
 
@@ -1378,7 +1642,6 @@ function update(dt) {
         // 💥 돌 부수기 (파워 모드)
         obstacles.splice(i, 1);
         rocksSmashed++; smashCombo++; stats.rocks++;  // 🏅 통계
-        bumpMission('rock', 1);                       // 🎯 오늘의 미션
         const smashPts = 25 + (smashCombo - 1) * 10;
         addScore(smashPts, true);
         addCoins(2);                               // 💰 돌당 코인
@@ -1387,20 +1650,6 @@ function update(dt) {
         haptic(smashCombo > 1 ? [20, 30, 20] : 30);
         spawnParticles(o.x, o.y, '#9E9E9E', 12);   // 💥 먼지
         timeLeft = Math.min(maxTime, timeLeft + 0.4);
-        // 🏯 광화문 아직 완성 전이면 → 건설 진행 (완성 후엔 돌은 그냥 장애물)
-        if (!gateReady && rocksBuilt < rocksGoal) {
-          rocksBuilt++;                            // 🧱 건설 진행
-          snakeLen += 1;                           // 🐍 돌 깰 때마다 꼬리도 자람!
-          // 🧱 깨진 돌이 광화문 자리로 날아감 (실시간 건설 연출)
-          for (let k = 0; k < 3; k++) {
-            flyingStones.push({
-              x: o.x + (Math.random()-0.5)*10, y: o.y + (Math.random()-0.5)*10,
-              tx: gateSite.x + (Math.random()-0.5)*40, ty: gateSite.y + 20 - Math.random()*30,
-              t: 0, dur: 0.45 + Math.random()*0.15
-            });
-          }
-          if (rocksBuilt >= rocksGoal) { roundClear(); return; }  // 🏯 완성!
-        }
         ensureRocks();
         updateHUD();
       } else if (graceT <= 0) { die('obstacle'); return; }
@@ -1419,6 +1668,30 @@ function update(dt) {
         sfxSmash();
         spawnParticles(b.x, b.y, '#FFC107', 18);
       } else if (graceT <= 0) { die('bee'); return; }
+    }
+  }
+
+  // ⏳ 처치된 천적 재등장 타이머
+  for (let i = predatorRespawnQueue.length - 1; i >= 0; i--) {
+    predatorRespawnQueue[i] -= dt;
+    if (predatorRespawnQueue[i] <= 0) {
+      predatorRespawnQueue.splice(i, 1);
+      if (round > PREDATOR_FROM_ROUND) { spawnPredator(); showCombo('🦅 천적 재등장!'); }
+    }
+  }
+  // 🦅 천적 추격 + 충돌 (파워 모드면 쫓아낸다)
+  updatePredators(dt);
+  for (let i = predators.length - 1; i >= 0; i--) {
+    const p = predators[i];
+    if (Math.hypot(headX - p.x, headY - p.y) < HEAD_R + p.r - 4) {
+      if (powerT > 0) {
+        predators.splice(i, 1);
+        predatorRespawnQueue.push(4.0);   // ⏳ 4초 뒤 새 천적이 먼 곳에서 재등장 (라운드 위협 유지)
+        addScore(60, true); addCoins(3);
+        sfxSmash(); shake = 14; haptic([20, 30, 20]);
+        spawnParticles(p.x, p.y, '#FF1744', 22);
+        showCombo('🦅 천적 처치! 곧 새 녀석이 온다…');
+      } else if (graceT <= 0) { die('predator'); return; }
     }
   }
 
@@ -1474,14 +1747,13 @@ function showCombo(text) {
 
 function updateHUD() {
   document.getElementById('roundVal').textContent = round;
-  // 🏪 진행도: 사과 라운드는 사과 수, 돌깨기 라운드는 쌓은 돌 수
-  const appleMode = roundMode === 'apple';
-  document.getElementById('buildVal').textContent = appleMode ? roundApples : rocksBuilt;
-  document.getElementById('buildGoalVal').textContent = appleMode ? roundApplesGoal : rocksGoal;
-  const bi = document.getElementById('buildIcon'); if (bi) bi.textContent = appleMode ? '🍎' : curShop().icon;
-  // ⚡ 파워 칸은 돌깨기 라운드에서만 의미가 있다
+  const cn = document.getElementById('countryName'); if (cn) cn.textContent = curCountry()[0].split(' ').slice(1).join(' ');
+  document.getElementById('buildVal').textContent = roundApples;
+  document.getElementById('buildGoalVal').textContent = roundApplesGoal;
+  // 🏪 먹이=가게 테마 통일: 진행도 아이콘도 이번 라운드 가게로 표시
+  const bi = document.getElementById('buildIcon'); if (bi) bi.textContent = curShop().icon;
   const pw = document.getElementById('powerWrap');
-  if (pw) pw.style.display = appleMode ? 'none' : 'inline';
+  if (pw) pw.style.display = 'none';
   document.getElementById('powerVal').textContent = (powerT > 0 ? '파워!' : powerGauge + '/' + powerNeed());
   document.getElementById('scoreVal').textContent = score;
   const lv = document.getElementById('lenVal'); if (lv) lv.textContent = snakeLen;
@@ -1510,6 +1782,9 @@ function roundClear() {
   const timeBonus = Math.floor(timeLeft * 10);
   lastRoundBonus = clearBonus + timeBonus;
   addScore(lastRoundBonus, false);
+  // 💰 코인은 가게(라운드) 완성으로만 획득 — "가게 지으면 +15" 한 곳에 몰아 소모·획득이 눈에 보이게
+  addCoins(15);
+  showCombo('🏛️ ' + curShop().name + ' 완성! 💰+15');
   haptic([40, 30, 40, 30, 120]);
   // 최고 점수 갱신
   if (score > best) {
@@ -1635,9 +1910,9 @@ function enterDoor() {
   //    (개수가 늘어도 항상 정돈되게 — drawTown 참조)
   placedGates.push({ shop: curShop() });
   doorPhase = false; gateReady = false; door = null;
-  startRound(nextR, carry);
-  startBGM();   // 🎵 다음 라운드 음악
-  showCombo('🏁 ' + nextR + '라운드 · 🎨 ' + curTheme().name + '!');
+  // 🎬 커튼 전환 시작(아래→위 상승) — 실제 라운드 교체는 커튼이 화면을 다 덮는 순간(update의 wipe 블록)에서
+  wipeNextR = nextR; wipeCarry = carry; wipeY = H; wipeSwitched = false;
+  wipeHoldMax = 3.8; wipeHold = wipeHoldMax;   // 🗺️ 지도 3.8초 감상 (2026-08-03 +2초 연장)
 }
 
 function die(cause) {
@@ -1688,6 +1963,46 @@ function buildBgCache() {
     }
     row++;
   }
+  // 🌍 이번 나라 랜드마크 워터마크 + 국가 라벨 (마당 배경, 라운드마다 교체)
+  const co = curCountry();
+  c.save();
+  c.globalAlpha = 0.17;
+  const lmSp = emojiSprite(co[2]);
+  const LS = Math.min(field.w * 0.62, 270);   // 랜드마크 더 크게
+  c.drawImage(lmSp, field.x + field.w / 2 - LS / 2, field.y + field.h * 0.42 - LS / 2, LS, LS);
+  // 🎁 상징물 잔뜩 — 8곳 배치 (데코 2종 + 대표음식 + 랜드마크 소형 혼합, 2026-08-03 증설)
+  //    ※ 중앙 국가명 텍스트는 제거 (대표님 지시 — 그림만으로 나라를 표현)
+  const deco = (co[6] || '').split('|');
+  const icons = [deco[0], deco[1], co[4], deco[0], co[2], deco[1], co[4], deco[1]];
+  const DS = Math.min(field.w * 0.30, 130), DM = Math.round(DS * 0.62);
+  const spots = [
+    [field.x + 10,                   field.y + 66,                DS],
+    [field.x + field.w - DS - 30,    field.y + field.h * 0.50,    DS],
+    [field.x + 12,                   field.y + field.h - DS - 14, DS],
+    [field.x + field.w - DS - 30,    field.y + field.h - DS - 14, DS],
+    [field.x + field.w * 0.5 - DM/2, field.y + field.h - DM - 8,  DM],
+    [field.x + 14,                   field.y + field.h * 0.44,    DM],
+    [field.x + field.w * 0.30,       field.y + 78,                DM],
+    [field.x + field.w * 0.62,       field.y + field.h * 0.68,    DM]
+  ];
+  c.globalAlpha = 0.17;
+  spots.forEach(function(s, i) {
+    const d = icons[i % icons.length];
+    if (d) c.drawImage(emojiSprite(d), s[0], s[1], s[2], s[2]);
+  });
+  c.restore();
+  // 🚩 국기 — 크게, 우상단 (좌상단은 미니랭킹 UI가 가려 안 보였음 → 이동+확대, 2026-08-03)
+  c.save();
+  const FW = 86, FH = 56;
+  const fx3 = field.x + field.w - FW - 34, fy3 = field.y + 14;
+  c.fillStyle = '#5D4037'; c.fillRect(fx3 - 5, fy3 - 4, 5, FH + 26);   // 깃대
+  c.fillStyle = co[5] || '#888';
+  c.beginPath();   // 펄럭이는 깃발
+  c.moveTo(fx3, fy3); c.lineTo(fx3 + FW, fy3 + 5); c.lineTo(fx3 + FW - 9, fy3 + FH / 2);
+  c.lineTo(fx3 + FW, fy3 + FH - 5); c.lineTo(fx3, fy3 + FH); c.closePath(); c.fill();
+  c.strokeStyle = 'rgba(255,255,255,0.85)'; c.lineWidth = 2.5; c.stroke();
+  c.drawImage(emojiSprite(co[0].split(' ')[0]), fx3 + 12, fy3 + 6, FH - 12, FH - 12);   // 국기 이모지(모바일=실제 국기)
+  c.restore();
   c.restore();
   // 둥근 벽(월드 경계)
   c.lineJoin = 'round';
@@ -1697,7 +2012,7 @@ function buildBgCache() {
   roundRectPath(c, field.x + 6, field.y + 6, field.w - 12, field.h - 12, RAD - 6); c.stroke();
 }
 function drawField() {
-  const key = themeIndex + '_' + WORLD_W + '_' + WORLD_H + '_' + DPR;
+  const key = round + '_' + WORLD_W + '_' + WORLD_H + '_' + DPR;   // 🌍 라운드(국가)마다 배경 재생성
   if (key !== bgKey) { buildBgCache(); bgKey = key; }
   // 보이는 월드 영역만 잘라서 화면에 그림 (카메라)
   ctx.drawImage(bgCanvas, cam.x * DPR, cam.y * DPR, W * DPR, H * DPR, 0, 0, W, H);
@@ -1726,6 +2041,87 @@ function roundRect(x, y, w, h, r) {
   ctx.closePath();
 }
 
+// 🖼️ 이모지 고해상도 스프라이트 캐시 — 매 프레임 fillText 하면 작게 흐릿하게 찍힌다.
+//    256px 오프스크린 캔버스에 한 번 크게 그려두고 drawImage로 축소 → 또렷한 '실사' 컬러 그림
+const emojiSpriteCache = {};
+// ✨ 후광 스프라이트 캐시 — createRadialGradient를 매 프레임 만들면 프레임이 출렁인다(속도 불안정 원인)
+const glowSpriteCache = {};
+function glowSprite(color) {
+  let sp = glowSpriteCache[color];
+  if (sp) return sp;
+  const S = 96;
+  sp = document.createElement('canvas');
+  sp.width = S; sp.height = S;
+  const c = sp.getContext('2d');
+  const rg = c.createRadialGradient(S/2, S/2, 2, S/2, S/2, S/2);
+  rg.addColorStop(0, color); rg.addColorStop(1, 'rgba(0,0,0,0)');
+  c.fillStyle = rg;
+  c.fillRect(0, 0, S, S);
+  glowSpriteCache[color] = sp;
+  return sp;
+}
+// 🪨 돌 스프라이트 캐시 — 돌마다 매 프레임 그라디언트를 만들면 돌 22개 × 60fps = 초당 1,320회 생성 (프레임 드랍 주범)
+let rockSpriteC = null;
+function rockSprite() {
+  if (rockSpriteC) return rockSpriteC;
+  const R = 14, S = 64, cx = S / 2, cy = S / 2, sc = 2;
+  rockSpriteC = document.createElement('canvas');
+  rockSpriteC.width = S; rockSpriteC.height = S;
+  const c = rockSpriteC.getContext('2d');
+  c.translate(cx, cy); c.scale(sc, sc);
+  const g = c.createRadialGradient(-4, -5, 3, 0, 0, R);
+  g.addColorStop(0, '#9E9E9E'); g.addColorStop(1, '#5D5D5D');
+  c.fillStyle = g;
+  c.beginPath();
+  c.moveTo(-R, 4); c.lineTo(-R*0.6, -R*0.8); c.lineTo(R*0.3, -R); c.lineTo(R, -R*0.2); c.lineTo(R*0.7, R*0.7); c.lineTo(-R*0.4, R*0.6);
+  c.closePath(); c.fill();
+  c.strokeStyle = '#424242'; c.lineWidth = 1.5; c.stroke();
+  c.strokeStyle = 'rgba(0,0,0,0.3)'; c.lineWidth = 1;
+  c.beginPath(); c.moveTo(-4, -R*0.5); c.lineTo(2, 4); c.lineTo(-3, R*0.5); c.stroke();
+  return rockSpriteC;
+}
+// 🥀 썩은 음식 스프라이트 캐시 — 캐시 생성 때 딱 1번만 filter 사용 (프레임 루프에선 filter 금지)
+const rotSpriteCache = {};
+function rotSprite(icon) {
+  let sp = rotSpriteCache[icon];
+  if (sp) return sp;
+  const src = emojiSprite(icon), S = src.width;
+  sp = document.createElement('canvas');
+  sp.width = S; sp.height = S;
+  const c = sp.getContext('2d');
+  c.filter = 'grayscale(1) brightness(0.55)';
+  c.drawImage(src, 0, 0);
+  rotSpriteCache[icon] = sp;
+  return sp;
+}
+// 🩶 회색 실루엣 스프라이트 캐시 (건설 밑그림용)
+const graySpriteCache = {};
+function graySprite(icon) {
+  let sp = graySpriteCache[icon];
+  if (sp) return sp;
+  const src = emojiSprite(icon), S = src.width;
+  sp = document.createElement('canvas');
+  sp.width = S; sp.height = S;
+  const c = sp.getContext('2d');
+  c.filter = 'grayscale(1) brightness(0.9)';
+  c.drawImage(src, 0, 0);
+  graySpriteCache[icon] = sp;
+  return sp;
+}
+function emojiSprite(icon) {
+  let sp = emojiSpriteCache[icon];
+  if (sp) return sp;
+  const S = 256;
+  sp = document.createElement('canvas');
+  sp.width = S; sp.height = S;
+  const c = sp.getContext('2d');
+  c.font = Math.round(S * 0.82) + 'px "Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",sans-serif';
+  c.textAlign = 'center'; c.textBaseline = 'middle';
+  c.fillText(icon, S / 2, S / 2 + S * 0.04);
+  emojiSpriteCache[icon] = sp;
+  return sp;
+}
+
 function drawApple(a) {
   ctx.save();
   ctx.translate(a.x, a.y);
@@ -1747,50 +2143,76 @@ function drawApple(a) {
     if (rotProg > 0.5 && Math.floor(a.t * 8) % 2 === 0) ctx.globalAlpha = 0.55;
   }
 
-  let color, hl;
-  if (a.type === 'golden') { color = '#FFC107'; hl = '#FFF59D'; }
-  else if (a.type === 'blue') { color = '#42A5F5'; hl = '#BBDEFB'; }
-  else if (a.type === 'green') { color = '#66BB6A'; hl = '#C5E1A5'; }
-  else { color = '#F44336'; hl = '#FF8A80'; }
-  // 썩으면 갈색으로 변함
-  if (rotProg > 0) { color = mixColor(color, '#5D4037', rotProg * 0.7); hl = mixColor(hl, '#795548', rotProg * 0.7); }
-  const r = a.type === 'golden' ? 14 : 12;
-  if (a.type === 'golden' && rotProg < 0.3) { ctx.shadowBlur = 18; ctx.shadowColor = '#FFD700'; }
-  // 사과 몸
-  const g = ctx.createRadialGradient(-4, -4, 2, 0, 0, r);
-  g.addColorStop(0, hl); g.addColorStop(1, color);
-  ctx.fillStyle = g;
-  ctx.beginPath();
-  ctx.arc(-r*0.35, 0, r*0.7, 0, Math.PI*2);
-  ctx.arc(r*0.35, 0, r*0.7, 0, Math.PI*2);
-  ctx.fill();
-  ctx.shadowBlur = 0;
-  // 줄기
-  ctx.strokeStyle = '#5D4037'; ctx.lineWidth = 2; ctx.lineCap = 'round';
-  ctx.beginPath(); ctx.moveTo(0, -r*0.6); ctx.quadraticCurveTo(2, -r-3, 5, -r-2); ctx.stroke();
-  ctx.lineCap = 'butt';
-  // 잎 (썩으면 시들)
-  ctx.fillStyle = rotProg > 0.4 ? '#827717' : '#4CAF50';
-  ctx.beginPath(); ctx.ellipse(6, -r-1, 4, 2.2, -0.5, 0, Math.PI*2); ctx.fill();
-  // 하이라이트
-  ctx.fillStyle = 'rgba(255,255,255,0.6)';
-  ctx.beginPath(); ctx.ellipse(-r*0.4, -r*0.3, 2.5, 3.5, -0.4, 0, Math.PI*2); ctx.fill();
-  // 썩음 반점
-  if (rotProg > 0.3) {
-    ctx.fillStyle = 'rgba(62,39,35,0.6)';
-    ctx.beginPath(); ctx.arc(r*0.2, r*0.2, 2.5, 0, Math.PI*2); ctx.arc(-r*0.3, r*0.3, 2, 0, Math.PI*2); ctx.fill();
+  // 🏪 먹이 = 이번 라운드 가게 품목 그 자체(원 배경 없이 그림만). 효과 구분은 뒤쪽 후광 색으로.
+  const r = a.type === 'golden' ? 17 : 15;
+  let glow = null;
+  if (a.type === 'golden') glow = '#FFD700';
+  else if (a.type === 'blue') glow = '#42A5F5';
+  else if (a.type === 'green') glow = '#66BB6A';
+  if (glow && rotProg < 0.5) {
+    ctx.save();
+    ctx.globalAlpha = 0.30 + Math.sin(a.t * 4) * 0.08;
+    const gs = glowSprite(glow), GD = r * 3;
+    ctx.drawImage(gs, -GD / 2, -GD / 2, GD, GD);
+    ctx.restore();
+  }
+  // 바닥 그림자(입체감)
+  ctx.fillStyle = 'rgba(0,0,0,0.22)';
+  ctx.beginPath(); ctx.ellipse(0, r * 0.78, r * 0.55, r * 0.20, 0, 0, Math.PI*2); ctx.fill();
+  // 품목 그림 — 이번 나라 대표음식 (건물은 랜드마크, 먹이는 음식으로 분리 — 2026-08-03)
+  const sp = emojiSprite(curFood());
+  const D = r * 2.3;
+  ctx.drawImage(sp, -D / 2, -D / 2, D, D);
+  if (rotProg > 0) {   // 🥀 썩음: 캐시된 회색 스프라이트를 위에 겹쳐 페이드 (filter 사용 금지 — 프레임 드랍 주범)
+    ctx.save();
+    ctx.globalAlpha = Math.min(1, rotProg);
+    ctx.drawImage(rotSprite(curFood()), -D / 2, -D / 2, D, D);
+    ctx.restore();
   }
   ctx.restore();
+}
+
+// 🍎 오른쪽 세로 진행 스택 — 먹은 사과가 아래에서 위로 쌓인다 (빈 칸 = 남은 목표)
+function drawAppleStack() {
+  const goal = roundApplesGoal, got = Math.min(roundApples, goal);
+  if (!goal) return;
+  const x = field.x + field.w - 13;
+  const availH = field.h - 44;
+  const step = Math.min(26, availH / goal);
+  const size = Math.min(22, step - 2);
+  const baseY = field.y + field.h - 18;
+  const sp = emojiSprite(curFood());   // 먹은 음식이 쌓인다
+  // 🍽️ 음식 이름 세로 표기 (스택 꼭대기 위 — 공부가 되게)
+  const fname = foodNameOf(round - 1);
+  ctx.save();
+  ctx.font = 'bold 13px sans-serif'; ctx.textAlign = 'center';
+  ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(0,0,0,0.6)'; ctx.fillStyle = '#FFE082';
+  for (let ci = 0; ci < fname.length; ci++) {
+    const cy2 = field.y + 106 + ci * 15;
+    ctx.strokeText(fname[ci], x, cy2); ctx.fillText(fname[ci], x, cy2);
+  }
+  ctx.restore();
+  for (let i = 0; i < goal; i++) {
+    const y = baseY - i * step;
+    if (i < got) {
+      ctx.drawImage(sp, x - size / 2, y - size / 2, size, size);
+    } else {
+      ctx.globalAlpha = 0.22;
+      ctx.fillStyle = '#fff';
+      ctx.beginPath(); ctx.arc(x, y, size * 0.3, 0, Math.PI * 2); ctx.fill();
+      ctx.globalAlpha = 1;
+    }
+  }
 }
 
 function drawPepper(a) {
   // 🌶️ 빨간 고추 - 반짝이는 파워 음식
   const pulse = 1 + Math.sin(a.t * 8) * 0.1;
   ctx.scale(pulse, pulse);
-  ctx.shadowBlur = 20; ctx.shadowColor = '#FF1744';
-  // 후광
-  ctx.fillStyle = 'rgba(255,61,0,0.25)';
-  ctx.beginPath(); ctx.arc(0, 0, 20, 0, Math.PI*2); ctx.fill();
+  // 후광 (캐시 스프라이트 — shadowBlur는 프레임 드랍 주범이라 금지)
+  ctx.save(); ctx.globalAlpha = 0.5;
+  ctx.drawImage(glowSprite('#FF1744'), -26, -26, 52, 52);
+  ctx.restore();
   // 고추 몸 (곡선)
   const g = ctx.createLinearGradient(-8, -8, 8, 12);
   g.addColorStop(0, '#FF5252'); g.addColorStop(1, '#C62828');
@@ -1825,25 +2247,10 @@ function mixColor(a, b, t) {
 }
 
 function drawObstacle(o) {
-  ctx.save();
-  ctx.translate(o.x, o.y);
-  // 바위
-  const g = ctx.createRadialGradient(-4, -5, 3, 0, 0, o.r);
-  g.addColorStop(0, '#9E9E9E'); g.addColorStop(1, '#5D5D5D');
-  ctx.fillStyle = g;
-  ctx.beginPath();
-  ctx.moveTo(-o.r, 4);
-  ctx.lineTo(-o.r*0.6, -o.r*0.8);
-  ctx.lineTo(o.r*0.3, -o.r);
-  ctx.lineTo(o.r, -o.r*0.2);
-  ctx.lineTo(o.r*0.7, o.r*0.7);
-  ctx.lineTo(-o.r*0.4, o.r*0.6);
-  ctx.closePath(); ctx.fill();
-  ctx.strokeStyle = '#424242'; ctx.lineWidth = 1.5; ctx.stroke();
-  // 금
-  ctx.strokeStyle = 'rgba(0,0,0,0.3)'; ctx.lineWidth = 1;
-  ctx.beginPath(); ctx.moveTo(-4, -o.r*0.5); ctx.lineTo(2, 4); ctx.lineTo(-3, o.r*0.5); ctx.stroke();
-  ctx.restore();
+  // 🚀 캐시 스프라이트 1장으로 (그라디언트 재생성 금지 — 돌 개수만큼 프레임이 느려지던 원인)
+  const sp = rockSprite();
+  const D = o.r * 2.3;
+  ctx.drawImage(sp, o.x - D / 2, o.y - D / 2, D, D);
 }
 
 function polyPath(c, sides, r, rot, inner) {
@@ -1862,8 +2269,10 @@ function drawTunnel(pos, tn) {
   const r = tn.r;
   const spin = tn.t * 1.8;
 
-  // 바깥 글로우 링
-  ctx.shadowBlur = 18; ctx.shadowColor = tn.glow;
+  // 바깥 글로우 (캐시 스프라이트 — shadowBlur는 프레임 드랍 주범)
+  ctx.save(); ctx.globalAlpha = 0.55;
+  ctx.drawImage(glowSprite(tn.glow), -(r+16), -(r+16), (r+16)*2, (r+16)*2);
+  ctx.restore();
   ctx.fillStyle = tn.ring;
   ctx.save(); ctx.rotate(spin * 0.5);
   if (tn.shape === 'star') polyPath(ctx, 5, r + 5, -Math.PI/2, 0.5);
@@ -1873,12 +2282,13 @@ function drawTunnel(pos, tn) {
   else { ctx.beginPath(); ctx.arc(0, 0, r + 4, 0, Math.PI*2); }
   ctx.fill();
   ctx.restore();
-  ctx.shadowBlur = 0;
 
-  // 안쪽 어두운 구멍 (모양 따라)
-  const g = ctx.createRadialGradient(0, 0, 2, 0, 0, r);
-  g.addColorStop(0, '#000012'); g.addColorStop(0.55, tn.ring); g.addColorStop(1, tn.glow);
-  ctx.fillStyle = g;
+  // 안쪽 어두운 구멍 (모양 따라) — 그라디언트는 터널 생성 시 1회만 만들어 재사용
+  if (!tn.holeGrad) {
+    tn.holeGrad = ctx.createRadialGradient(0, 0, 2, 0, 0, r);
+    tn.holeGrad.addColorStop(0, '#000012'); tn.holeGrad.addColorStop(0.55, tn.ring); tn.holeGrad.addColorStop(1, tn.glow);
+  }
+  ctx.fillStyle = tn.holeGrad;
   ctx.save(); ctx.rotate(spin * 0.5);
   if (tn.shape === 'star') polyPath(ctx, 5, r, -Math.PI/2, 0.5);
   else if (tn.shape === 'diamond') polyPath(ctx, 4, r, spin * 0.3);
@@ -2117,19 +2527,23 @@ function drawDoor() {
   ctx.save();
   ctx.translate(x, y);
 
-  ctx.scale(SHOP_DONE_SCALE, SHOP_DONE_SCALE);   // 🏪 완성된 가게는 더 크게
+  ctx.scale(SHOP_DONE_SCALE, SHOP_DONE_SCALE);   // 🏛️ 완성된 랜드마크는 더 크게
 
   // 후광 (들어가야 하는 곳 강조)
-  const gl = ctx.createRadialGradient(0, 0, 6, 0, 0, 62 + pulse);
-  gl.addColorStop(0, 'rgba(255,224,102,0.55)'); gl.addColorStop(1, 'rgba(255,224,102,0)');
-  ctx.fillStyle = gl; ctx.beginPath(); ctx.arc(0, 0, 62 + pulse, 0, Math.PI*2); ctx.fill();
+  ctx.save(); ctx.globalAlpha = 0.75;
+  ctx.drawImage(glowSprite('#FFE066'), -(64 + pulse), -(64 + pulse), (64 + pulse) * 2, (64 + pulse) * 2);
+  ctx.restore();
+  // 랜드마크 본체 (2026-08-03: 가게 건물 → 상징물 스프라이트)
+  ctx.fillStyle = 'rgba(0,0,0,0.18)';
+  ctx.beginPath(); ctx.ellipse(0, 48, 52, 10, 0, 0, Math.PI*2); ctx.fill();
+  ctx.drawImage(emojiSprite(shop.icon), -60, -72, 120, 120);
 
-  drawShopBody(shop);
-
-  // 열린 출입문 - 빛나는 포털
-  const ag = ctx.createLinearGradient(0, -12, 0, 30);
-  ag.addColorStop(0, '#FFF8D0'); ag.addColorStop(0.5, '#FFD54F'); ag.addColorStop(1, '#FF9800');
-  ctx.fillStyle = ag;
+  // 열린 출입문 - 빛나는 포털 (그라디언트 1회 생성 캐시)
+  if (!window.__doorGrad) {
+    window.__doorGrad = ctx.createLinearGradient(0, -12, 0, 30);
+    window.__doorGrad.addColorStop(0, '#FFF8D0'); window.__doorGrad.addColorStop(0.5, '#FFD54F'); window.__doorGrad.addColorStop(1, '#FF9800');
+  }
+  ctx.fillStyle = window.__doorGrad;
   ctx.beginPath();
   ctx.moveTo(-14, 30); ctx.lineTo(-14, -2);
   ctx.arc(0, -2, 14, Math.PI, 0);
@@ -2180,35 +2594,20 @@ function drawTown() {
     ctx.restore();
   }
 }
-// 🏪 가벼운 가게 (마을 장식용 — 그라데이션 없이 단순 도형, 성능↑)
+// 🏛️ 마을에 남는 미니 랜드마크 (2026-08-03: 가게 건물 → 상징물 스프라이트)
 function drawMiniGate(cx, cy, scale, shop) {
-  shop = shop || SHOPS[0];
+  if (!shop) return;
   ctx.save();
-  ctx.globalAlpha = 0.75;
+  ctx.globalAlpha = 0.8;
   ctx.translate(cx, cy);
   ctx.scale(scale, scale);
-  // ⚠️ 차양을 건물보다 넓게 빼면 궁궐 지붕(광화문) 실루엣으로 보인다.
-  //    가게로 읽히게 하려면 '세로로 선 상자 + 건물 폭 안쪽 차양 + 간판 + 아이콘'.
-  // 벽 (가로로 넓지 않게 — 집처럼)
-  ctx.fillStyle = shop.wall;
-  ctx.fillRect(-30, -20, 60, 50);
-  ctx.strokeStyle = 'rgba(0,0,0,0.25)'; ctx.lineWidth = 2;
-  ctx.strokeRect(-30, -20, 60, 50);
-  // 출입문
-  ctx.fillStyle = '#6D4C41';
-  ctx.beginPath(); ctx.arc(0, 14, 10, Math.PI, 0); ctx.rect(-10, 14, 20, 16); ctx.fill();
-  // 차양 (건물 폭 안쪽 — 밖으로 안 퍼짐)
-  ctx.fillStyle = shop.roof;
-  ctx.fillRect(-32, -28, 64, 9);
-  // 간판
-  ctx.fillStyle = shop.sign;
-  ctx.fillRect(-26, -42, 52, 13);
-  // 가게 아이콘 (한눈에 무슨 가게인지)
-  ctx.font = '20px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.fillText(shop.icon, 0, -3);
+  ctx.fillStyle = 'rgba(0,0,0,0.15)';
+  ctx.beginPath(); ctx.ellipse(0, 26, 26, 6, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.drawImage(emojiSprite(shop.icon), -30, -34, 60, 60);
   ctx.restore();
   ctx.globalAlpha = 1;
 }
+// 🏛️ 완성된 랜드마크 (2026-08-03: 가게 건물 → 그 나라 상징물 자체를 크게)
 function drawGwanghwamun(cx, cy, scale, alpha, noGlow) {
   ctx.save();
   ctx.globalAlpha = alpha == null ? 1 : alpha;
@@ -2216,13 +2615,20 @@ function drawGwanghwamun(cx, cy, scale, alpha, noGlow) {
   ctx.scale(scale, scale);
   // 후광
   if (!noGlow) {
-    const gl = ctx.createRadialGradient(0, 0, 6, 0, 0, 64);
-    gl.addColorStop(0, 'rgba(255,224,102,0.6)'); gl.addColorStop(1, 'rgba(255,224,102,0)');
-    ctx.fillStyle = gl; ctx.beginPath(); ctx.arc(0, 0, 64, 0, Math.PI*2); ctx.fill();
+    ctx.save(); ctx.globalAlpha *= 0.7;
+    ctx.drawImage(glowSprite('#FFE066'), -70, -70, 140, 140);
+    ctx.restore();
   }
-  drawShopBody(curShop());
-  // 닫힌 출입문 (완성 연출 중 — 끝나면 drawDoor가 빛나는 문으로 바꿔 그린다)
-  drawShopDoorClosed('#8D6E63');
+  // 바닥 그림자 + 받침대
+  ctx.fillStyle = 'rgba(0,0,0,0.18)';
+  ctx.beginPath(); ctx.ellipse(0, 48, 52, 10, 0, 0, Math.PI*2); ctx.fill();
+  // 랜드마크 본체 (대형 스프라이트)
+  ctx.drawImage(emojiSprite(curShop().icon), -60, -72, 120, 120);
+  // 🚪 입구 아치 (들어갈 문)
+  ctx.fillStyle = 'rgba(62,39,35,0.85)';
+  ctx.beginPath(); ctx.arc(0, 34, 13, Math.PI, 0); ctx.rect(-13, 34, 26, 14); ctx.fill();
+  ctx.strokeStyle = 'rgba(255,224,102,0.9)'; ctx.lineWidth = 2.5;
+  ctx.beginPath(); ctx.arc(0, 34, 13, Math.PI, 0); ctx.moveTo(-13, 34); ctx.lineTo(-13, 48); ctx.moveTo(13, 34); ctx.lineTo(13, 48); ctx.stroke();
   ctx.restore();
 }
 
@@ -2230,10 +2636,7 @@ function drawGwanghwamun(cx, cy, scale, alpha, noGlow) {
 function drawGateConstruction() {
   const x = gateSite.x, baseY = gateSite.y + 28;
   const shop = curShop();
-  const appleMode = roundMode === 'apple';
-  const built = appleMode ? roundApples : rocksBuilt;
-  const goal  = appleMode ? roundApplesGoal : rocksGoal;
-  const p = Math.min(1, built / goal);
+  const p = Math.min(1, roundApples / roundApplesGoal);
   ctx.save();
   // 공사 터 그림자
   ctx.fillStyle = 'rgba(0,0,0,0.12)';
@@ -2241,22 +2644,22 @@ function drawGateConstruction() {
 
   ctx.save();
   ctx.translate(x, gateSite.y);
-  // ① 흑백 밑그림 — 처음부터 '무엇을 짓는지' 실제 크기로 보여준다
-  ctx.globalAlpha = 0.32;
-  drawShopBody(grayShop(shop));
-  drawShopDoorClosed('#9E9E9E');
-  ctx.globalAlpha = 1;
+  // ① 흑백 밑그림 — 처음부터 '무슨 랜드마크를 짓는지' 실루엣으로 보여준다 (2026-08-03: 가게→상징물)
+  const lmSp2 = emojiSprite(shop.icon);
+  const SZ = 120, TOP = -72, BOT = 48, HGT = BOT - TOP;
+  ctx.save();
+  ctx.globalAlpha = 0.30;
+  ctx.drawImage(graySprite(shop.icon), -SZ / 2, TOP, SZ, SZ);   // 캐시된 회색 실루엣 (매 프레임 filter 금지)
+  ctx.restore();
 
-  // ② 아래에서 위로 색이 차오름 — 먹을수록 가게에 색이 칠해진다
+  // ② 아래에서 위로 색이 차오름 — 먹을수록 랜드마크가 완성된다
   if (p > 0) {
-    const TOP = -60, BOT = 34, HGT = BOT - TOP;
     const fillH = HGT * p;
     ctx.save();
     ctx.beginPath();
-    ctx.rect(-70, BOT - fillH, 140, fillH);
+    ctx.rect(-SZ / 2 - 10, BOT - fillH, SZ + 20, fillH);
     ctx.clip();
-    drawShopBody(shop);
-    drawShopDoorClosed('#8D6E63');
+    ctx.drawImage(lmSp2, -SZ / 2, TOP, SZ, SZ);
     ctx.restore();
     // 색이 차오르는 경계선 반짝임
     if (p < 1) {
@@ -2271,7 +2674,7 @@ function drawGateConstruction() {
   // 진행 라벨
   ctx.font = 'bold 14px sans-serif'; ctx.textAlign = 'center';
   ctx.strokeStyle = 'rgba(0,0,0,0.55)'; ctx.lineWidth = 3;
-  const lab = (appleMode ? '🍎 ' : shop.icon + ' ') + shop.name + ' ' + built + '/' + goal;
+  const lab = shop.icon + ' ' + shop.name + ' ' + roundApples + '/' + roundApplesGoal;
   ctx.strokeText(lab, x, gateSite.y - 68); ctx.fillStyle = '#fff'; ctx.fillText(lab, x, gateSite.y - 68);
   ctx.textAlign = 'left';
   ctx.restore();
@@ -2308,23 +2711,25 @@ function render() {
   if (!gateFly && !gateReady) drawGateConstruction();   // 🏯 지어지는 광화문 (완성 전)
   // 🚪 들어갈 광화문 강조 (완성·정착 후, 게임 진행 중)
   if (gateReady && door) {
-    const pulse = 1 + Math.sin(performance.now()/180) * 0.12;
-    drawGwanghwamun(door.x, door.y, 0.62 * pulse, 1, false);  // 후광 켜서 빛남
+    // 🏪 완성된 가게는 완성 연출 크기(SHOP_DONE_SCALE) 그대로 유지 — 작아지지 않는다 (2026-08-03, 구 0.62배 축소 제거)
+    const pulse = 1 + Math.sin(performance.now()/180) * 0.05;
+    drawGwanghwamun(door.x, door.y, SHOP_DONE_SCALE * pulse, 1, false);  // 후광 켜서 빛남
     // 들어가기 화살표
     ctx.save();
     ctx.font = 'bold 22px sans-serif'; ctx.textAlign = 'center';
     const bob = Math.sin(performance.now()/200) * 4;
-    ctx.fillText('⬇️', door.x, door.y - 46 + bob);
+    ctx.fillText('⬇️', door.x, door.y - 62 * SHOP_DONE_SCALE - 14 + bob);
     ctx.strokeStyle = 'rgba(0,0,0,0.5)'; ctx.lineWidth = 3;
     ctx.font = 'bold 13px sans-serif';
-    ctx.strokeText('들어가기!', door.x, door.y + 44);
-    ctx.fillStyle = '#FFD700'; ctx.fillText('들어가기!', door.x, door.y + 44);
+    ctx.strokeText('들어가기!', door.x, door.y + 40 * SHOP_DONE_SCALE + 6);
+    ctx.fillStyle = '#FFD700'; ctx.fillText('들어가기!', door.x, door.y + 40 * SHOP_DONE_SCALE + 6);
     ctx.textAlign = 'left';
     ctx.restore();
   }
   for (const a of apples) if (vis(a.x, a.y)) drawApple(a);
   for (const o of obstacles) if (vis(o.x, o.y)) drawObstacle(o);
   for (const b of bees) if (vis(b.x, b.y)) drawBee(b);
+  for (const p of predators) if (vis(p.x, p.y)) drawPredator(p);
   drawSnake();
   // 😅 위기(시간 부족) 땀방울 / 💖 부활 무적 반짝
   if (running && !dead) {
@@ -2338,6 +2743,7 @@ function render() {
       ctx.textAlign = 'left';
     }
   }
+  if (running && !dead) drawAppleStack();    // 🍎 오른쪽 세로 진행 스택
   drawParticles();
   drawFlyingStones();                        // 🧱 날아가는 돌
   // ✈️ 완성된 광화문이 하늘로 떴다가 마당에 내려앉는 연출
@@ -2356,17 +2762,10 @@ function render() {
     ctx.fillText(bn, W/2, H * 0.5);
     ctx.textAlign = 'left';
   }
-  // 하단 안내 — 사과 라운드는 사과 진행도, 돌깨기 라운드는 파워 충전도
-  if (running && !dead && (roundMode === 'apple' || powerT <= 0)) {
-    let txt = roundMode === 'apple'
-      ? '🍎 ' + curShop().name + ' 짓기 ' + roundApples + '/' + roundApplesGoal + ' (사과 먹기)'
-      : '⚡ 파워 충전 ' + powerGauge + '/' + powerNeed() + ' (사과 먹기)';
+  // 하단 안내 — 이번 라운드 가게 짓기 진행도
+  if (running && !dead) {
+    let txt = curShop().icon + ' ' + curShop().name + ' 짓기 ' + roundApples + '/' + roundApplesGoal;
     let bg = 'rgba(0,0,0,0.55)';
-    // 🔵 파랑 사과 슬로우가 걸려 있으면 그걸 우선 알려준다 (효과가 걸린 줄 모르는 문제 보완)
-    if (speedBoostT > 0) {
-      txt = '🔵 천천히! ' + speedBoostT.toFixed(1) + '초';
-      bg = 'rgba(21,101,192,0.75)';
-    }
     ctx.font = 'bold 18px sans-serif'; ctx.textAlign = 'center';
     const tw = ctx.measureText(txt).width + 24;
     const py = H - 44 - safeIn.bottom;
@@ -2427,6 +2826,153 @@ function render() {
     ctx.textBaseline = 'alphabetic';
     ctx.restore();
   }
+  // 🎬 라운드 전환: 🗺️ 세계지도 여행 패널 (아래→위 스윕, 맨 위에 덮어 그림)
+  if (wipeY !== null) {
+    const py = wipeY;
+    // 패널 배경: 밤바다 느낌 네이비
+    const cg = ctx.createLinearGradient(0, py, 0, py + H);
+    cg.addColorStop(0, '#0D1B3E'); cg.addColorStop(0.5, '#122B52'); cg.addColorStop(1, '#0D1B3E');
+    ctx.fillStyle = cg;
+    ctx.fillRect(0, py, W, H);
+    ctx.fillStyle = 'rgba(255,255,255,0.25)';
+    ctx.fillRect(0, py, W, 5); ctx.fillRect(0, py + H - 5, W, 5);
+    // 🗺️ 세계지도 — 더 크게, 실제 지도처럼 (파란 바다 + 경위선 + 해안선 대륙)
+    const mw = W * 0.97, mh = mw * 0.60;
+    const mx = (W - mw) / 2, my = py + H * 0.40 - mh / 2;
+    ctx.save();
+    // 바다
+    const og = ctx.createLinearGradient(0, my, 0, my + mh);
+    og.addColorStop(0, '#5B8FC9'); og.addColorStop(1, '#2F5E96');
+    ctx.fillStyle = og;
+    roundRect(mx - 6, my - 6, mw + 12, mh + 12, 12); ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,0.5)'; ctx.lineWidth = 2;
+    roundRect(mx - 6, my - 6, mw + 12, mh + 12, 12); ctx.stroke();
+    ctx.save();
+    roundRect(mx - 6, my - 6, mw + 12, mh + 12, 12); ctx.clip();
+    // 경위선 (30도 간격) — '진짜 지도' 인상
+    ctx.strokeStyle = 'rgba(255,255,255,0.13)'; ctx.lineWidth = 1;
+    for (let lon = -150; lon <= 150; lon += 30) {
+      const gx = mx + ll2xy(lon, 0)[0] * mw;
+      ctx.beginPath(); ctx.moveTo(gx, my); ctx.lineTo(gx, my + mh); ctx.stroke();
+    }
+    for (let lat = -60; lat <= 60; lat += 30) {
+      const gy = my + ll2xy(0, lat)[1] * mh;
+      ctx.beginPath(); ctx.moveTo(mx, gy); ctx.lineTo(mx + mw, gy); ctx.stroke();
+    }
+    // 대륙 (해안선 폴리곤)
+    ctx.fillStyle = '#8FBF6B';
+    ctx.strokeStyle = '#4E7A3A'; ctx.lineWidth = 1.4;
+    for (const poly of CONT_LL) {
+      ctx.beginPath();
+      poly.forEach(function(p, i) {
+        const q = ll2xy(p[0], p[1]);
+        const x = mx + q[0] * mw, y = my + q[1] * mh;
+        i ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+      });
+      ctx.closePath(); ctx.fill(); ctx.stroke();
+    }
+    // 📍 100개국 점 전부 표시 — 미방문은 회색, 방문은 노랑 (2026-08-03)
+    const visited = Math.min(wipeNextR - 1, COUNTRIES.length);
+    ctx.fillStyle = 'rgba(255,255,255,0.45)';
+    for (let i = visited; i < COUNTRIES.length; i++) {
+      const p = countryXY(i);
+      ctx.beginPath(); ctx.arc(mx + p[0] * mw, my + p[1] * mh, 1.8, 0, Math.PI * 2); ctx.fill();
+    }
+    // 🧵 지나온 여정 전체를 선으로 잇는다 (중국 출발 → 누적 경로)
+    if (visited >= 2) {
+      ctx.strokeStyle = 'rgba(255,215,0,0.75)'; ctx.lineWidth = 2;
+      ctx.beginPath();
+      for (let i = 0; i < visited; i++) {
+        const p = countryXY(i);
+        const x = mx + p[0] * mw, y = my + p[1] * mh;
+        i ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+      }
+      ctx.stroke();
+    }
+    ctx.fillStyle = '#FFEB3B';
+    for (let i = 0; i < visited; i++) {
+      const p = countryXY(i);
+      ctx.beginPath(); ctx.arc(mx + p[0] * mw, my + p[1] * mh, 2.6, 0, Math.PI * 2); ctx.fill();
+    }
+    // ✈️ 이번 이동: 이전 나라 → 다음 나라 (점선 + 비행기 진행)
+    const toIdx = (wipeNextR - 1) % COUNTRIES.length;
+    const toP = countryXY(toIdx);
+    const tx2 = mx + toP[0] * mw, ty2 = my + toP[1] * mh;
+    let fx2 = tx2, fy2 = ty2;
+    if (wipeNextR > 1) {
+      const fromP = countryXY((wipeNextR - 2) % COUNTRIES.length);
+      fx2 = mx + fromP[0] * mw; fy2 = my + fromP[1] * mh;
+      ctx.setLineDash([5, 5]);
+      ctx.strokeStyle = '#FFD700'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(fx2, fy2); ctx.lineTo(tx2, ty2); ctx.stroke();
+      ctx.setLineDash([]);
+    }
+    // 진행도: 홀드 단계에서 0→1로 이동 (덮기 전 0, 걷힐 땐 1)
+    const prog = py > 0 ? 0 : (wipeHold > 0 ? Math.max(0, Math.min(1, 1 - wipeHold / wipeHoldMax)) : 1);
+    const ease = prog * prog * (3 - 2 * prog);
+    const ax = fx2 + (tx2 - fx2) * ease, ay = fy2 + (ty2 - fy2) * ease;
+    // 목적지 핀 (깜빡)
+    if (Math.floor(performance.now() / 300) % 2 === 0) {
+      ctx.font = '20px sans-serif'; ctx.textAlign = 'center';
+      ctx.fillText('📍', tx2, ty2 - 8);
+      ctx.textAlign = 'left';
+    }
+    // 🐍 꼬마뱀이 꿈틀꿈틀 기어간다 (2026-08-03: ✈️ → 뱀)
+    (function() {
+      const t = performance.now() / 1000;
+      const ang = Math.atan2(ty2 - fy2, tx2 - fx2) || 0;
+      const pxv = -Math.sin(ang), pyv = Math.cos(ang);   // 진행 수직 방향
+      for (let k = 6; k >= 0; k--) {
+        const d = k * 6.5;
+        const wig = Math.sin(t * 11 - k * 1.15) * 3.6;   // 🪱 꿈틀
+        const bx = ax - Math.cos(ang) * d + pxv * wig;
+        const by = ay - Math.sin(ang) * d + pyv * wig;
+        const r = k === 0 ? 6 : 5 - k * 0.35;
+        ctx.fillStyle = k === 0 ? '#66BB6A' : (k % 2 ? '#4CAF50' : '#81C784');
+        ctx.strokeStyle = 'rgba(0,0,0,0.35)'; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.arc(bx, by, r, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+        if (k === 0) {   // 눈
+          ctx.fillStyle = '#fff';
+          ctx.beginPath();
+          ctx.arc(bx + pxv * 2.6 + Math.cos(ang) * 2, by + pyv * 2.6 + Math.sin(ang) * 2, 1.7, 0, Math.PI * 2);
+          ctx.arc(bx - pxv * 2.6 + Math.cos(ang) * 2, by - pyv * 2.6 + Math.sin(ang) * 2, 1.7, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = '#000';
+          ctx.beginPath();
+          ctx.arc(bx + pxv * 2.6 + Math.cos(ang) * 2.8, by + pyv * 2.6 + Math.sin(ang) * 2.8, 0.8, 0, Math.PI * 2);
+          ctx.arc(bx - pxv * 2.6 + Math.cos(ang) * 2.8, by - pyv * 2.6 + Math.sin(ang) * 2.8, 0.8, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+    })();
+    ctx.restore();   // 지도 클리핑 해제
+    ctx.restore();
+    // 라벨: 출발/이동 안내 — 국기 글자 대신 이름만(Windows 캔버스에서 국기가 깨짐) + 상징물·음식 공부용 표기
+    const nc = COUNTRIES[toIdx];
+    const wl1 = wipeNextR === 1 ? '🌍 세계여행 출발!'
+      : (wipeNextR % 10 === 0 ? '🎉 ' + wipeNextR + '번째 나라 축제!' : '🐍 ' + wipeNextR + '번째 나라로!');
+    ctx.font = 'bold 30px sans-serif'; ctx.textAlign = 'center';
+    ctx.lineWidth = 6; ctx.strokeStyle = 'rgba(0,0,0,0.6)';
+    ctx.strokeText(wl1, W/2, my - 34); ctx.fillStyle = '#FFEB3B'; ctx.fillText(wl1, W/2, my - 34);
+    // 국가명 (크게) + 왼쪽에 상징색 견장
+    const cname = countryNameOf(toIdx);
+    ctx.font = 'bold 27px sans-serif';
+    const cw2 = ctx.measureText(cname).width;
+    ctx.fillStyle = nc[5] || '#888';
+    ctx.fillRect(W/2 - cw2/2 - 30, my + mh + 18, 20, 26);
+    ctx.strokeStyle = 'rgba(255,255,255,0.8)'; ctx.lineWidth = 2;
+    ctx.strokeRect(W/2 - cw2/2 - 30, my + mh + 18, 20, 26);
+    ctx.lineWidth = 6; ctx.strokeStyle = 'rgba(0,0,0,0.6)';
+    ctx.strokeText(cname, W/2, my + mh + 40); ctx.fillStyle = '#FFFFFF'; ctx.fillText(cname, W/2, my + mh + 40);
+    // 📚 공부 두 줄: 상징물 / 대표 음식 (이름을 글자로)
+    ctx.font = 'bold 17px sans-serif';
+    ctx.lineWidth = 4;
+    const l3 = '🏛️ 상징물: ' + nc[2] + ' ' + nc[1];
+    const l4 = '🍽️ 대표 음식: ' + nc[4] + ' ' + foodNameOf(toIdx);
+    ctx.strokeText(l3, W/2, my + mh + 68); ctx.fillStyle = '#FFE082'; ctx.fillText(l3, W/2, my + mh + 68);
+    ctx.strokeText(l4, W/2, my + mh + 92); ctx.fillStyle = '#A5D6A7'; ctx.fillText(l4, W/2, my + mh + 92);
+    ctx.textAlign = 'left';
+  }
   ctx.restore();
 }
 
@@ -2452,6 +2998,9 @@ function startGame() {
   if (typeof renderBoosters === 'function') renderBoosters();
   reviveCount = 0; graceT = 0;
   countdownT = 3; lastCountInt = -1;   // 🔢 3·2·1 카운트다운
+  // 🌍 시작 인트로: 세계지도에 출발점(🇨🇳 1번째 나라)을 잠시 보여준 뒤 패널이 위로 걷힌다
+  wipeNextR = 1; wipeCarry = 0; wipeSwitched = true; wipeY = 0;
+  wipeHoldMax = 3.0; wipeHold = wipeHoldMax;   // 출발 지도도 여유 있게 (2026-08-03 연장)
   runStartCoins = coins;               // 💰 이번 판 코인 시작값
   document.getElementById('startScreen').style.display = 'none';
   document.getElementById('gameOver').style.display = 'none';
@@ -2515,7 +3064,6 @@ function gameOver() {
   document.getElementById('finalLen').textContent = finalScore;
   document.getElementById('finalRound').textContent = finalRound;
   document.getElementById('applesEaten').textContent = applesEaten;
-  document.getElementById('rocksSmashedShow').textContent = rocksSmashed;
   document.getElementById('newBestText').style.display = newBest ? 'block' : 'none';
 
   // 등급 메시지
@@ -2625,13 +3173,14 @@ function reviveByAd() {
   if (reviveCount >= MAX_REVIVE || !dead) return;
   showRewardAd(doRevive);
 }
-// 💰 코인 부활 — 회차별 체증(50→150→300). 비싸질수록 유저는 광고를 택한다
+// 💰 코인 부활 — 전 회차 1000 고정. 코인 여유가 없으면 자연히 광고를 택한다
 function reviveByCoin() {
   if (reviveCount >= MAX_REVIVE || !dead) return;
   const cost = REVIVE_COIN_COST[reviveCount];
   if (coins < cost) return;
   coins -= cost; saveCoins();
   doRevive();
+  showCombo('💰 -' + cost + ' 코인 부활!');   // 차감이 눈에 보이게
 }
 function doRevive() {   // 실제 부활 처리 (코인/광고 공통)
   reviveCount++;
@@ -2640,8 +3189,22 @@ function doRevive() {   // 실제 부활 처리 (코인/광고 공통)
   const m = HEAD_R + 20;
   headX = Math.max(field.x + m, Math.min(field.x + field.w - m, headX));
   headY = Math.max(field.y + m, Math.min(field.y + field.h - m, headY));
+  // 🧭 부활 방향은 마당 중앙 쪽으로 — 죽었던 벽으로 그대로 재돌진하는 사고 방지 (2026-08-03)
+  const cdx = (field.x + field.w / 2) - headX, cdy = (field.y + field.h / 2) - headY;
+  if (Math.abs(cdx) > Math.abs(cdy)) { dirX = cdx > 0 ? 1 : -1; dirY = 0; }
+  else { dirX = 0; dirY = cdy > 0 ? 1 : -1; }
+  pendingDir = null;
+  countdownT = 1.2; lastCountInt = -1;   // 🔢 짧은 카운트로 마음의 준비 시간
   obstacles = obstacles.filter(o => Math.hypot(o.x - headX, o.y - headY) > 150);
   bees = bees.filter(b => Math.hypot(b.x - headX, b.y - headY) > 150);
+  // 🦅 천적은 지우지 않고 멀리 밀어낸다(추격형이라 지우면 라운드 난도가 통째로 사라진다)
+  for (const p of predators) {
+    const dx = p.x - headX, dy = p.y - headY, d = Math.hypot(dx, dy) || 1;
+    if (d < 240) {
+      p.x = Math.max(field.x + p.r, Math.min(field.x + field.w - p.r, headX + (dx / d) * 240));
+      p.y = Math.max(field.y + p.r, Math.min(field.y + field.h - p.r, headY + (dy / d) * 240));
+    }
+  }
   timeLeft = Math.max(timeLeft, maxTime * 0.7);
   graceT = 2.2;                       // 잠깐 무적
   snapCam();
@@ -2927,24 +3490,6 @@ function onStartPressed() {
 }
 bindBtn('startBtn', onStartPressed);
 
-// 🎚️ 난이도 선택 토글
-function renderDiffSelect() {
-  document.querySelectorAll('#diffSelect .diffBtn').forEach(function(b) {
-    b.classList.toggle('selected', b.getAttribute('data-diff') === difficulty);
-  });
-}
-document.querySelectorAll('#diffSelect .diffBtn').forEach(function(b) {
-  const pick = function() {
-    difficulty = b.getAttribute('data-diff');
-    try { localStorage.setItem('snakeDifficulty', difficulty); } catch(e) {}
-    renderDiffSelect();
-    try { tone(700, 0.08, 'sine', 0.15); } catch(e) {}
-  };
-  b.addEventListener('click', pick);
-  b.addEventListener('touchstart', function(e){ e.preventDefault(); pick(); }, {passive:false});
-});
-renderDiffSelect();
-
 bindBtn('restartBtn', backToStartFromResult);
 bindBtn('saveNameBtn', saveAndContinue);
 bindBtn('clearRestartBtn', backToStartFromResult);
@@ -2957,16 +3502,7 @@ bindBtn('tutorialOkBtn', function() {
 bindBtn('shareBtn', shareScore);
 bindBtn('reviveAdBtn', reviveByAd);
 bindBtn('reviveBtn', reviveByCoin);
-// 📺 광고 보고 "이번 판 점수 2배" 재시작
-// (구 설계 = 10라운드 점프: 점수는 0 리셋인데 난이도만 2.6배라 광고 시청이 손해였음 → 순수 이득으로 교체)
-bindBtn('adBoostBtn', function() {
-  showRewardAd(function() {
-    clearAdTrialSkin();   // 새 판 시작 → 체험 스킨 원복
-    startGame();          // reset → 1라운드 세팅 + scoreMult=1 초기화
-    scoreMult = 2;        // ⚠️ reset() 이후에 설정해야 유지된다
-    showCombo('✨ 점수 2배 모드! 🔥');
-  });
-});
+// (2026-08-03: "광고 보고 점수 2배 재시작" 버튼 제거 — 게임오버 화면이 너무 복잡하다는 피드백. 광고 훅은 부활+부스터 2곳으로 압축)
 bindBtn('achBtn', function() { renderAchList(); document.getElementById('achScreen').style.display = 'flex'; });
 bindBtn('achCloseBtn', function() { document.getElementById('achScreen').style.display = 'none'; });
 // ⏸️ 일시정지
@@ -3061,7 +3597,7 @@ function makeShareCard() {
   // 텍스트
   c.fillStyle = '#fff'; c.textAlign = 'center';
   c.font = 'bold 36px sans-serif';
-  c.fillText('🐍 꼬마 뱀의 사과 모험', cw/2, 285);
+  c.fillText('🐍 꼬마뱀 세계여행 🌍', cw/2, 285);
   c.fillStyle = '#FFEB3B';
   c.font = 'bold 110px sans-serif';
   c.fillText(score + '점', cw/2, 410);
@@ -3074,7 +3610,7 @@ function makeShareCard() {
   return cvs;
 }
 function shareScore() {
-  const text = '나는 🐍꼬마 뱀의 사과 모험에서 ' + score + '점 (' + round + '라운드)! 너도 도전해봐 🍎 #꼬마뱀';
+  const text = '나는 🐍꼬마뱀 세계여행에서 ' + score + '점 (' + round + '번째 나라)! 너도 도전해봐 🌍 #꼬마뱀세계여행';
   const cvs = makeShareCard();
   tone(880, 0.1, 'square', 0.16); tone(1318, 0.15, 'square', 0.16, 1318, 0.08);
   cvs.toBlob(function(blob) {
