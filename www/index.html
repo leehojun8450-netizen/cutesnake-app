@@ -67,7 +67,7 @@
 
   #comboMsg { position: absolute; top: 150px; left: 50%; transform: translateX(-50%) scale(0.5); font-size: 30px; color: #FFEB3B; font-weight: bold; text-shadow: 2px 2px 0 #2E7D32, 0 0 15px #FFEB3B; pointer-events: none; opacity: 0; transition: all 0.3s; z-index: 12; white-space: nowrap; text-align: center; }
 
-  .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 30, 10, 0.9); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 30; text-align: center; padding: 20px; overflow-y: auto; }
+  .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 30, 10, 0.9); display: flex; flex-direction: column; justify-content: center; justify-content: safe center; align-items: center; z-index: 30; text-align: center; padding: calc(20px + env(safe-area-inset-top)) 20px calc(28px + env(safe-area-inset-bottom)); overflow-y: auto; -webkit-overflow-scrolling: touch; }
   .overlay h1 { font-size: 40px; color: #8BC34A; text-shadow: 3px 3px 0 #1B5E20, 0 0 25px #8BC34A; margin-bottom: 5px; letter-spacing: 1px; }
   .overlay h2 { font-size: 19px; color: white; margin-bottom: 12px; opacity: 0.85; }
   .info { background: rgba(255,255,255,0.1); border: 2px solid rgba(139,195,74,0.6); border-radius: 14px; padding: 12px 18px; margin: 8px 0; font-size: 14px; color: white; line-height: 1.7; }
@@ -137,6 +137,13 @@
   .shopBtn.wear { background: linear-gradient(135deg,#42A5F5,#1565C0); color: #fff; }
   .shopBtn.on { background: linear-gradient(135deg,#FFD700,#FFA000); color: #3E2723; }
   .shopBtn.poor { background: #6E6E6E; color: #ccc; }
+  .tierTag { display: inline-block; margin-left: 6px; padding: 1px 7px; border-radius: 9px; font-size: 10px; font-weight: bold; vertical-align: middle; }
+  .tierTag.t1 { background: rgba(139,195,74,0.30); color: #C5E1A5; }
+  .tierTag.t2 { background: rgba(66,165,245,0.30); color: #90CAF9; }
+  .tierTag.t3 { background: rgba(255,193,7,0.30); color: #FFE082; }
+  .tierTag.t4 { background: rgba(156,39,176,0.35); color: #E1BEE7; }
+  /* 상점 목록을 조금 더 길게 볼 수 있게 */
+  #shopList { max-height: 62vh; }
   /* 📺 부활 도전 카운트다운 (2026-08-05) */
   #reviveCountdown { font-size: 92px; font-weight: bold; color: #FFEB3B; line-height: 1;
     text-shadow: 3px 3px 0 #000, 0 0 30px rgba(255,235,59,0.8); margin: 6px 0 10px;
@@ -245,7 +252,7 @@
       <div id="coinBig">💰 코인<br><span id="coinVal">0</span></div>
       <div id="bestBox">🏆 BEST<br><span id="bestVal">0</span></div>
     </div>
-    <div id="subRow"><span id="buildIcon">🍎</span> <b><span id="buildVal">0</span>/<span id="buildGoalVal">6</span></b> · 🐍 <b><span id="lenVal">4</span></b><span id="powerWrap" style="display:none">⚡ <span id="powerVal">0/5</span></span></div>
+    <div id="subRow"><span id="buildIcon">🍜</span> <b><span id="buildVal">0</span>/<span id="buildGoalVal">6</span></b> · 🐍 <b><span id="lenVal">4</span></b><span id="powerWrap" style="display:none">⚡ <span id="powerVal">0/5</span></span></div>
   </div>
   <div id="scorePop"></div>
   <div id="miniRank"></div>
@@ -344,7 +351,7 @@
       <div class="goBest">🏆 최고 <span id="goBestVal">0</span></div>
       <div class="goStats">
         <span>🏁 <b><span id="finalRound">1</span></b>번째 나라</span>
-        <span>🍎 <b><span id="applesEaten">0</span></b></span>
+        <span>🍽️ <b><span id="applesEaten">0</span></b></span>
         <span>🪙 <b id="goCoinMsg">+0</b></span>
       </div>
     </div>
@@ -507,19 +514,44 @@ function snapCam() { // 즉시 중앙
 const BEAD_DEFAULT = ['#8BC34A', '#CDDC39', '#4DD0E1', '#42A5F5', '#5C6BC0'];
 // 🎨 스킨 5종 (2026-08-06 상점 개편) — id는 지시서 명세를 따르되, 구 id는 아래 SKIN_MIGRATE로 이어받는다
 const SKINS = {
-  default:     { name:'기초 뱀',      desc:'클래식 그린 뱀',            head:'#66BB6A', body1:'#81C784', body2:'#4CAF50', belly:'#C5E1A5',
+  // ─ 무료 ─
+  default:     { name:'기초 뱀',      desc:'클래식 그린 뱀',              head:'#66BB6A', body1:'#81C784', body2:'#4CAF50', belly:'#C5E1A5',
                  beads: BEAD_DEFAULT },
-  cute_cat:    { name:'분홍 냥이',    desc:'귀여운 핑크 고양이',        head:'#F06292', body1:'#F48FB1', body2:'#EC407A', belly:'#F8BBD0',
+  // ─ 입문 (100~200) ─
+  cute_cat:    { name:'분홍 냥이',    desc:'귀여운 핑크 고양이',          head:'#F06292', body1:'#F48FB1', body2:'#EC407A', belly:'#F8BBD0',
                  beads:['#F8BBD0','#F48FB1','#F06292','#EC407A','#D81B60'], ears:true },
-  neon_dragon: { name:'네온 드래곤',  desc:'사이버펑크 네온 발광',      head:'#42A5F5', body1:'#64B5F6', body2:'#1E88E5', belly:'#BBDEFB',
+  mint_soda:   { name:'민트 소다',    desc:'톡 쏘는 청량 민트',           head:'#4DD0E1', body1:'#80DEEA', body2:'#26C6DA', belly:'#B2EBF2',
+                 beads:['#E0F7FA','#B2EBF2','#4DD0E1','#26C6DA','#00ACC1'] },
+  choco:       { name:'초코 뱀',      desc:'달콤한 초콜릿빛',             head:'#8D6E63', body1:'#A1887F', body2:'#6D4C41', belly:'#D7CCC8',
+                 beads:['#D7CCC8','#A1887F','#8D6E63','#6D4C41','#4E342E'] },
+  // ─ 중급 (250~400) ─
+  neon_dragon: { name:'네온 드래곤',  desc:'사이버펑크 네온 발광',        head:'#42A5F5', body1:'#64B5F6', body2:'#1E88E5', belly:'#BBDEFB',
                  beads:['#00E5FF','#18FFFF','#40C4FF','#7C4DFF','#B388FF'], glow:'#00E5FF', horns:true },
-  golden_king: { name:'골든 킹',      desc:'왕관을 쓴 황금 뱀',          head:'#FFCA28', body1:'#FFD54F', body2:'#FFA000', belly:'#FFECB3',
+  sakura:      { name:'벚꽃 뱀',      desc:'흩날리는 봄날의 분홍',        head:'#F8BBD0', body1:'#FCE4EC', body2:'#F48FB1', belly:'#FFF0F5',
+                 beads:['#FFF0F5','#FCE4EC','#F8BBD0','#F48FB1','#EC407A'], ears:true },
+  lava:        { name:'용암 뱀',      desc:'이글거리는 화산의 열기',      head:'#FF7043', body1:'#FF8A65', body2:'#E64A19', belly:'#FFCCBC',
+                 beads:['#FFEB3B','#FFA726','#FF7043','#E64A19','#BF360C'], glow:'#FF6D00' },
+  // ─ 상급 (500~700) ─
+  golden_king: { name:'골든 킹',      desc:'왕관을 쓴 황금 뱀',           head:'#FFCA28', body1:'#FFD54F', body2:'#FFA000', belly:'#FFECB3',
                  beads:['#FFF176','#FFD54F','#FFCA28','#FFB300','#FF8F00'], glow:'#FFD700', crown:true },
-  rainbow:     { name:'무지개 스네이크', desc:'알록달록 무지개 그라데이션', head:'#66BB6A', belly:'#FFFFFF', rainbow:true }
+  ice_queen:   { name:'얼음 여왕',    desc:'서릿발 왕관의 설원 뱀',       head:'#B3E5FC', body1:'#E1F5FE', body2:'#4FC3F7', belly:'#FFFFFF',
+                 beads:['#FFFFFF','#E1F5FE','#B3E5FC','#81D4FA','#4FC3F7'], glow:'#B3E5FC', crown:true },
+  shadow:      { name:'그림자 뱀',    desc:'어둠 속을 미끄러지는 존재',   head:'#5E35B1', body1:'#7E57C2', body2:'#4527A0', belly:'#B39DDB',
+                 beads:['#B39DDB','#7E57C2','#5E35B1','#4527A0','#311B92'], glow:'#7C4DFF', horns:true },
+  // ─ 최상급 (1000~) ─
+  rainbow:     { name:'무지개 스네이크', desc:'알록달록 무지개 그라데이션', head:'#66BB6A', belly:'#FFFFFF', rainbow:true },
+  galaxy:      { name:'은하수 뱀',    desc:'별을 품고 여행하는 전설',     head:'#7C4DFF', body1:'#9575CD', body2:'#512DA8', belly:'#D1C4E9',
+                 beads:['#FFFFFF','#B388FF','#7C4DFF','#3F51B5','#1A237E'], glow:'#B388FF', crown:true, horns:true }
 };
-// 💰 스킨 가격 (지시서 명세)
-const SKIN_COST = { default:0, cute_cat:100, neon_dragon:250, golden_king:500, rainbow:1000 };
-const SKIN_ORDER = ['default','cute_cat','neon_dragon','golden_king','rainbow'];
+// 💰 스킨 가격 — 등급별 곡선 (무료 → 입문 → 중급 → 상급 → 최상급)
+const SKIN_COST = {
+  default:0,
+  cute_cat:100, mint_soda:150, choco:200,
+  neon_dragon:250, sakura:320, lava:400,
+  golden_king:500, ice_queen:620, shadow:700,
+  rainbow:1000, galaxy:1500
+};
+const SKIN_ORDER = ['default','cute_cat','mint_soda','choco','neon_dragon','sakura','lava','golden_king','ice_queen','shadow','rainbow','galaxy'];
 // 🔁 구 id → 새 id (기존 유저의 보유·착용 스킨이 초기화되지 않도록)
 const SKIN_MIGRATE = { green:'default', pink:'cute_cat', blue:'neon_dragon', orange:'golden_king', rainbow:'rainbow' };
 function migrateSkinId(id) { return SKIN_MIGRATE[id] || (SKINS[id] ? id : 'default'); }
@@ -582,7 +614,7 @@ const MAX_REVIVE = 5;   // 2026-08-03 대표님 지시: 판당 부활 5회까지
 const BOOSTERS = {
   time:  { icon: '⏱️', name: '시작시간<br>+3초',  cost: 60,  bonus: 3 },
   power: { icon: '⚡', name: '파워 달고<br>시작', cost: 80 },
-  apple: { icon: '🍎', name: '사과 2배<br>등장',  cost: 100, mult: 2 }
+  apple: { icon: '🍜', name: '음식 2배<br>등장',  cost: 100, mult: 2 }
 };
 let boostPick = { time: false, power: false, apple: false };  // 상점에서 고른 것(다음 판에 적용)
 let boostRun  = { time: false, power: false, apple: false };  // 이번 판에 적용 중인 것
@@ -622,12 +654,12 @@ let achDone = [];
 try { const a = JSON.parse(localStorage.getItem('snake_ach') || 'null'); if (Array.isArray(a)) achDone = a; } catch(e) {}
 const ACHIEVEMENTS = [
   // 🌱 첫판부터 달성 가능한 '빠른 성취' 3종 — 신규 유저가 첫 세션에 업적을 하나도 못 따는 문제 보완
-  { id:'apple1',   icon:'🍏', name:'첫 사과',      desc:'사과 1개 먹기',   reward:15,  check:()=>stats.apples>=1 },
+  { id:'apple1',   icon:'🍽️', name:'첫 한 입',     desc:'음식 1개 먹기',   reward:15,  check:()=>stats.apples>=1 },
   { id:'round2',   icon:'🚪', name:'문 통과',      desc:'2라운드 도달',    reward:20,  check:()=>stats.bestRound>=2 },
   { id:'gate1',    icon:'🏪', name:'첫 가게',      desc:'가게 1개 완성',   reward:40,  check:()=>stats.gates>=1 },
   { id:'combo4',   icon:'✨', name:'콤보 입문',    desc:'4연속 콤보',      reward:25,  check:()=>stats.bestCombo>=4 },
-  { id:'apple50',  icon:'🍎', name:'사과 사냥꾼',  desc:'사과 50개 먹기',  reward:50,  check:()=>stats.apples>=50 },
-  { id:'apple300', icon:'🍏', name:'사과 대장',    desc:'사과 300개 먹기', reward:150, check:()=>stats.apples>=300 },
+  { id:'apple50',  icon:'🍜', name:'미식 여행자',  desc:'음식 50개 먹기',  reward:50,  check:()=>stats.apples>=50 },
+  { id:'apple300', icon:'🍲', name:'세계의 맛',    desc:'음식 300개 먹기', reward:150, check:()=>stats.apples>=300 },
   { id:'combo8',   icon:'🔥', name:'콤보 마스터',  desc:'8연속 콤보',      reward:80,  check:()=>stats.bestCombo>=8 },
   { id:'round5',   icon:'🏘️', name:'마을 건축가',  desc:'5라운드 도달',    reward:100, check:()=>stats.bestRound>=5 },
   { id:'round15',  icon:'👑', name:'궁궐의 주인',  desc:'15라운드 도달',   reward:300, check:()=>stats.bestRound>=15 },
@@ -645,7 +677,7 @@ function checkAchievements() {
 
 // 🎯 오늘의 미션 (매일 리셋) — 라운드 완주 없이도 세션 안에서 작은 성취를 자주 주기 위한 장치
 const MISSIONS = [
-  { key:'apple', icon:'🍎', label:'사과 5개 먹기',   goal:5, reward:30 },
+  { key:'apple', icon:'🍜', label:'음식 5개 먹기',   goal:5, reward:30 },
   { key:'round', icon:'🚪', label:'2라운드 도달',    goal:1, reward:40 },
   { key:'gate',  icon:'🏪', label:'가게 1개 완성',   goal:1, reward:60 }
 ];
@@ -832,25 +864,76 @@ const NOTE = {
   'C5':523.25,'D5':587.33,'E5':659.25,'F5':698.46,'G5':783.99,'A5':880.00,'B5':987.77,
   'C6':1046.50,'D6':1174.66,'E6':1318.51, 0:0
 };
-// 🎵 2026-08-03 개작: 경쾌·흥얼거림 목표 — 도왑 진행(C→Am→F→G) + 묻고답하는 AABA' 후크
-//    16스텝 × 4마디 = 64스텝 루프. 마지막 B4→C5 해결로 "돌아온 느낌"을 줘서 무한루프에도 안 지친다.
-const BGM_MELODY = [
-  // 마디 1 (C) — 후크: 통통 뛰어오르는 질문
-  'E5',0,'G5',0, 'C6',0,'G5',0, 'A5',0,'G5',0, 'E5',0,'C5',0,
-  // 마디 2 (Am) — 같은 후크를 한 번 더 (반복이 흥얼거림을 만든다)
-  'A5',0,'C6',0, 'A5',0,'G5',0, 'E5',0,'G5',0, 'A5',0,0,0,
-  // 마디 3 (F) — 브릿지: 새로운 색으로 살짝 벗어남
-  'F5',0,'A5',0, 'C6',0,'A5',0, 'G5',0,'F5',0, 'E5',0,'D5',0,
-  // 마디 4 (G→C) — 응답: 시원하게 해결하고 처음으로
-  'D5',0,'E5',0, 'F5',0,'D5',0, 'B4',0,'D5',0, 'C5',0,0,0
+// 🎵 K-POP 스타일 BGM 8종 (2026-08-06) — 라운드마다 다른 곡이 순환한다.
+//   [왜 코드 합성인가] mp3를 넣으면 곡당 0.5~3MB라 8곡이면 게임이 수십 배로 불어난다.
+//   앱인토스는 외부 로딩이 금지라 전부 번들에 들어가므로, 코드로 합성하면 용량이 0이다.
+//   K-pop 느낌은 ①4도권/도왑 코드진행 ②싱코페이션 훅 ③펀치 있는 킥·클랩으로 만든다.
+const NOTE_X = { 'C4':261.63,'Db4':277.18,'D4':293.66,'Eb4':311.13,'E4':329.63,'F4':349.23,'Gb4':369.99,
+  'G4':392.00,'Ab4':415.30,'A4':440.00,'Bb4':466.16,'B4':493.88,
+  'C5':523.25,'Db5':554.37,'D5':587.33,'Eb5':622.25,'E5':659.25,'F5':698.46,'Gb5':739.99,
+  'G5':783.99,'Ab5':830.61,'A5':880.00,'Bb5':932.33,'B5':987.77,
+  'C6':1046.50,'D6':1174.66,'Eb6':1244.51,'E6':1318.51,'F6':1396.91,'G6':1567.98,'A6':1760.00, 0:0 };
+
+// 각 트랙: 멜로디(16스텝×4마디=64) + 베이스(4스텝당 1개=16) + 템포 + 음색
+const BGM_TRACKS = [
+  { name:'Bright Pop', tempo:128, wave:'square',
+    mel:['E5',0,'G5',0,'C6',0,'G5',0, 'A5',0,'G5',0,'E5',0,'C5',0,
+         'A5',0,'C6',0,'A5',0,'G5',0, 'E5',0,'G5',0,'A5',0,0,0,
+         'F5',0,'A5',0,'C6',0,'A5',0, 'G5',0,'F5',0,'E5',0,'D5',0,
+         'D5',0,'E5',0,'F5',0,'D5',0, 'B4',0,'D5',0,'C5',0,0,0],
+    bass:['C4','G4','C4','G4','A4','E4','A4','E4','F4','C4','F4','C4','G4','D4','G4','D4'] },
+
+  { name:'Dance Hook', tempo:132, wave:'square',
+    mel:['A5',0,'A5','G5','E5',0,'A5',0, 'C6',0,'B5',0,'A5',0,0,0,
+         'G5',0,'G5','F5','D5',0,'G5',0, 'B5',0,'A5',0,'G5',0,0,0,
+         'F5',0,'A5',0,'C6',0,'C6',0, 'B5','A5','G5',0,'E5',0,0,0,
+         'D5',0,'F5',0,'A5',0,'B5',0, 'C6',0,0,0,'A5',0,0,0],
+    bass:['A4','A4','E4','E4','F4','F4','C4','C4','G4','G4','D4','D4','A4','E4','A4','E4'] },
+
+  { name:'City Neon', tempo:120, wave:'sawtooth',
+    mel:['D5',0,'F5',0,'A5',0,'D6',0, 'C6',0,'A5',0,'F5',0,'D5',0,
+         'Bb4',0,'D5',0,'F5',0,'Bb5',0, 'A5',0,'F5',0,'D5',0,0,0,
+         'C5',0,'E5',0,'G5',0,'C6',0, 'B5',0,'G5',0,'E5',0,'C5',0,
+         'F5',0,'A5',0,'C6',0,'A5',0, 'G5',0,'F5',0,'D5',0,0,0],
+    bass:['D4','A4','D4','A4','Bb4','F4','Bb4','F4','C4','G4','C4','G4','F4','C4','F4','C4'] },
+
+  { name:'Cute Bounce', tempo:136, wave:'triangle',
+    mel:['C5','E5','G5',0,'E5','G5','C6',0, 'A5',0,'G5',0,'E5',0,0,0,
+         'D5','F5','A5',0,'F5','A5','D6',0, 'C6',0,'A5',0,'F5',0,0,0,
+         'E5','G5','C6',0,'G5','C6','E6',0, 'D6',0,'C6',0,'A5',0,0,0,
+         'G5',0,'F5',0,'E5',0,'D5',0, 'C5',0,0,0,0,0,0,0],
+    bass:['C4','C4','G4','G4','D4','D4','A4','A4','E4','E4','C4','C4','G4','G4','C4','C4'] },
+
+  { name:'Sunset Chill', tempo:112, wave:'sine',
+    mel:['A5',0,0,'G5','E5',0,'D5',0, 'E5',0,0,0,'G5',0,'A5',0,
+         'C6',0,0,'B5','G5',0,'E5',0, 'D5',0,0,0,'E5',0,0,0,
+         'F5',0,0,'E5','D5',0,'C5',0, 'D5',0,'E5',0,'F5',0,'G5',0,
+         'A5',0,0,'G5','E5',0,'D5',0, 'C5',0,0,0,0,0,0,0],
+    bass:['A4','E4','A4','E4','F4','C4','F4','C4','G4','D4','G4','D4','C4','G4','C4','G4'] },
+
+  { name:'Power Beat', tempo:140, wave:'square',
+    mel:['E5','E5',0,'E5','G5',0,'E5',0, 'D5',0,'E5',0,'G5',0,'A5',0,
+         'A5','A5',0,'A5','C6',0,'A5',0, 'G5',0,'A5',0,'C6',0,'D6',0,
+         'E6',0,'D6',0,'C6',0,'A5',0, 'G5',0,'E5',0,'D5',0,'C5',0,
+         'D5',0,'E5',0,'G5',0,'A5',0, 'E5',0,0,0,0,0,0,0],
+    bass:['E4','E4','B4','B4','A4','A4','E4','E4','C4','C4','G4','G4','D4','D4','A4','A4'] },
+
+  { name:'Dreamy Synth', tempo:118, wave:'triangle',
+    mel:['G5',0,'B5',0,'D6',0,'B5',0, 'A5',0,'G5',0,'E5',0,0,0,
+         'F5',0,'A5',0,'C6',0,'A5',0, 'G5',0,'F5',0,'D5',0,0,0,
+         'E5',0,'G5',0,'B5',0,'G5',0, 'A5',0,'B5',0,'C6',0,0,0,
+         'D6',0,'C6',0,'B5',0,'A5',0, 'G5',0,0,0,0,0,0,0],
+    bass:['G4','D4','G4','D4','F4','C4','F4','C4','E4','B4','E4','B4','A4','E4','D4','D4'] },
+
+  { name:'Festival', tempo:144, wave:'square',
+    mel:['C6',0,'C6',0,'A5',0,'G5',0, 'A5',0,'C6',0,'D6',0,'E6',0,
+         'D6',0,'C6',0,'A5',0,'G5',0, 'E5',0,'G5',0,'A5',0,0,0,
+         'F5',0,'A5',0,'C6',0,'F6',0, 'E6',0,'C6',0,'A5',0,'F5',0,
+         'G5',0,'B5',0,'D6',0,'G6',0, 'C6',0,0,0,0,0,0,0],
+    bass:['C4','G4','A4','E4','F4','C4','G4','D4','F4','C4','C4','G4','G4','D4','C4','C4'] }
 ];
-// 🎸 붐-빠 베이스 (루트↔5도 교대) — 4스텝(8분음표)마다 한 번, 통통 튀는 워킹감
-const BGM_BASS = [
-  'C4','G4','C4','G4',   // C
-  'A4','E4','A4','E4',   // Am
-  'F4','C4','F4','C4',   // F
-  'G4','D4','G4','D4'    // G
-];
+let bgmTrack = BGM_TRACKS[0];
+function pickBgmTrack(R) { return BGM_TRACKS[(R - 1) % BGM_TRACKS.length]; }
 
 function bgmNote(freq, dur, type, vol, attack) {
   if (!audioCtx || !bgmOn) return;
@@ -870,39 +953,41 @@ function bgmDrum(kind) {
   const t0 = audioCtx.currentTime;
   if (kind === 'kick') {
     const osc = audioCtx.createOscillator(), g = audioCtx.createGain();
-    osc.type = 'sine'; osc.frequency.setValueAtTime(140, t0);
-    osc.frequency.exponentialRampToValueAtTime(45, t0 + 0.12);
-    g.gain.setValueAtTime(0.32, t0); g.gain.exponentialRampToValueAtTime(0.001, t0 + 0.14);
+    osc.type = 'sine'; osc.frequency.setValueAtTime(150, t0);
+    osc.frequency.exponentialRampToValueAtTime(45, t0 + 0.11);
+    g.gain.setValueAtTime(0.36, t0); g.gain.exponentialRampToValueAtTime(0.001, t0 + 0.14);
     osc.connect(g); g.connect(bgmGain); osc.start(t0); osc.stop(t0 + 0.16);
-  } else { // hihat (노이즈)
-    const bs = Math.floor(audioCtx.sampleRate * 0.04);
+  } else {   // clap / hat (노이즈) — K-pop 특유의 클랩
+    const bs = Math.floor(audioCtx.sampleRate * (kind === 'clap' ? 0.09 : 0.035));
     const buf = audioCtx.createBuffer(1, bs, audioCtx.sampleRate);
     const d = buf.getChannelData(0);
-    for (let i = 0; i < bs; i++) d[i] = (Math.random()*2-1) * (1 - i/bs);
+    for (let i = 0; i < bs; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / bs, kind === 'clap' ? 2.2 : 1);
     const src = audioCtx.createBufferSource(); src.buffer = buf;
-    const hp = audioCtx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 7000;
-    const g = audioCtx.createGain(); g.gain.setValueAtTime(0.08, t0); g.gain.exponentialRampToValueAtTime(0.001, t0 + 0.04);
-    src.connect(hp); hp.connect(g); g.connect(bgmGain); src.start(t0); src.stop(t0 + 0.05);
+    const f = audioCtx.createBiquadFilter();
+    f.type = kind === 'clap' ? 'bandpass' : 'highpass';
+    f.frequency.value = kind === 'clap' ? 1600 : 8000;
+    const g = audioCtx.createGain();
+    g.gain.setValueAtTime(kind === 'clap' ? 0.16 : 0.06, t0);
+    g.gain.exponentialRampToValueAtTime(0.001, t0 + (kind === 'clap' ? 0.09 : 0.035));
+    src.connect(f); f.connect(g); g.connect(bgmGain); src.start(t0); src.stop(t0 + 0.12);
   }
 }
 
-const BGM_TEMPO = 128; // BPM (경쾌하게 — 2026-08-03 상향)
 function bgmTick() {
-  const len = BGM_MELODY.length;
-  const m = BGM_MELODY[bgmStep % len];
-  // 멜로디 — 스타카토 사각파(칩튠 톤)로 또랑또랑, 옥타브 위 반짝임 살짝
-  if (m && NOTE[m]) {
-    bgmNote(NOTE[m], 0.17, 'square', 0.055, 0.008);
-    bgmNote(NOTE[m] * 2, 0.12, 'sine', 0.02, 0.008);
+  const T = bgmTrack;
+  const m = T.mel[bgmStep % T.mel.length];
+  if (m && NOTE_X[m]) {
+    bgmNote(NOTE_X[m], 0.17, T.wave, 0.055, 0.008);
+    bgmNote(NOTE_X[m] * 2, 0.11, 'sine', 0.018, 0.008);   // 옥타브 위 반짝임
   }
-  // 붐-빠 베이스 — 8분음표마다 루트↔5도 교대로 통통
-  if (bgmStep % 4 === 0) {
-    const b = BGM_BASS[Math.floor(bgmStep / 4) % BGM_BASS.length];
-    if (b && NOTE[b]) bgmNote(NOTE[b] / 2, 0.20, 'triangle', 0.10, 0.008);
+  if (bgmStep % 4 === 0) {                                  // 붐-빠 베이스
+    const b = T.bass[Math.floor(bgmStep / 4) % T.bass.length];
+    if (b && NOTE_X[b]) bgmNote(NOTE_X[b] / 2, 0.20, 'triangle', 0.10, 0.008);
   }
-  // 드럼 — 킥은 정박(1·3박), 하이햇은 엇박에서 통통 튀는 스윙감
+  // 🥁 K-pop 드럼: 킥(1·3박) + 클랩(2·4박) + 하이햇(엇박)
   if (bgmStep % 8 === 0) bgmDrum('kick');
-  if (bgmStep % 8 === 4) bgmDrum('hat');
+  if (bgmStep % 16 === 8) bgmDrum('clap');
+  if (bgmStep % 4 === 2) bgmDrum('hat');
   bgmStep++;
 }
 function startBGM() {
@@ -912,7 +997,8 @@ function startBGM() {
   if (!bgmGain) { bgmGain = audioCtx.createGain(); bgmGain.gain.value = 0.5; bgmGain.connect(audioCtx.destination); }
   bgmPlaying = true;
   bgmStep = 0;
-  const interval = (60 / BGM_TEMPO / 4) * 1000; // 16분음표 간격(ms)
+  bgmTrack = pickBgmTrack(round);                        // 🎵 라운드마다 다른 곡
+  const interval = (60 / bgmTrack.tempo / 4) * 1000;     // 16분음표 간격(ms)
   bgmTick();
   bgmTimer = setInterval(bgmTick, interval);
 }
@@ -1335,7 +1421,7 @@ function eatApple(a, idx) {
   stats.apples++;             // 🏅 통계
   bumpMission('apple', 1);    // 🎯 오늘의 미션
   // 💰 2026-08-03: 사과당 +1 코인 폐지 — 코인이 무한히 쌓여 광고·소모 경제가 죽는 원인. 코인은 라운드 클리어/미션/업적에서만
-  haptic(12); // 📳 먹을 때 짧은 진동
+  haptic([0, 28]); // 📳 먹을 때 — 12ms는 폰에서 거의 안 느껴져 28ms 단발로 (2026-08-06)
   // 🔥 콤보 갱신
   eatCombo++; eatComboT = COMBO_WINDOW;
   if (eatCombo > stats.bestCombo) stats.bestCombo = eatCombo;
@@ -1347,7 +1433,7 @@ function eatApple(a, idx) {
     activatePower();
   } else if (a.type === 'golden') {
     snakeLen += 3; timeLeft = Math.min(maxTime, timeLeft + 3.5); base = 50;
-    sfxGolden(); showCombo('🌟 황금 사과!');
+    sfxGolden(); showCombo('🌟 황금 ' + foodNameOf(round - 1) + '!');
     spawnParticles(a.x, a.y, '#FFD700', 25);
   } else if (a.type === 'blue') {
     // 2026-08-03: 슬로우 효과 폐지(속도 불안정 원인) → 점수 보너스 아이템으로 전환
@@ -1357,7 +1443,7 @@ function eatApple(a, idx) {
     spawnParticles(a.x, a.y, '#42A5F5', 18);
   } else if (a.type === 'green') {
     timeLeft = Math.min(maxTime, timeLeft + getRefill() + 2); base = 10;
-    sfxEat(); showCombo('🍏 시간 회복!');
+    sfxEat(); showCombo('⏱️ 시간 회복!');
     spawnParticles(a.x, a.y, '#8BC34A', 18);
   } else {
     snakeLen += 1; timeLeft = Math.min(maxTime, timeLeft + getRefill()); base = 10;
@@ -1372,7 +1458,7 @@ function eatApple(a, idx) {
     showCombo(praise + ' x' + mult);
     sfxCombo(); haptic(20);
     if (mult >= 4) flashT = 0.18;          // 번쩍
-    if (mult >= 5) { slowmoT = 0.35; shake = Math.max(shake, 10); } // 슬로우모션
+    if (mult >= 5) { slowmoT = 0.35; shake = Math.max(shake, 10); haptic([0,30,40,60]); } // 대박 콤보 — 강한 3연타
   }
   // 혀 날름 + 사과 제거 (⚠️ 아래 roundClear로 빠지기 전에 반드시 먼저 처리)
   tongueOut = 1;
@@ -1740,7 +1826,7 @@ function update(dt) {
           startBGM();
           graceT = Math.max(graceT, 0.6);
           showCombo(festivalRound
-            ? '🎉 ' + wipeNextR + 'R 축제! 황금사과 잔치 🌟'
+            ? '🎉 ' + wipeNextR + 'R 축제! 황금 음식 잔치 🌟'
             : '🏁 ' + wipeNextR + '번째 나라 · ' + countryNameOf(wipeNextR - 1) + '!');
         }
       }
@@ -1770,7 +1856,7 @@ function update(dt) {
     powerT -= dt;
     if (powerT <= 0) {
       powerT = 0; smashCombo = 0;
-      showCombo('파워 끝! 사과 더 먹어요'); tone(330, 0.2, 'sine', 0.15, 165);
+      showCombo('파워 끝! 음식 더 먹어요'); tone(330, 0.2, 'sine', 0.15, 165);
       updateHUD();
     }
   }
@@ -1952,7 +2038,9 @@ function update(dt) {
     const hitR = HEAD_R + BODY_R - 4; // 머리·몸이 실제로 겹칠 때
     for (let d = 28; d < total; d += 6) {  // 목(28px)까지는 제외, 그 뒤는 촘촘히
       const p = getPointAtDist(d);
-      if (Math.hypot(headX - p.x, headY - p.y) < hitR) { die('self'); return; }
+      // 🐍 2026-08-06 대표님 지시: 자기 몸에 부딪혀도 죽지 않는다.
+      //    (뱀이 길어질수록 억울하게 죽는다는 피드백 — 캐주얼 지향에 맞춰 제거)
+      //    if (Math.hypot(headX - p.x, headY - p.y) < hitR) { die('self'); return; }
     }
   }
 
@@ -2002,7 +2090,7 @@ function updateHUD() {
   document.getElementById('buildVal').textContent = roundApples;
   document.getElementById('buildGoalVal').textContent = roundApplesGoal;
   // 🏪 먹이=가게 테마 통일: 진행도 아이콘도 이번 라운드 가게로 표시
-  const bi = document.getElementById('buildIcon'); if (bi) bi.textContent = curShop().icon;
+  const bi = document.getElementById('buildIcon'); if (bi) bi.textContent = curFood();   // 🍜 진행도는 '먹는 음식' 기준
   const pw = document.getElementById('powerWrap');
   if (pw) pw.style.display = 'none';
   document.getElementById('powerVal').textContent = (powerT > 0 ? '파워!' : powerGauge + '/' + powerNeed());
@@ -3967,7 +4055,7 @@ function makeShareCard() {
   c.fillText(score + '점', cw/2, 410);
   c.fillStyle = '#fff';
   c.font = 'bold 30px sans-serif';
-  c.fillText('🏁 ' + round + '라운드 · 🍎 사과 ' + applesEaten + '개', cw/2, 465);
+  c.fillText('🏁 ' + round + '번째 나라 · 🍽️ ' + applesEaten + '개', cw/2, 465);
   c.fillStyle = '#8BC34A';
   c.font = 'bold 26px sans-serif';
   c.fillText('너도 도전해봐! #꼬마뱀', cw/2, 530);
