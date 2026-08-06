@@ -47,8 +47,19 @@
     display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(2, 1fr);
     gap: 6px; z-index: 13; }
   #dirPad.off { display: none; }
-  .dirBtn { background: rgba(0,0,0,0.30); border: 2px solid rgba(255,255,255,0.45); border-radius: 16px; color: rgba(255,255,255,0.9); font-size: 28px; display: flex; justify-content: center; align-items: center; cursor: pointer; user-select: none; touch-action: none; }
-  .dirBtn:active { background: rgba(255,255,255,0.5); transform: scale(0.92); }
+  .dirBtn { border-radius: 16px; color: #fff; font-size: 28px; display: flex; justify-content: center; align-items: center;
+    cursor: pointer; user-select: none; touch-action: none;
+    background: linear-gradient(180deg, rgba(255,255,255,0.30) 0%, rgba(255,255,255,0.12) 45%, rgba(0,0,0,0.22) 100%);
+    border: 2px solid rgba(255,255,255,0.55);
+    box-shadow: 0 5px 0 rgba(0,0,0,0.42), 0 8px 14px rgba(0,0,0,0.34), inset 0 2px 0 rgba(255,255,255,0.45);
+    text-shadow: 0 2px 3px rgba(0,0,0,0.5);
+    transform: translateY(0);
+    transition: transform 0.06s ease-out, box-shadow 0.06s ease-out, background 0.06s; }
+  .dirBtn:active, .dirBtn.press {
+    transform: translateY(5px);
+    box-shadow: 0 0 0 rgba(0,0,0,0.42), 0 2px 5px rgba(0,0,0,0.35), inset 0 3px 6px rgba(0,0,0,0.35);
+    background: linear-gradient(180deg, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0.06) 50%, rgba(0,0,0,0.28) 100%);
+    border-color: rgba(255,255,255,0.8); }
   #btnUp { grid-column: 2; grid-row: 1; }
   #btnLeft { grid-column: 1; grid-row: 2; }
   #btnDown { grid-column: 2; grid-row: 2; }
@@ -739,7 +750,7 @@ function sfxEat() {
   tone(n * 2, 0.07, 'sine', 0.045, n * 2, 0.04);   // 옥타브 위 반짝임
 }
 function sfxGolden() { [523,659,784,1047,1318].forEach((n,i)=>tone(n,0.1,'square',0.18,n,i*0.05)); }
-function sfxTurn() { tone(587, 0.03, 'sine', 0.035); }   // 레(D5) 아주 짧게 — 조작음도 조성 안에
+function sfxTurn() { tone(659, 0.045, 'square', 0.085); tone(988, 0.03, 'sine', 0.03, 988, 0.012); }   // 미(E5) 또렷한 '틱' — 조성 안에 유지
 function sfxLowTime() { tone(392, 0.08, 'sine', 0.2); tone(392, 0.08, 'sine', 0.16, 392, 0.12); }  // 솔(G4) 경고 펄스
 function sfxCrash() {
   // 💥 충돌도 '라솔미도' 하강 프레이즈 — 아프지만 노래처럼
@@ -3930,7 +3941,14 @@ document.addEventListener('keydown', function(e) {
 // 방향 버튼
 function bindDir(id, nx, ny) {
   const b = document.getElementById(id);
-  const fn = function(e) { e.preventDefault(); setDir(nx, ny); };
+  const fn = function(e) {
+    e.preventDefault();
+    try { tone(880, 0.028, 'square', 0.06); } catch (err) {}   // 🔘 버튼 눌림 클릭음
+    haptic(10);
+    b.classList.add('press');                                  // 눌림 상태 잠깐 유지(터치는 :active가 짧다)
+    setTimeout(function(){ b.classList.remove('press'); }, 110);
+    setDir(nx, ny);
+  };
   b.addEventListener('touchstart', fn, {passive:false});
   b.addEventListener('mousedown', fn);
 }
