@@ -264,6 +264,7 @@
     </div>
     <div id="goCoinMsg" style="color:#FFD700;font-size:15px;font-weight:bold;margin:4px 0">💰 이번 판 +0 · 보유 0</div>
     <div id="goAchMsg" style="color:#FFD700;font-size:14px;font-weight:bold;margin:4px 0"></div>
+    <div id="goAdFailMsg" style="display:none;color:#FF8A80;font-size:14px;font-weight:bold;margin:4px 0"></div>
     <button id="reviveAdBtn" class="btnAlt" style="display:none;background:linear-gradient(135deg,#7B68EE,#4B0082)">📺 광고 보고 무료 부활!</button>
     <button id="reviveBtn" class="btnAlt" style="display:none;background:linear-gradient(135deg,#FF6FA5,#FF1493)">💖 코인으로 부활</button>
     <button id="shareBtn" class="btnAlt">📤 점수 자랑하기</button>
@@ -468,6 +469,7 @@ let boostRun  = { time: false, power: false, apple: false };  // 이번 판에 �
 let boostPaid = { time: 0, power: 0, apple: 0 };              // 실지불 코인(📺광고로 얻으면 0 → 취소해도 환불 없음)
 let graceT = 0;          // 부활/시작 직후 무적 시간
 const INVINCIBLE_SEC = 2.0;   // 🛡️ 부활 후 무적 지속(초) — 사양 확정값
+function isInvincible() { return graceT > 0; }   // 지시서의 isInvincible 상태 (setTimeout 대신 프레임 감산 → 일시정지·탭전환에도 안 어긋남)
 let countdownT = 0;      // 🔢 시작 카운트다운
 let lastCountInt = -1;   // 카운트다운 소리용
 let runStartCoins = 0;   // 💰 이번 판 시작 시 코인
@@ -1967,6 +1969,7 @@ function die(cause) {
 //=========================================
 let hasRevivedThisGame = false;   // 이번 판에 광고 부활을 이미 썼는가
 let reviveOfferTimer = null;
+let adFailMsg = '';        // 📺 광고를 못 봐서 부활 실패한 사유 — 최종 게임오버 화면에 안내한다
 function showReviveOffer() {
   if (!dead) return;                       // 그 사이 부활했으면 띄우지 않는다
   let remain = 5;
@@ -3138,6 +3141,9 @@ function gameOver() {
   document.getElementById('finalRound').textContent = finalRound;
   document.getElementById('applesEaten').textContent = applesEaten;
   const gbv = document.getElementById('goBestVal'); if (gbv) gbv.textContent = Math.max(best, finalScore);
+  const afm = document.getElementById('goAdFailMsg');
+  if (afm) { afm.textContent = adFailMsg; afm.style.display = adFailMsg ? 'block' : 'none'; }
+  adFailMsg = '';
   document.getElementById('newBestText').style.display = newBest ? 'block' : 'none';
 
   // 등급 메시지
@@ -3277,7 +3283,8 @@ function reviveByAd() {
       hideReviveOffer();
       doRevive();
     },
-    function () {                       // ❌ 실패·중도이탈 → 최종 게임오버
+    function () {                       // ❌ 실패·중도이탈 → 안내 후 최종 게임오버
+      adFailMsg = '📺 광고를 끝까지 보지 않아 부활하지 못했어요';
       hideReviveOffer();
       gameOver();
     }
