@@ -967,6 +967,7 @@ function startRound(R, startLen) {
   gateSite = { x: field.x + field.w / 2, y: field.y + field.h * 0.26 };
   // 🎁 7일 연속 출석 보너스: 1라운드에 파워로 시작
   if (R === 1 && pendingBonus > 0 && dailyStreak % 7 === 0) powerT = POWER_DUR;
+  if (R === 1) pendingBonus = 0;   // 출석 보상은 '그날 첫 판' 1회성 — 소비하면 즉시 비운다
   if (R === 1 && boostRun.power) powerT = POWER_DUR;   // 🛒 부스터: 파워 달고 시작
   snapCam();   // 🎥 카메라를 뱀 중앙으로
   if (R > ROCK_FROM_ROUND) ensureRocks();       // 🪨 2R부터 돌 장애물, 라운드마다 증가
@@ -3413,7 +3414,7 @@ function renderMiniRank() {
 function renderStartTopRankings() { renderRankingPanel('startTopRankings'); renderMiniRank(); }
 function saveLbEntry(name, sc, rnd) {
   name = (name || '').trim().slice(0, 8) || '익명';
-  const entry = { name, score: sc, round: rnd, skin: selectedSkin, date: new Date().toISOString().slice(0,10) };
+  const entry = { name, score: sc, round: rnd, skin: selectedSkin, date: todayStr() };   // 🇰🇷 랭킹 날짜도 KST
   leaderboard.push(entry);
   leaderboard.sort((a, b) => b.score - a.score);
   leaderboard = leaderboard.slice(0, 10);
@@ -3663,7 +3664,14 @@ bindBtn('nextRoundBtn', function() {
 //=========================================
 // 🎁 일일 출석 보상
 //=========================================
-function todayStr() { return new Date().toISOString().slice(0, 10); }
+// 🇰🇷 KST(UTC+9) 기준 날짜 — 토스 미니앱은 한국 대상이라 반드시 한국 날짜여야 한다.
+//    구 코드는 UTC라서 '한국 자정~오전 9시'가 전날로 인식됐다(연속 출석·미션 리셋이 어긋나던 원인).
+const KST_OFFSET_MS = 9 * 3600000;
+function kstDayStr(offsetDays) {
+  const d = new Date(Date.now() + KST_OFFSET_MS + (offsetDays || 0) * 86400000);
+  return d.toISOString().slice(0, 10);
+}
+function todayStr() { return kstDayStr(0); }
 function checkDailyReward() {
   let last = '';
   try { last = localStorage.getItem('snake_lastclaim') || ''; } catch(e) {}
@@ -3674,7 +3682,7 @@ function checkDailyReward() {
     return;
   }
   // 연속 여부 판단 (어제면 +1, 아니면 리셋)
-  const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+  const yesterday = kstDayStr(-1);   // 🇰🇷 KST 기준 어제
   if (last === yesterday) dailyStreak += 1;
   else dailyStreak = 1;
   try {
