@@ -35,7 +35,7 @@
   #subRow b { color: #8BC34A; }
   /* 점수 획득 팝업 */
   #scorePop { position: absolute; top: 96px; right: 16px; color: #FFEB3B; font-size: 18px; font-weight: bold; text-shadow: 1px 1px 0 #000; opacity: 0; pointer-events: none; z-index: 11; transition: all 0.4s; }
-  #miniRank { position: absolute; top: 92px; left: 14px; display: flex; flex-direction: column; gap: 3px; z-index: 10; pointer-events: none; }
+  #miniRank { display: none !important; }   /* 2026-08-06 대표님 지시: 화면 가림 → 삭제 */
   .miniRankRow { background: rgba(0,0,0,0.55); padding: 3px 10px; border-radius: 12px; color: white; font-size: 12px; font-weight: bold; border: 1px solid rgba(255,255,255,0.3); white-space: nowrap; }
   .miniRankRow.gold { border-color: #FFD700; color: #FFD700; }
   .miniRankRow.silver { border-color: #C0C0C0; }
@@ -522,20 +522,20 @@ const SKINS = {
   neon_dragon: { name:'네온 드래곤',  desc:'사이버펑크 네온 발광',        head:'#42A5F5', body1:'#64B5F6', body2:'#1E88E5', belly:'#BBDEFB',
                  beads:['#00E5FF','#18FFFF','#40C4FF','#7C4DFF','#B388FF'], glow:'#00E5FF', horns:true },
   sakura:      { name:'벚꽃 뱀',      desc:'흩날리는 봄날의 분홍',        head:'#F8BBD0', body1:'#FCE4EC', body2:'#F48FB1', belly:'#FFF0F5',
-                 beads:['#FFF0F5','#FCE4EC','#F8BBD0','#F48FB1','#EC407A'], ears:true },
+                 beads:['#FFF0F5','#FCE4EC','#F8BBD0','#F48FB1','#EC407A'], ears:true, fx:'petal' },
   lava:        { name:'용암 뱀',      desc:'이글거리는 화산의 열기',      head:'#FF7043', body1:'#FF8A65', body2:'#E64A19', belly:'#FFCCBC',
-                 beads:['#FFEB3B','#FFA726','#FF7043','#E64A19','#BF360C'], glow:'#FF6D00' },
+                 beads:['#FFEB3B','#FFA726','#FF7043','#E64A19','#BF360C'], glow:'#FF6D00', fx:'flame' },
   // ─ 상급 (500~700) ─
   golden_king: { name:'골든 킹',      desc:'왕관을 쓴 황금 뱀',           head:'#FFCA28', body1:'#FFD54F', body2:'#FFA000', belly:'#FFECB3',
-                 beads:['#FFF176','#FFD54F','#FFCA28','#FFB300','#FF8F00'], glow:'#FFD700', crown:true },
+                 beads:['#FFF176','#FFD54F','#FFCA28','#FFB300','#FF8F00'], glow:'#FFD700', crown:true, fx:'gold' },
   ice_queen:   { name:'얼음 여왕',    desc:'서릿발 왕관의 설원 뱀',       head:'#B3E5FC', body1:'#E1F5FE', body2:'#4FC3F7', belly:'#FFFFFF',
-                 beads:['#FFFFFF','#E1F5FE','#B3E5FC','#81D4FA','#4FC3F7'], glow:'#B3E5FC', crown:true },
+                 beads:['#FFFFFF','#E1F5FE','#B3E5FC','#81D4FA','#4FC3F7'], glow:'#B3E5FC', crown:true, fx:'snow' },
   shadow:      { name:'그림자 뱀',    desc:'어둠 속을 미끄러지는 존재',   head:'#5E35B1', body1:'#7E57C2', body2:'#4527A0', belly:'#B39DDB',
-                 beads:['#B39DDB','#7E57C2','#5E35B1','#4527A0','#311B92'], glow:'#7C4DFF', horns:true },
+                 beads:['#B39DDB','#7E57C2','#5E35B1','#4527A0','#311B92'], glow:'#7C4DFF', horns:true, fx:'shadow' },
   // ─ 최상급 (1000~) ─
-  rainbow:     { name:'무지개 스네이크', desc:'알록달록 무지개 그라데이션', head:'#66BB6A', belly:'#FFFFFF', rainbow:true },
+  rainbow:     { name:'무지개 스네이크', desc:'알록달록 무지개 그라데이션', head:'#66BB6A', belly:'#FFFFFF', rainbow:true, fx:'rainbow' },
   galaxy:      { name:'은하수 뱀',    desc:'별을 품고 여행하는 전설',     head:'#7C4DFF', body1:'#9575CD', body2:'#512DA8', belly:'#D1C4E9',
-                 beads:['#FFFFFF','#B388FF','#7C4DFF','#3F51B5','#1A237E'], glow:'#B388FF', crown:true, horns:true }
+                 beads:['#FFFFFF','#B388FF','#7C4DFF','#3F51B5','#1A237E'], glow:'#B388FF', crown:true, horns:true, fx:'galaxy' }
 };
 // 💰 스킨 가격 — 등급별 곡선 (무료 → 입문 → 중급 → 상급 → 최상급)
 const SKIN_COST = {
@@ -870,65 +870,65 @@ const NOTE_X = { 'C4':261.63,'Db4':277.18,'D4':293.66,'Eb4':311.13,'E4':329.63,'
 
 // 각 트랙: 멜로디(16스텝×4마디=64) + 베이스(4스텝당 1개=16) + 템포 + 음색
 const BGM_TRACKS = [
-  { name:'Bright Pop', tempo:128, wave:'square',
-    mel:['E5',0,'G5',0,'C6',0,'G5',0, 'A5',0,'G5',0,'E5',0,'C5',0,
-         'A5',0,'C6',0,'A5',0,'G5',0, 'E5',0,'G5',0,'A5',0,0,0,
-         'F5',0,'A5',0,'C6',0,'A5',0, 'G5',0,'F5',0,'E5',0,'D5',0,
-         'D5',0,'E5',0,'F5',0,'D5',0, 'B4',0,'D5',0,'C5',0,0,0],
-    bass:['C4','G4','C4','G4','A4','E4','A4','E4','F4','C4','F4','C4','G4','D4','G4','D4'] },
-
-  { name:'Dance Hook', tempo:132, wave:'square',
-    mel:['A5',0,'A5','G5','E5',0,'A5',0, 'C6',0,'B5',0,'A5',0,0,0,
-         'G5',0,'G5','F5','D5',0,'G5',0, 'B5',0,'A5',0,'G5',0,0,0,
-         'F5',0,'A5',0,'C6',0,'C6',0, 'B5','A5','G5',0,'E5',0,0,0,
-         'D5',0,'F5',0,'A5',0,'B5',0, 'C6',0,0,0,'A5',0,0,0],
-    bass:['A4','A4','E4','E4','F4','F4','C4','C4','G4','G4','D4','D4','A4','E4','A4','E4'] },
-
-  { name:'City Neon', tempo:120, wave:'sawtooth',
-    mel:['D5',0,'F5',0,'A5',0,'D6',0, 'C6',0,'A5',0,'F5',0,'D5',0,
-         'Bb4',0,'D5',0,'F5',0,'Bb5',0, 'A5',0,'F5',0,'D5',0,0,0,
-         'C5',0,'E5',0,'G5',0,'C6',0, 'B5',0,'G5',0,'E5',0,'C5',0,
-         'F5',0,'A5',0,'C6',0,'A5',0, 'G5',0,'F5',0,'D5',0,0,0],
-    bass:['D4','A4','D4','A4','Bb4','F4','Bb4','F4','C4','G4','C4','G4','F4','C4','F4','C4'] },
-
-  { name:'Cute Bounce', tempo:136, wave:'triangle',
+  // ① 뛰어! (메인) — 블랙핑크 'JUMP' 무드: 단조 챈트 훅 + 포온플로어 킥 + 묵직한 톱니 베이스
+  { name:'JUMP!', tempo:142, wave:'square', bassWave:'sawtooth', kickEvery:4, clapAt:8, hatOff:true, vol:0.06,
+    mel:['E5',0,'E5',0,'G5',0,'E5',0, 'B5',0,'A5',0,'G5',0,'E5',0,
+         'E5',0,'E5',0,'G5',0,'A5',0, 'B5','B5',0,'A5','G5',0,'E5',0,
+         'D6',0,'B5',0,'A5',0,'G5',0, 'A5','A5',0,'G5','E5',0,'D5',0,
+         'E5',0,'G5','A5','B5',0,'D6',0, 'E6',0,0,0,'B5',0,0,0],
+    bass:['E4','E4','E4','G4','A4','A4','A4','B4','C4','C4','C4','D4','E4','E4','B4','B4'] },
+  // ② 네온 러너 — 단조 신스웨이브, 하프타임 킥
+  { name:'Neon Runner', tempo:118, wave:'sawtooth', bassWave:'triangle', kickEvery:8, clapAt:12, hatOff:false, vol:0.05,
+    mel:['A5',0,0,'G5','E5',0,'A5',0, 'C6',0,'B5',0,'A5',0,'E5',0,
+         'G5',0,0,'F5','D5',0,'G5',0, 'B5',0,'A5',0,'G5',0,'D5',0,
+         'F5',0,'A5',0,'C6',0,'E6',0, 'D6',0,'C6',0,'A5',0,'F5',0,
+         'E5',0,'G5',0,'B5',0,'D6',0, 'C6',0,'A5',0,'E5',0,0,0],
+    bass:['A4','A4','E4','E4','G4','G4','D4','D4','F4','F4','C4','C4','E4','E4','B4','B4'] },
+  // ③ 큐트 바운스 — 장조 통통, 스윙 하이햇
+  { name:'Cute Bounce', tempo:134, wave:'triangle', bassWave:'triangle', kickEvery:4, clapAt:8, hatOff:true, vol:0.065,
     mel:['C5','E5','G5',0,'E5','G5','C6',0, 'A5',0,'G5',0,'E5',0,0,0,
          'D5','F5','A5',0,'F5','A5','D6',0, 'C6',0,'A5',0,'F5',0,0,0,
          'E5','G5','C6',0,'G5','C6','E6',0, 'D6',0,'C6',0,'A5',0,0,0,
          'G5',0,'F5',0,'E5',0,'D5',0, 'C5',0,0,0,0,0,0,0],
     bass:['C4','C4','G4','G4','D4','D4','A4','A4','E4','E4','C4','C4','G4','G4','C4','C4'] },
-
-  { name:'Sunset Chill', tempo:112, wave:'sine',
+  // ④ 파워 드롭 — 단조 EDM 드롭, 더블 클랩
+  { name:'Power Drop', tempo:146, wave:'square', bassWave:'sawtooth', kickEvery:4, clapAt:4, hatOff:true, vol:0.055,
+    mel:['D5','D5',0,'D5','F5',0,'D5',0, 'C5',0,'D5',0,'F5',0,'G5',0,
+         'A5','A5',0,'A5','C6',0,'A5',0, 'G5',0,'A5',0,'C6',0,'D6',0,
+         'F6',0,'D6',0,'C6',0,'A5',0, 'G5',0,'F5',0,'D5',0,'C5',0,
+         'D5',0,'F5',0,'A5',0,'C6',0, 'D6',0,0,0,0,0,0,0],
+    bass:['D4','D4','D4','D4','Bb4','Bb4','Bb4','Bb4','C4','C4','C4','C4','D4','D4','A4','A4'] },
+  // ⑤ 선셋 칠 — 장조 로파이, 킥 드물게
+  { name:'Sunset Chill', tempo:104, wave:'sine', bassWave:'sine', kickEvery:8, clapAt:-1, hatOff:false, vol:0.06,
     mel:['A5',0,0,'G5','E5',0,'D5',0, 'E5',0,0,0,'G5',0,'A5',0,
          'C6',0,0,'B5','G5',0,'E5',0, 'D5',0,0,0,'E5',0,0,0,
          'F5',0,0,'E5','D5',0,'C5',0, 'D5',0,'E5',0,'F5',0,'G5',0,
          'A5',0,0,'G5','E5',0,'D5',0, 'C5',0,0,0,0,0,0,0],
     bass:['A4','E4','A4','E4','F4','C4','F4','C4','G4','D4','G4','D4','C4','G4','C4','G4'] },
-
-  { name:'Power Beat', tempo:140, wave:'square',
-    mel:['E5','E5',0,'E5','G5',0,'E5',0, 'D5',0,'E5',0,'G5',0,'A5',0,
-         'A5','A5',0,'A5','C6',0,'A5',0, 'G5',0,'A5',0,'C6',0,'D6',0,
-         'E6',0,'D6',0,'C6',0,'A5',0, 'G5',0,'E5',0,'D5',0,'C5',0,
-         'D5',0,'E5',0,'G5',0,'A5',0, 'E5',0,0,0,0,0,0,0],
-    bass:['E4','E4','B4','B4','A4','A4','E4','E4','C4','C4','G4','G4','D4','D4','A4','A4'] },
-
-  { name:'Dreamy Synth', tempo:118, wave:'triangle',
+  // ⑥ 시티 나이트 — 단조 시티팝, 셔플 베이스
+  { name:'City Night', tempo:112, wave:'triangle', bassWave:'sawtooth', kickEvery:8, clapAt:8, hatOff:false, vol:0.055,
     mel:['G5',0,'B5',0,'D6',0,'B5',0, 'A5',0,'G5',0,'E5',0,0,0,
          'F5',0,'A5',0,'C6',0,'A5',0, 'G5',0,'F5',0,'D5',0,0,0,
          'E5',0,'G5',0,'B5',0,'G5',0, 'A5',0,'B5',0,'C6',0,0,0,
          'D6',0,'C6',0,'B5',0,'A5',0, 'G5',0,0,0,0,0,0,0],
-    bass:['G4','D4','G4','D4','F4','C4','F4','C4','E4','B4','E4','B4','A4','E4','D4','D4'] },
-
-  { name:'Festival', tempo:144, wave:'square',
+    bass:['G4','D4','G4','B4','F4','C4','F4','A4','E4','B4','E4','G4','A4','E4','D4','D4'] },
+  // ⑦ 페스티벌 — 장조 최고 템포, 포온플로어
+  { name:'Festival', tempo:150, wave:'square', bassWave:'triangle', kickEvery:4, clapAt:8, hatOff:true, vol:0.055,
     mel:['C6',0,'C6',0,'A5',0,'G5',0, 'A5',0,'C6',0,'D6',0,'E6',0,
          'D6',0,'C6',0,'A5',0,'G5',0, 'E5',0,'G5',0,'A5',0,0,0,
          'F5',0,'A5',0,'C6',0,'F6',0, 'E6',0,'C6',0,'A5',0,'F5',0,
          'G5',0,'B5',0,'D6',0,'G6',0, 'C6',0,0,0,0,0,0,0],
-    bass:['C4','G4','A4','E4','F4','C4','G4','D4','F4','C4','C4','G4','G4','D4','C4','C4'] }
+    bass:['C4','G4','A4','E4','F4','C4','G4','D4','F4','C4','C4','G4','G4','D4','C4','C4'] },
+  // ⑧ 드리미 — 장조 몽환, 넓은 간격
+  { name:'Dreamy', tempo:96, wave:'sine', bassWave:'sine', kickEvery:16, clapAt:-1, hatOff:false, vol:0.06,
+    mel:['E5',0,0,0,'G5',0,0,0, 'B5',0,0,0,'A5',0,0,0,
+         'F5',0,0,0,'A5',0,0,0, 'C6',0,0,0,'B5',0,0,0,
+         'G5',0,0,0,'B5',0,0,0, 'D6',0,0,0,'C6',0,0,0,
+         'A5',0,0,'B5','C6',0,'B5',0, 'G5',0,0,0,0,0,0,0],
+    bass:['E4','B4','E4','B4','F4','C4','F4','C4','G4','D4','G4','D4','A4','E4','G4','G4'] }
 ];
 let bgmTrack = BGM_TRACKS[0];
 function pickBgmTrack(R) { return BGM_TRACKS[(R - 1) % BGM_TRACKS.length]; }
-
 function bgmNote(freq, dur, type, vol, attack) {
   if (!audioCtx || !bgmOn) return;
   const t0 = audioCtx.currentTime;
@@ -971,17 +971,17 @@ function bgmTick() {
   const T = bgmTrack;
   const m = T.mel[bgmStep % T.mel.length];
   if (m && NOTE_X[m]) {
-    bgmNote(NOTE_X[m], 0.17, T.wave, 0.055, 0.008);
-    bgmNote(NOTE_X[m] * 2, 0.11, 'sine', 0.018, 0.008);   // 옥타브 위 반짝임
+    bgmNote(NOTE_X[m], 0.17, T.wave, T.vol, 0.008);
+    bgmNote(NOTE_X[m] * 2, 0.11, 'sine', T.vol * 0.32, 0.008);   // 옥타브 위 반짝임
   }
-  if (bgmStep % 4 === 0) {                                  // 붐-빠 베이스
+  if (bgmStep % 4 === 0) {                                        // 베이스 (곡별 음색)
     const b = T.bass[Math.floor(bgmStep / 4) % T.bass.length];
-    if (b && NOTE_X[b]) bgmNote(NOTE_X[b] / 2, 0.20, 'triangle', 0.10, 0.008);
+    if (b && NOTE_X[b]) bgmNote(NOTE_X[b] / 2, 0.20, T.bassWave || 'triangle', 0.10, 0.008);
   }
-  // 🥁 K-pop 드럼: 킥(1·3박) + 클랩(2·4박) + 하이햇(엇박)
-  if (bgmStep % 8 === 0) bgmDrum('kick');
-  if (bgmStep % 16 === 8) bgmDrum('clap');
-  if (bgmStep % 4 === 2) bgmDrum('hat');
+  // 🥁 곡별 드럼 패턴 — 포온플로어(뛰어·드롭·페스티벌) vs 하프타임(칠·시티)
+  if (bgmStep % T.kickEvery === 0) bgmDrum('kick');
+  if (T.clapAt >= 0 && bgmStep % 16 === T.clapAt) bgmDrum('clap');
+  if (T.hatOff ? (bgmStep % 4 === 2) : (bgmStep % 8 === 4)) bgmDrum('hat');
   bgmStep++;
 }
 function startBGM() {
@@ -2806,8 +2806,31 @@ function drawSnake() {
     ctx.textBaseline = 'alphabetic'; ctx.textAlign = 'left';
     ctx.restore();
   }
+  // ✨ 스킨 꾸미기 이펙트 — 꼬리에서 스킨별 파티클이 흩날린다 (유불리 없음, 소유욕 전용)
+  if (skin.fx && running && !dead && particles.length < 400) {
+    fxTick = (fxTick + 1) % 5;
+    if (fxTick === 0 && pts.length > 2) {
+      const tp = pts[pts.length - 1];
+      const FX = {
+        flame:   { col: ['#FFEB3B', '#FF7043', '#E64A19'], vy: -1.6, size: 3.2 },
+        gold:    { col: ['#FFD700', '#FFF176', '#FFE082'], vy: -1.0, size: 2.6 },
+        snow:    { col: ['#FFFFFF', '#E1F5FE', '#B3E5FC'], vy:  0.7, size: 2.8 },
+        shadow:  { col: ['#7C4DFF', '#5E35B1', '#B39DDB'], vy: -0.5, size: 3.4 },
+        rainbow: { col: ['#F44336', '#FF9800', '#FFEB3B', '#4CAF50', '#2196F3', '#9C27B0'], vy: -1.0, size: 2.8 },
+        galaxy:  { col: ['#FFFFFF', '#B388FF', '#7C4DFF'], vy: -0.9, size: 2.4, star: true },
+        petal:   { col: ['#F8BBD0', '#F48FB1', '#FCE4EC'], vy:  0.9, size: 3.0 }
+      }[skin.fx];
+      if (FX) particles.push({
+        x: tp.x + (Math.random() - 0.5) * 14, y: tp.y + (Math.random() - 0.5) * 14,
+        vx: (Math.random() - 0.5) * 1.4, vy: FX.vy + (Math.random() - 0.5) * 0.6,
+        life: 26, max: 26, color: FX.col[Math.floor(Math.random() * FX.col.length)],
+        size: FX.size + Math.random() * 1.2
+      });
+    }
+  }
   if (invBlink < 1) ctx.restore();   // 🛡️ 무적 깜빡임 alpha 복원
 }
+let fxTick = 0;
 
 function drawParticles() {
   for (const p of particles) {
@@ -3317,30 +3340,46 @@ function render() {
     })();
     ctx.restore();   // 지도 클리핑 해제
     ctx.restore();
-    // 라벨: 출발/이동 안내 — 국기 글자 대신 이름만(Windows 캔버스에서 국기가 깨짐) + 상징물·음식 공부용 표기
+    // 라벨 (2026-08-06 리디자인): 상징물·음식을 '게임에 나오는 그 이미지'로 크게 + 글자 확대
     const nc = COUNTRIES[toIdx];
     const wl1 = wipeNextR === 1 ? '🌍 세계여행 출발!'
       : (wipeNextR % 10 === 0 ? '🎉 ' + wipeNextR + '번째 나라 축제!' : '🐍 ' + wipeNextR + '번째 나라로!');
-    ctx.font = 'bold 30px sans-serif'; ctx.textAlign = 'center';
-    ctx.lineWidth = 6; ctx.strokeStyle = 'rgba(0,0,0,0.6)';
-    ctx.strokeText(wl1, W/2, fy - 34); ctx.fillStyle = '#FFEB3B'; ctx.fillText(wl1, W/2, fy - 34);
-    // 국가명 (크게) + 왼쪽에 상징색 견장
+    ctx.font = 'bold 34px sans-serif'; ctx.textAlign = 'center';
+    ctx.lineWidth = 7; ctx.strokeStyle = 'rgba(0,0,0,0.6)';
+    ctx.strokeText(wl1, W/2, fy - 40); ctx.fillStyle = '#FFEB3B'; ctx.fillText(wl1, W/2, fy - 40);
+    // 국가명 (크게) + 상징색 견장
     const cname = countryNameOf(toIdx);
-    ctx.font = 'bold 27px sans-serif';
+    ctx.font = 'bold 32px sans-serif';
     const cw2 = ctx.measureText(cname).width;
     ctx.fillStyle = nc[5] || '#888';
-    ctx.fillRect(W/2 - cw2/2 - 30, fy + frameH + 18, 20, 26);
+    ctx.fillRect(W/2 - cw2/2 - 36, fy + frameH + 16, 24, 30);
     ctx.strokeStyle = 'rgba(255,255,255,0.8)'; ctx.lineWidth = 2;
-    ctx.strokeRect(W/2 - cw2/2 - 30, fy + frameH + 18, 20, 26);
-    ctx.lineWidth = 6; ctx.strokeStyle = 'rgba(0,0,0,0.6)';
-    ctx.strokeText(cname, W/2, fy + frameH + 40); ctx.fillStyle = '#FFFFFF'; ctx.fillText(cname, W/2, fy + frameH + 40);
-    // 📚 공부 두 줄: 상징물 / 대표 음식 (이름을 글자로)
-    ctx.font = 'bold 17px sans-serif';
-    ctx.lineWidth = 4;
-    const l3 = '🏛️ 상징물: ' + nc[2] + ' ' + nc[1];
-    const l4 = '🍽️ 대표 음식: ' + nc[4] + ' ' + foodNameOf(toIdx);
-    ctx.strokeText(l3, W/2, fy + frameH + 68); ctx.fillStyle = '#FFE082'; ctx.fillText(l3, W/2, fy + frameH + 68);
-    ctx.strokeText(l4, W/2, fy + frameH + 92); ctx.fillStyle = '#A5D6A7'; ctx.fillText(l4, W/2, fy + frameH + 92);
+    ctx.strokeRect(W/2 - cw2/2 - 36, fy + frameH + 16, 24, 30);
+    ctx.lineWidth = 7; ctx.strokeStyle = 'rgba(0,0,0,0.6)';
+    ctx.strokeText(cname, W/2, fy + frameH + 42); ctx.fillStyle = '#FFFFFF'; ctx.fillText(cname, W/2, fy + frameH + 42);
+    // 🏛️🍽️ 상징물·음식 카드 2개 — 게임 스프라이트를 크게 박는다
+    (function () {
+      const cardY = fy + frameH + 58, cardH = 78, cardW = W * 0.44;
+      const items = [
+        { sp: nc[2], label: nc[1] },
+        { sp: nc[4], label: foodNameOf(toIdx) }
+      ];
+      items.forEach(function (it, i) {
+        const cx0 = W/2 + (i === 0 ? -cardW - 6 : 6);
+        ctx.fillStyle = 'rgba(255,255,255,0.10)';
+        roundRect(cx0, cardY, cardW, cardH, 16); ctx.fill();
+        ctx.strokeStyle = 'rgba(255,255,255,0.35)'; ctx.lineWidth = 2;
+        roundRect(cx0, cardY, cardW, cardH, 16); ctx.stroke();
+        try { ctx.drawImage(emojiSprite(it.sp), cx0 + 8, cardY + cardH/2 - 27, 54, 54); } catch (e) {}
+        ctx.font = 'bold 21px sans-serif'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+        ctx.lineWidth = 5; ctx.strokeStyle = 'rgba(0,0,0,0.65)';
+        ctx.strokeText(it.label, cx0 + 68, cardY + cardH/2);
+        ctx.fillStyle = i === 0 ? '#FFE082' : '#C5E1A5';
+        ctx.fillText(it.label, cx0 + 68, cardY + cardH/2);
+        ctx.textBaseline = 'alphabetic';
+      });
+    })();
+    ctx.textAlign = 'left';
     ctx.textAlign = 'left';
   }
   ctx.restore();
@@ -3822,7 +3861,11 @@ function renderShop() {
     card.className = 'shopCard' + (on ? ' equipped' : owned ? ' owned' : '');
     const pv = document.createElement('canvas'); pv.width = 56; pv.height = 56;
     const info = document.createElement('div'); info.className = 'shopInfo';
-    info.innerHTML = '<div class=shopName>' + sk.name + (on ? ' <span style=color:#FFD700>★</span>' : '') + '</div>' +
+    const tier = cost === 0 ? '' : cost <= 200 ? '<span class="tierTag t1">입문</span>'
+      : cost <= 400 ? '<span class="tierTag t2">중급</span>'
+      : cost <= 700 ? '<span class="tierTag t3">상급</span>' : '<span class="tierTag t4">최상급</span>';
+    const fxTxt = sk.fx ? ' <span style="color:#FFD54F">✨이펙트</span>' : '';
+    info.innerHTML = '<div class="shopName">' + sk.name + tier + fxTxt + (on ? ' <span style="color:#FFD700">★</span>' : '') + '</div>' +
                      '<div class=shopDesc>' + sk.desc + '</div>';
     const btn = document.createElement('button');
     // 버튼 4상태 분기 (지시서 C-2)
