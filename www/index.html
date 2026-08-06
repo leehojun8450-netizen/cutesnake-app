@@ -33,6 +33,13 @@
   #bestBox { font-size: 14px; background: rgba(0,0,0,0.5); padding: 5px 12px; border-radius: 18px; border: 2px solid #FFD700; color: #FFD700; text-align: right; }
   #subRow { margin-top: 4px; color: #fff; font-size: 15px; font-weight: bold; text-shadow: 1px 1px 0 #000; opacity: 0.95; }
   #subRow b { color: #8BC34A; }
+  /* ⚡ 파워 배지 — 개수 + 더블탭 사용법 상시 안내 (2026-08-07 지시: 사용법이 어디에도 없었다) */
+  #powerBadge { position: absolute; left: 50%; transform: translateX(-50%); bottom: calc(16px + env(safe-area-inset-bottom));
+    background: rgba(0,0,0,0.55); border: 2px solid #FFD700; color: #FFD700; font-weight: bold; font-size: 15px;
+    padding: 7px 16px; border-radius: 22px; z-index: 11; pointer-events: none; display: none;
+    text-shadow: 1px 1px 0 #000; white-space: nowrap; transition: opacity 0.3s; }
+  #powerBadge.ready { animation: pbPulse 1.6s ease-in-out infinite; }
+  @keyframes pbPulse { 0%,100% { box-shadow: 0 0 0 rgba(255,215,0,0); } 50% { box-shadow: 0 0 16px rgba(255,215,0,0.75); } }
   /* 점수 획득 팝업 */
   #scorePop { position: absolute; top: 96px; right: 16px; color: #FFEB3B; font-size: 18px; font-weight: bold; text-shadow: 1px 1px 0 #000; opacity: 0; pointer-events: none; z-index: 11; transition: all 0.4s; }
   #miniRank { display: none !important; }   /* 2026-08-06 대표님 지시: 화면 가림 → 삭제 */
@@ -261,6 +268,7 @@
   <div id="scorePop"></div>
   <div id="miniRank"></div>
   <div id="comboMsg"></div>
+  <div id="powerBadge"></div>
   <div id="ratingBanner">전체이용가 · 게임물내용정보 해당사항 없음 · 코다리컴퍼니</div>
 
   <button id="muteBtn">⚙️</button>
@@ -1864,6 +1872,8 @@ function setHudHidden(v) {
   hudHidden = v;
   const el = document.getElementById('topUI');
   if (el) el.style.opacity = v ? '0' : '1';
+  const pb2 = document.getElementById('powerBadge');   // ⚡ 배지도 지도 패널 동안 숨김
+  if (pb2) pb2.style.opacity = v ? '0' : '1';
 }
 function haptic(ms) {
   if (!vibeOn) return;
@@ -1921,6 +1931,7 @@ function update(dt) {
   // 파워 모드 타이머
   if (powerT > 0) {
     powerT -= dt;
+    if (Math.floor(powerT * 10) !== Math.floor((powerT + dt) * 10)) updateHUD();   // ⚡ 배지 남은시간 갱신
     if (powerT <= 0) {
       powerT = 0; smashCombo = 0;
       showCombo('파워 끝! 더블탭으로 다시 ⚡'); tone(330, 0.2, 'sine', 0.15, 165);
@@ -2161,6 +2172,16 @@ function updateHUD() {
   const pw = document.getElementById('powerWrap');
   if (pw) pw.style.display = '';   // ⚡ 스톡제로 개편하며 상시 표시 (더블탭 발동 안내 겸)
   document.getElementById('powerVal').textContent = (powerT > 0 ? '파워!' : '×' + (powerStock + powerInv));
+  // ⚡ 하단 배지 — 개수와 사용법(더블탭)을 한 줄로
+  const pb = document.getElementById('powerBadge');
+  if (pb) {
+    const tot = powerStock + powerInv;
+    pb.textContent = powerT > 0 ? '⚡ 파워뱀 발동 중! ' + powerT.toFixed(1) + '초'
+      : tot > 0 ? '⚡ ×' + tot + ' · 화면 두 번 탭하면 파워뱀!'
+      : '⚡ 소진 · 두 번 탭 = ' + POWER_BUY_COST + '코인으로 충전';
+    pb.classList.toggle('ready', powerT <= 0 && tot > 0);
+    pb.style.display = (running && !dead) ? 'block' : 'none';
+  }
   document.getElementById('scoreVal').textContent = score;
   const lv = document.getElementById('lenVal'); if (lv) lv.textContent = snakeLen;
 }
