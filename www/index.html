@@ -62,6 +62,25 @@
   .btnAlt { background: linear-gradient(135deg, #FF69B4, #FF1493); color: white; border: none; padding: 12px 28px; font-size: 16px; font-weight: bold; border-radius: 30px; cursor: pointer; margin: 6px; box-shadow: 0 4px 15px rgba(255,20,147,0.4); font-family: inherit; }
   .btnAlt:active { transform: scale(0.95); }
   #gameOver { display: none; }
+  /* 🛍️ 스킨 상점 (2026-08-06) */
+  #shopCoins { font-size: 22px; font-weight: bold; color: #FFD700; text-shadow: 1px 1px 0 #000; margin: 2px 0 12px; }
+  #shopList { display: flex; flex-direction: column; gap: 10px; width: 340px; max-width: 94%; max-height: 58vh; overflow-y: auto; padding: 2px; }
+  #shopList::-webkit-scrollbar { width: 5px; }
+  #shopList::-webkit-scrollbar-thumb { background: #8BC34A; border-radius: 3px; }
+  .shopCard { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 16px;
+    background: rgba(255,255,255,0.09); border: 2px solid rgba(255,255,255,0.22); text-align: left; }
+  .shopCard.owned { border-color: rgba(139,195,74,0.7); }
+  .shopCard.equipped { border-color: #FFD700; background: linear-gradient(135deg, rgba(255,215,0,0.22), rgba(0,0,0,0.3)); box-shadow: 0 0 16px rgba(255,215,0,0.35); }
+  .shopCard canvas { width: 56px; height: 56px; flex-shrink: 0; }
+  .shopInfo { flex: 1; min-width: 0; }
+  .shopName { font-size: 16px; font-weight: bold; color: #fff; }
+  .shopDesc { font-size: 12px; color: rgba(255,255,255,0.72); margin-top: 2px; }
+  .shopBtn { min-width: 96px; padding: 10px 12px; border: none; border-radius: 22px; font-size: 13px; font-weight: bold;
+    font-family: inherit; cursor: pointer; line-height: 1.3; }
+  .shopBtn.buy { background: linear-gradient(135deg,#8BC34A,#4CAF50); color: #fff; }
+  .shopBtn.wear { background: linear-gradient(135deg,#42A5F5,#1565C0); color: #fff; }
+  .shopBtn.on { background: linear-gradient(135deg,#FFD700,#FFA000); color: #3E2723; }
+  .shopBtn.poor { background: #6E6E6E; color: #ccc; }
   /* 📺 부활 도전 카운트다운 (2026-08-05) */
   #reviveCountdown { font-size: 92px; font-weight: bold; color: #FFEB3B; line-height: 1;
     text-shadow: 3px 3px 0 #000, 0 0 30px rgba(255,235,59,0.8); margin: 6px 0 10px;
@@ -192,14 +211,7 @@
 
     <div id="coinBoxStart">💰 <span id="coinValStart">0</span></div>
 
-    <div class="charLabel">🎨 뱀 색 고르기 (🔒 코인으로 해제) 🎨</div>
-    <div class="skinSelect" id="skinSelect">
-      <div class="skinOption" data-skin="green"><canvas width="44" height="44"></canvas><div class="skinName">초록이</div><div class="lockTag"></div></div>
-      <div class="skinOption" data-skin="blue"><canvas width="44" height="44"></canvas><div class="skinName">파랑이</div><div class="lockTag"></div></div>
-      <div class="skinOption" data-skin="pink"><canvas width="44" height="44"></canvas><div class="skinName">분홍이</div><div class="lockTag"></div></div>
-      <div class="skinOption" data-skin="orange"><canvas width="44" height="44"></canvas><div class="skinName">주황이</div><div class="lockTag"></div></div>
-      <div class="skinOption" data-skin="rainbow"><canvas width="44" height="44"></canvas><div class="skinName">무지개</div><div class="lockTag"></div></div>
-    </div>
+    <button id="shopBtn" class="btnAlt" style="background:linear-gradient(135deg,#7E57C2,#4527A0);font-size:18px;padding:14px 32px">🛍️ 스킨 상점</button>
     <div style="height: 24px"></div>
 
     <div id="streakBox">🔥 <span id="streakDays">0</span>일 연속 출석 중!</div>
@@ -219,6 +231,14 @@
       <button id="achBtn" class="btnAlt">🏅 업적</button>
       <button id="howToBtn" class="btnAlt">❓ 방법</button>
     </div>
+  </div>
+
+  <!-- 🛍️ 스킨 상점 (2026-08-06) -->
+  <div id=shopScreen class=overlay style=display:none>
+    <h1>🛍️ 스킨 상점</h1>
+    <div id=shopCoins>🪙 <span id=shopCoinVal>0</span> 코인</div>
+    <div id=shopList></div>
+    <button id=shopCloseBtn class=btn>닫기 ✖</button>
   </div>
 
   <!-- 🏅 업적 화면 -->
@@ -398,15 +418,26 @@ function snapCam() { // 즉시 중앙
 //=========================================
 // 🔮 구슬 색 흐름 (구버전 폰 디자인): 연두 → 라임 → 청록 → 하늘 → 남색
 const BEAD_DEFAULT = ['#8BC34A', '#CDDC39', '#4DD0E1', '#42A5F5', '#5C6BC0'];
+// 🎨 스킨 5종 (2026-08-06 상점 개편) — id는 지시서 명세를 따르되, 구 id는 아래 SKIN_MIGRATE로 이어받는다
 const SKINS = {
-  green:  { head: '#66BB6A', body1: '#81C784', body2: '#4CAF50', belly: '#C5E1A5', beads: BEAD_DEFAULT },
-  blue:   { head: '#42A5F5', body1: '#64B5F6', body2: '#1E88E5', belly: '#BBDEFB', beads: ['#4FC3F7','#29B6F6','#42A5F5','#5C6BC0','#7E57C2'] },
-  pink:   { head: '#F06292', body1: '#F48FB1', body2: '#EC407A', belly: '#F8BBD0', beads: ['#F8BBD0','#F48FB1','#F06292','#EC407A','#AB47BC'] },
-  orange: { head: '#FFA726', body1: '#FFB74D', body2: '#FB8C00', belly: '#FFE0B2', beads: ['#FFD54F','#FFB74D','#FFA726','#FF7043','#EF5350'] },
-  rainbow:{ rainbow: true, head: '#66BB6A', belly: '#FFFFFF' }
+  default:     { name:'기초 뱀',      desc:'클래식 그린 뱀',            head:'#66BB6A', body1:'#81C784', body2:'#4CAF50', belly:'#C5E1A5',
+                 beads: BEAD_DEFAULT },
+  cute_cat:    { name:'분홍 냥이',    desc:'귀여운 핑크 고양이',        head:'#F06292', body1:'#F48FB1', body2:'#EC407A', belly:'#F8BBD0',
+                 beads:['#F8BBD0','#F48FB1','#F06292','#EC407A','#D81B60'], ears:true },
+  neon_dragon: { name:'네온 드래곤',  desc:'사이버펑크 네온 발광',      head:'#42A5F5', body1:'#64B5F6', body2:'#1E88E5', belly:'#BBDEFB',
+                 beads:['#00E5FF','#18FFFF','#40C4FF','#7C4DFF','#B388FF'], glow:'#00E5FF', horns:true },
+  golden_king: { name:'골든 킹',      desc:'왕관을 쓴 황금 뱀',          head:'#FFCA28', body1:'#FFD54F', body2:'#FFA000', belly:'#FFECB3',
+                 beads:['#FFF176','#FFD54F','#FFCA28','#FFB300','#FF8F00'], glow:'#FFD700', crown:true },
+  rainbow:     { name:'무지개 스네이크', desc:'알록달록 무지개 그라데이션', head:'#66BB6A', belly:'#FFFFFF', rainbow:true }
 };
-let selectedSkin = 'green';
-try { selectedSkin = localStorage.getItem('snake_skin') || 'green'; } catch(e) {}
+// 💰 스킨 가격 (지시서 명세)
+const SKIN_COST = { default:0, cute_cat:100, neon_dragon:250, golden_king:500, rainbow:1000 };
+const SKIN_ORDER = ['default','cute_cat','neon_dragon','golden_king','rainbow'];
+// 🔁 구 id → 새 id (기존 유저의 보유·착용 스킨이 초기화되지 않도록)
+const SKIN_MIGRATE = { green:'default', pink:'cute_cat', blue:'neon_dragon', orange:'golden_king', rainbow:'rainbow' };
+function migrateSkinId(id) { return SKIN_MIGRATE[id] || (SKINS[id] ? id : 'default'); }
+let selectedSkin = 'default';
+try { selectedSkin = migrateSkinId(localStorage.getItem('snake_skin') || 'default'); } catch(e) {}
 
 //=========================================
 // 게임 상태
@@ -489,9 +520,11 @@ function updateCoinUI() {
   const b = document.getElementById('coinValStart'); if (b) b.textContent = coins;
 }
 // 스킨 가격(0=기본 무료). 해제하면 unlocked에 저장
-const SKIN_COST = { green:0, blue:0, pink:150, orange:250, rainbow:600 };
-let unlocked = ['green','blue'];
-try { const u = JSON.parse(localStorage.getItem('snake_unlocked') || 'null'); if (Array.isArray(u)) unlocked = u; } catch(e) {}
+let unlocked = ['default'];
+try { const u = JSON.parse(localStorage.getItem('snake_unlocked') || 'null');
+  if (Array.isArray(u)) unlocked = u.map(migrateSkinId);   // 🔁 구 id 이어받기
+} catch(e) {}
+if (unlocked.indexOf('default') === -1) unlocked.push('default');
 function isUnlocked(id) { return SKIN_COST[id] === 0 || unlocked.indexOf(id) !== -1; }
 function saveUnlocked() { try { localStorage.setItem('snake_unlocked', JSON.stringify(unlocked)); } catch(e) {} }
 // 🏅 누적 통계 + 업적
@@ -525,9 +558,9 @@ function checkAchievements() {
 
 // 🎯 오늘의 미션 (매일 리셋) — 라운드 완주 없이도 세션 안에서 작은 성취를 자주 주기 위한 장치
 const MISSIONS = [
-  { key:'apple', icon:'🍎', label:'사과 5개 먹기',   goal:5, reward:15 },
-  { key:'round', icon:'🚪', label:'2라운드 도달',    goal:1, reward:25 },
-  { key:'gate',  icon:'🏪', label:'가게 1개 완성',   goal:1, reward:40 }
+  { key:'apple', icon:'🍎', label:'사과 5개 먹기',   goal:5, reward:30 },
+  { key:'round', icon:'🚪', label:'2라운드 도달',    goal:1, reward:40 },
+  { key:'gate',  icon:'🏪', label:'가게 1개 완성',   goal:1, reward:60 }
 ];
 let missionState = { date:'', progress:{}, claimed:{} };
 function loadMissions() {
@@ -833,6 +866,39 @@ function drawSnakeHead(c, px, py, angle, skinKey, scale) {
   c.rotate(angle);
   c.scale(scale, scale);
   const R = 13; // 머리 그림 기준 크기 (충돌용 HEAD_R과 분리)
+  // 🎨 스킨 장식 — 머리 회전(c.rotate) 안에서 그리므로 x=앞쪽, y=좌우
+  if (skin.ears) {          // 🐱 분홍 냥이: 삼각 귀 2개
+    c.fillStyle = skin.head;
+    for (const s of [-1, 1]) {
+      c.beginPath();
+      c.moveTo(-R * 0.15, s * R * 0.55); c.lineTo(-R * 0.85, s * R * 1.35); c.lineTo(-R * 0.05, s * R * 1.05);
+      c.closePath(); c.fill();
+      c.fillStyle = 'rgba(255,183,197,0.95)';
+      c.beginPath();
+      c.moveTo(-R * 0.28, s * R * 0.72); c.lineTo(-R * 0.68, s * R * 1.16); c.lineTo(-R * 0.22, s * R * 0.98);
+      c.closePath(); c.fill();
+      c.fillStyle = skin.head;
+    }
+  }
+  if (skin.horns) {         // 🐲 네온 드래곤: 뒤로 뻗은 뿔
+    c.strokeStyle = '#B388FF'; c.lineWidth = R * 0.22; c.lineCap = 'round';
+    for (const s of [-1, 1]) {
+      c.beginPath();
+      c.moveTo(-R * 0.2, s * R * 0.6);
+      c.quadraticCurveTo(-R * 1.0, s * R * 1.0, -R * 1.25, s * R * 0.35);
+      c.stroke();
+    }
+    c.lineCap = 'butt';
+  }
+  if (skin.crown) {         // 👑 골든 킹: 머리 위 왕관
+    c.fillStyle = '#FFD700';
+    c.beginPath();
+    c.moveTo(-R * 0.55, -R * 0.95); c.lineTo(-R * 0.55, -R * 1.45); c.lineTo(-R * 0.2, -R * 1.15);
+    c.lineTo(R * 0.1, -R * 1.55); c.lineTo(R * 0.4, -R * 1.15); c.lineTo(R * 0.7, -R * 1.45);
+    c.lineTo(R * 0.7, -R * 0.95);
+    c.closePath(); c.fill();
+    c.strokeStyle = '#B8860B'; c.lineWidth = 1.2; c.stroke();
+  }
   // 머리 (둥근) — 그라디언트는 색상별 1회만 생성 (매 프레임 생성 금지)
   if (!drawSnakeHead._gc) drawSnakeHead._gc = {};
   let g = drawSnakeHead._gc[headColor];
@@ -2460,6 +2526,11 @@ function drawSnake() {
       const t = pts.length > 1 ? i / (pts.length - 1) : 0;
       const r = BODY_R * (1 - t * 0.28);          // 꼬리로 갈수록 살짝 가늘게
       const col = skin.rainbow ? hslColor(i, pts.length) : beads[i % beads.length];
+      if (skin.glow) {   // ✨ 네온/골드: 은은한 발광
+        ctx.save(); ctx.globalAlpha = 0.30;
+        ctx.drawImage(glowSprite(skin.glow), p.x - r * 2.1, p.y - r * 2.1, r * 4.2, r * 4.2);
+        ctx.restore();
+      }
       // 외곽선
       ctx.fillStyle = 'rgba(0,0,0,0.30)';
       ctx.beginPath(); ctx.arc(p.x, p.y, r + 2.2, 0, Math.PI * 2); ctx.fill();
@@ -3099,6 +3170,10 @@ function gameOver() {
   stats.plays++;
   if (finalRound > stats.bestRound) stats.bestRound = finalRound;
   saveStats();
+  // 💰 점수 정산 — 지시서는 10%였으나 실측상 판당 600코인이 들어와 코인경제가 붕괴(부활 1,000이 2판이면 조달).
+  //    3%·상한 300으로 낮춰 '스킨 수집은 되고, 코인부활은 여전히 사치재'인 균형을 유지한다.
+  const scoreCoins = Math.min(300, Math.floor(finalScore * 0.03));
+  if (scoreCoins > 0) addCoins(scoreCoins);
   const newAch = checkAchievements();   // 새 업적 → 코인 보상
   saveCoins();
   // 💰 이번 판 코인 요약
@@ -3431,26 +3506,7 @@ function saveAndContinue() {
 //=========================================
 // 스킨 미리보기 + 입력
 //=========================================
-function renderSkinPreviews() {
-  document.querySelectorAll('.skinOption').forEach(opt => {
-    const id = opt.dataset.skin;
-    const c = opt.querySelector('canvas').getContext('2d');
-    c.clearRect(0, 0, 44, 44);
-    c.save();
-    // 작은 몸통 + 머리
-    const skin = SKINS[id];
-    for (let i = 3; i >= 1; i--) {
-      let col = skin.rainbow ? hslColor(i, 4) : (i % 2 ? skin.body1 : skin.body2);
-      c.fillStyle = col;
-      c.beginPath(); c.arc(14 - i*7, 30, 6, 0, Math.PI*2); c.fill();
-    }
-    drawSnakeHead(c, 30, 22, -0.3, id, 0.7);
-    c.restore();
-  });
-}
-//=========================================
-// 🛒 시작 부스터 상점 (💰 코인 싱크 + 📺 광고 훅 4점째)
-//=========================================
+// 🛒 시작 부스터 상점 (스킨 상점과 별개 — 판마다 소비되는 코인 싱크)
 function renderBoosters() {
   const el = document.getElementById('boosterShop');
   if (!el) return;
@@ -3509,54 +3565,89 @@ function buyBooster(key) {
 })();
 
 // 🔒 스킨 잠금/가격 표시
-function renderSkinLocks() {
-  document.querySelectorAll('.skinOption').forEach(opt => {
-    const id = opt.dataset.skin;
-    const tag = opt.querySelector('.lockTag');
-    if (isUnlocked(id)) { opt.classList.remove('locked'); if (tag) tag.textContent = ''; }
-    else { opt.classList.add('locked'); if (tag) tag.innerHTML = '🔒<br>' + SKIN_COST[id]; }
-  });
-}
-function selectSkin(id) {
-  if (!isUnlocked(id)) {
-    // 구매 시도
-    const cost = SKIN_COST[id];
-    if (coins >= cost) {
-      coins -= cost; unlocked.push(id); saveUnlocked(); saveCoins();
-      renderSkinLocks();
-      tone(523,0.1,'square',0.2); tone(1047,0.15,'square',0.2,1047,0.08);
-      showCombo && showCombo('🎉 ' + (SKINS[id]?'새 스킨':'') + ' 해제!');
-    } else {
-      tone(200, 0.15, 'sawtooth', 0.2, 100); // 부족 소리
-      const cb = document.getElementById('coinValStart'); if (cb) { cb.style.color = '#FF5252'; setTimeout(()=>cb.style.color='', 400); }
-      // 📺 코인 부족 → 광고 보고 이번 판만 체험 장착 (저장 안 함, 판 종료 시 원복)
-      showConfirm('코인이 부족해요! 📺 광고 보고 이번 판만 장착해볼까요?', function() {
-        showRewardAd(function() {
-          adTrialSkin = { id: id, prev: selectedSkin };
-          selectedSkin = id;   // localStorage 저장 안 함 — 임시 장착
-          document.querySelectorAll('.skinOption').forEach(o => o.classList.toggle('selected', o.dataset.skin === id));
-          tone(880, 0.08, 'square', 0.12);
-          if (typeof showCombo === 'function') showCombo('📺 체험 장착! 이번 판만 사용');
-        });
-      });
-      return;
-    }
-  }
-  selectedSkin = id;
-  try { localStorage.setItem('snake_skin', id); } catch(e) {}
-  document.querySelectorAll('.skinOption').forEach(o => o.classList.toggle('selected', o.dataset.skin === id));
-  tone(880, 0.08, 'square', 0.12);
-}
-document.querySelectorAll('.skinOption').forEach(opt => {
-  opt.addEventListener('click', function(e) { e.preventDefault(); selectSkin(opt.dataset.skin); });
-  opt.addEventListener('touchstart', function(e) { e.preventDefault(); selectSkin(opt.dataset.skin); }, {passive:false});
-});
-// 잠긴 스킨이 선택돼 있으면 기본으로
-if (!isUnlocked(selectedSkin)) selectedSkin = 'green';
-renderSkinLocks();
-document.querySelector(`.skinOption[data-skin="${selectedSkin}"]`)?.classList.add('selected');
 
-// 🏅 업적 목록 렌더 + 화면 열기
+// 🛍️ 스킨 상점 (2026-08-06 지시서 옵션C)
+function skinPreview(cv, id) {
+  const c = cv.getContext('2d');
+  const S = cv.width;
+  c.clearRect(0, 0, S, S);
+  const sk = SKINS[id] || SKINS.default;
+  const beads = sk.beads || BEAD_DEFAULT;
+  // 꼬리쪽 구슬 3개 + 머리
+  for (let i = 3; i >= 1; i--) {
+    const x = S * 0.5 - i * S * 0.145, y = S * 0.62 + Math.sin(i) * 2;
+    const r = S * 0.115;
+    const col = sk.rainbow ? 'hsl(' + (i * 55) + ',85%,60%)' : beads[i % beads.length];
+    c.fillStyle = 'rgba(0,0,0,0.28)'; c.beginPath(); c.arc(x, y, r + 1.6, 0, Math.PI * 2); c.fill();
+    c.fillStyle = col; c.beginPath(); c.arc(x, y, r, 0, Math.PI * 2); c.fill();
+    c.fillStyle = 'rgba(255,255,255,0.35)'; c.beginPath(); c.arc(x - r * 0.3, y - r * 0.32, r * 0.4, 0, Math.PI * 2); c.fill();
+  }
+  drawSnakeHead(c, S * 0.62, S * 0.5, 0, id, S / 44);
+}
+function renderShop() {
+  const list = document.getElementById('shopList');
+  const cv = document.getElementById('shopCoinVal');
+  if (cv) cv.textContent = coins;
+  if (!list) return;
+  list.innerHTML = '';
+  for (const id of SKIN_ORDER) {
+    const sk = SKINS[id], cost = SKIN_COST[id] || 0;
+    const owned = isUnlocked(id), on = (selectedSkin === id);
+    const card = document.createElement('div');
+    card.className = 'shopCard' + (on ? ' equipped' : owned ? ' owned' : '');
+    const pv = document.createElement('canvas'); pv.width = 56; pv.height = 56;
+    const info = document.createElement('div'); info.className = 'shopInfo';
+    info.innerHTML = '<div class=shopName>' + sk.name + (on ? ' <span style=color:#FFD700>★</span>' : '') + '</div>' +
+                     '<div class=shopDesc>' + sk.desc + '</div>';
+    const btn = document.createElement('button');
+    // 버튼 4상태 분기 (지시서 C-2)
+    if (on)            { btn.className = 'shopBtn on';   btn.textContent = '착용 중'; }
+    else if (owned)    { btn.className = 'shopBtn wear'; btn.textContent = '착용하기'; }
+    else if (coins >= cost) { btn.className = 'shopBtn buy';  btn.innerHTML = '구매하기<br>🪙 ' + cost; }
+    else               { btn.className = 'shopBtn poor'; btn.innerHTML = '🪙 ' + cost + ' 필요'; btn.disabled = true; }
+    const act = function (ev) { ev.preventDefault(); shopAction(id); };
+    if (!btn.disabled) { btn.addEventListener('click', act); btn.addEventListener('touchstart', act, { passive: false }); }
+    card.appendChild(pv); card.appendChild(info); card.appendChild(btn);
+    list.appendChild(card);
+    try { skinPreview(pv, id); } catch (err) {}
+  }
+}
+function equipSkin(id) {
+  selectedSkin = id;
+  try { localStorage.setItem('snake_skin', id); } catch (e) {}
+  renderShop();
+}
+function shopAction(id) {
+  if (isUnlocked(id)) {                 // 보유 중 → 착용
+    if (selectedSkin === id) return;
+    equipSkin(id);
+    tone(880, 0.08, 'square', 0.16); tone(1318, 0.12, 'square', 0.14, 1318, 0.06);
+    if (typeof showCombo === 'function') showCombo('✨ ' + SKINS[id].name + ' 착용!');
+    haptic(12);
+    return;
+  }
+  const cost = SKIN_COST[id] || 0;
+  if (coins < cost) {                   // 코인 부족 → 📺 광고 체험 제안
+    tone(200, 0.15, 'sawtooth', 0.2, 100);
+    showConfirm('코인이 부족해요! 📺 광고 보고 이번 판만 장착해볼까요?', function () {
+      showRewardAd(function () {
+        adTrialSkin = { id: id, prev: selectedSkin };
+        selectedSkin = id;              // 저장하지 않음 — 판 종료 시 원복
+        renderShop();
+        if (typeof showCombo === 'function') showCombo('📺 체험 장착! 이번 판만 사용');
+      });
+    });
+    return;
+  }
+  // 구매 → 차감·해금·자동 착용
+  coins -= cost; saveCoins();
+  unlocked.push(id); saveUnlocked();
+  equipSkin(id);
+  tone(523, 0.1, 'square', 0.2); tone(784, 0.1, 'square', 0.2, 784, 0.07); tone(1047, 0.16, 'square', 0.2, 1047, 0.14);
+  haptic([20, 40, 20]);
+  if (typeof showCombo === 'function') showCombo('🎉 ' + SKINS[id].name + ' 구매 완료!');
+}
+
 function renderAchList() {
   const el = document.getElementById('achList');
   if (!el) return;
@@ -3619,6 +3710,8 @@ bindBtn('reviveAdOfferBtn', reviveByAd);
 bindBtn('reviveGiveUpBtn', function(){ hideReviveOffer(); gameOver(); });
 bindBtn('reviveBtn', reviveByCoin);
 // (2026-08-03: "광고 보고 점수 2배 재시작" 버튼 제거 — 게임오버 화면이 너무 복잡하다는 피드백. 광고 훅은 부활+부스터 2곳으로 압축)
+bindBtn('shopBtn', function(){ renderShop(); document.getElementById('shopScreen').style.display = 'flex'; });
+bindBtn('shopCloseBtn', function(){ document.getElementById('shopScreen').style.display = 'none'; });
 bindBtn('achBtn', function() { renderAchList(); document.getElementById('achScreen').style.display = 'flex'; });
 bindBtn('achCloseBtn', function() { document.getElementById('achScreen').style.display = 'none'; });
 // ⏸️ 일시정지
@@ -3686,7 +3779,7 @@ function checkDailyReward() {
   } catch(e) {}
   // 보상: 시작 시간 보너스 + 💰코인
   pendingBonus = Math.min(5, 1 + dailyStreak * 0.5);
-  const coinReward = 20 + dailyStreak * 5;
+  const coinReward = 30 + dailyStreak * 5;   // 출석 보상 상향 (2026-08-06)
   addCoins(coinReward); saveCoins();
   document.getElementById('streakDays').textContent = dailyStreak;
   document.getElementById('dailyStreakNum').textContent = dailyStreak;
@@ -3839,7 +3932,7 @@ window.addEventListener('mouseup', function() { steering = false; });
 
 resize();
 reset();
-renderSkinPreviews();
+// (스킨 미리보기는 상점 모달을 열 때 renderShop()이 그린다 — 2026-08-06)
 renderStartTopRankings();
 updateCoinUI();      // 💰 코인 표시
 renderBoosters();    // 🛒 시작 부스터 상점
