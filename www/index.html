@@ -77,6 +77,22 @@
   .btnAlt { background: linear-gradient(135deg, #FF69B4, #FF1493); color: white; border: none; padding: 12px 28px; font-size: 16px; font-weight: bold; border-radius: 30px; cursor: pointer; margin: 6px; box-shadow: 0 4px 15px rgba(255,20,147,0.4); font-family: inherit; }
   .btnAlt:active { transform: scale(0.95); }
   #gameOver { display: none; }
+  /* ⚖️ 등급 표시 (법정 의무) */
+  #ratingBox { width: 320px; max-width: 88%; padding: 26px 22px; border-radius: 20px; text-align: center;
+    background: rgba(255,255,255,0.07); border: 2px solid rgba(255,255,255,0.22); }
+  #ratingBadge { width: 104px; height: 104px; margin: 0 auto 18px; border-radius: 14px;
+    background: #009E4F; color: #fff; font-size: 22px; font-weight: bold; line-height: 1.15;
+    display: flex; flex-direction: column; justify-content: center; align-items: center;
+    border: 3px solid #fff; box-shadow: 0 6px 18px rgba(0,0,0,0.4); }
+  .ratingRow { display: flex; justify-content: space-between; gap: 10px; padding: 7px 2px;
+    font-size: 13px; color: rgba(255,255,255,0.72); border-top: 1px solid rgba(255,255,255,0.12); }
+  .ratingRow b { color: #fff; font-weight: bold; text-align: right; }
+  #ratingHint { margin-top: 16px; font-size: 12px; color: rgba(255,255,255,0.5); }
+  /* 플레이 중 1시간마다 재노출되는 작은 배너 */
+  #ratingBanner { position: absolute; left: 50%; transform: translateX(-50%);
+    top: calc(150px + env(safe-area-inset-top)); z-index: 14; display: none;
+    padding: 8px 14px; border-radius: 12px; background: rgba(0,0,0,0.72);
+    border: 2px solid #009E4F; color: #fff; font-size: 12px; font-weight: bold; white-space: nowrap; }
 /* === GO_BG_START === */
   /* 🌌 게임오버·랭킹 배경 (힉스필드 생성, 2026-08-06) */
   #gameOver, #rankScreen {
@@ -234,6 +250,7 @@
   <div id="scorePop"></div>
   <div id="miniRank"></div>
   <div id="comboMsg"></div>
+  <div id="ratingBanner">전체이용가 · 게임물내용정보 해당사항 없음 · 코다리컴퍼니</div>
 
   <button id="muteBtn">⚙️</button>
   <button id="pauseBtn" style="display:none">⏸️</button>
@@ -270,6 +287,19 @@
     <div>
       <button id="achBtn" class="btnAlt">🏅 업적</button>
       <button id="howToBtn" class="btnAlt">❓ 방법</button>
+    </div>
+  </div>
+
+  <!-- ⚖️ 게임물 등급 표시 (게임산업법 제33조 — 초기화면 3초 이상 노출 의무)
+       ※ 표시 항목은 법정 3종: 상호 / 등급 / 게임물내용정보
+          등급분류번호는 GRAC 발급 후 RATING.no 에 넣으면 자동으로 한 줄 추가된다 -->
+  <div id="ratingScreen" class="overlay" style="display:flex;z-index:60;background:#0B1A33">
+    <div id="ratingBox">
+      <div id="ratingBadge">전체<br>이용가</div>
+      <div class="ratingRow"><span>게임물내용정보</span><b id="ratingInfo">해당사항 없음</b></div>
+      <div class="ratingRow"><span>상호</span><b id="ratingMaker">코다리컴퍼니</b></div>
+      <div class="ratingRow" id="ratingNoRow" style="display:none"><span>등급분류번호</span><b id="ratingNo">-</b></div>
+      <div id="ratingHint">잠시 후 시작합니다…</div>
     </div>
   </div>
 
@@ -1420,6 +1450,55 @@ let flyingStones = [];   // 깨진 돌이 광화문으로 날아가는 연출
 let gateFly = false, gateFlyT = 0;
 const GATE_FLY_DUR = 1.3;   // 제자리 완성 연출이라 짧게(예전엔 날아가느라 2.4초)
 const SHOP_DONE_SCALE = 1.45;  // 🏪 완성된 가게는 짓는 중보다 더 크게 — 성취감·목표 가시성
+
+//=========================================
+// ⚖️ 게임물 등급 표시 (게임산업법 제33조)
+//   "게임 초기화면에서 3초 이상 + 게임시간 1시간마다 3초 이상" 표시가 법정 요건이다.
+//   설정 화면이나 푸터에만 넣으면 요건 미충족 — 반드시 진입 시 강제 노출해야 한다.
+//=========================================
+const RATING = {
+  grade: '전체이용가',
+  info:  '해당사항 없음',        // 선정성·폭력성·공포·언어·약물/범죄·사행성 전부 미해당
+  maker: '코다리컴퍼니',          // 상호 (사업자등록 후 실제 상호로 교체)
+  no:    ''                      // ⬅️ GRAC 등급분류번호 발급되면 여기에 기입 (예: '제CC-OM-260800-000000호')
+};
+const RATING_MS = 3200;           // 3초 이상 (여유 0.2초)
+const RATING_REPEAT_MS = 3600000; // 1시간
+let ratingShownAt = 0;
+
+function applyRatingText() {
+  const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+  set('ratingInfo', RATING.info);
+  set('ratingMaker', RATING.maker);
+  if (RATING.no) {
+    set('ratingNo', RATING.no);
+    const row = document.getElementById('ratingNoRow'); if (row) row.style.display = 'flex';
+  }
+  const b = document.getElementById('ratingBadge');
+  if (b) b.innerHTML = RATING.grade === '전체이용가' ? '전체<br>이용가' : RATING.grade;
+  const banner = document.getElementById('ratingBanner');
+  if (banner) banner.textContent = RATING.grade + ' · 게임물내용정보 ' + RATING.info + ' · ' + RATING.maker
+    + (RATING.no ? ' · ' + RATING.no : '');
+}
+function hideRatingScreen() {
+  const el = document.getElementById('ratingScreen');
+  if (el) el.style.display = 'none';
+  ratingShownAt = Date.now();
+}
+// 플레이 1시간마다 3초 재노출
+function checkRatingRepeat() {
+  if (!running || dead || paused) return;
+  if (Date.now() - ratingShownAt < RATING_REPEAT_MS) return;
+  ratingShownAt = Date.now();
+  const b = document.getElementById('ratingBanner');
+  if (!b) return;
+  b.style.display = 'block';
+  setTimeout(function () { b.style.display = 'none'; }, RATING_MS);
+}
+applyRatingText();
+setTimeout(hideRatingScreen, RATING_MS);
+setInterval(checkRatingRepeat, 30000);
+
 // 🎬 라운드 전환 커튼 (아래→위 스윕) — 커튼이 화면을 덮는 순간 다음 라운드로 교체 (2026-08-03)
 let wipeY = null, wipeSwitched = false, wipeNextR = 0, wipeCarry = 0;
 let wipeHold = 0, wipeHoldMax = 1.8;   // 🗺️ 지도를 멈춰 보여주는 시간(초) — 너무 빨라 안 보인다는 피드백 반영
