@@ -170,7 +170,7 @@
   .startRankRow .rName { flex: 1; font-weight: bold; text-align: left; }
   .startRankRow .rScore { color: #FFD700; font-weight: bold; font-size: 19px; }
   .startRankRow .empty { opacity: 0.4; }
-  #startTopRankings { display: flex; flex-direction: column; gap: 5px; margin: 10px 0; width: 280px; max-width: 90%; }
+  #startTopRankings, #goTopRankings { display: flex; flex-direction: column; gap: 5px; margin: 6px 0; width: 280px; max-width: 90%; }
   /* 게임오버 랭킹 리스트 */
   #goRankList { display: flex; flex-direction: column; gap: 4px; width: 300px; max-width: 92%; margin: 8px 0; max-height: 38vh; overflow-y: auto; }
   #goRankList::-webkit-scrollbar { width: 5px; }
@@ -198,9 +198,9 @@
   .tg { min-width: 64px; padding: 8px 14px; border-radius: 20px; border: none; font-size: 15px; font-weight: bold; cursor: pointer; }
   .tg.on { background: #4CAF50; color: #fff; }
   .tg.off { background: #777; color: #ddd; }
-  #streakBox { font-size: 15px; color: #FFA726; font-weight: bold; margin: 4px 0 10px; text-shadow: 1px 1px 0 #000; }
+  #streakBox { font-size: 15px; color: #FFA726; font-weight: bold; margin: 2px 0 6px; text-shadow: 1px 1px 0 #000; }
   /* 🎯 오늘의 미션 (앱인토스 리텐션 골격) */
-  #missionBox { width: 100%; max-width: 340px; margin: 2px auto 12px; }
+  #missionBox { width: 100%; max-width: 340px; margin: 2px auto 8px; }
   #missionBox .mTitle { font-size: 15px; font-weight: bold; color: #8BC34A; margin-bottom: 6px; text-shadow: 1px 1px 0 #000; }
   #missionBox .mRow { background: rgba(0,0,0,0.30); border: 1px solid rgba(139,195,74,0.35); border-radius: 12px; padding: 8px 10px; margin-bottom: 6px; }
   #missionBox .mRow.mGot { opacity: 0.55; }
@@ -209,7 +209,7 @@
   #missionBox .mBar { height: 6px; background: rgba(255,255,255,0.15); border-radius: 4px; margin: 6px 0 4px; overflow: hidden; }
   #missionBox .mBar i { display: block; height: 100%; background: linear-gradient(90deg,#8BC34A,#FFD700); border-radius: 4px; }
   /* 🛒 시작 부스터 상점 (💰 코인 싱크) */
-  #boosterShop { display: flex; gap: 6px; width: 100%; max-width: 340px; margin: 2px auto 12px; }
+  #boosterShop { display: flex; gap: 6px; width: 100%; max-width: 340px; margin: 2px auto 8px; }
   #boosterShop .bItem { flex: 1; background: rgba(0,0,0,0.30); border: 2px solid rgba(255,215,0,0.30);
     border-radius: 12px; padding: 8px 4px; text-align: center; cursor: pointer; user-select: none; }
   #boosterShop .bItem.on { border-color: #FFD700; background: rgba(255,215,0,0.18); }
@@ -252,7 +252,7 @@
       <div id="coinBig">💰 코인<br><span id="coinVal">0</span></div>
       <div id="bestBox">🏆 BEST<br><span id="bestVal">0</span></div>
     </div>
-    <div id="subRow"><span id="buildIcon">🍜</span> <b><span id="buildVal">0</span>/<span id="buildGoalVal">6</span></b> · 🐍 <b><span id="lenVal">4</span></b><span id="powerWrap" style="display:none">⚡ <span id="powerVal">0/5</span></span></div>
+    <div id="subRow"><span id="buildIcon">🍜</span> <b><span id="buildVal">0</span>/<span id="buildGoalVal">6</span></b> · 🐍 <b><span id="lenVal">4</span></b><span id="powerWrap">⚡ <span id="powerVal">×3</span></span></div>
   </div>
   <div id="scorePop"></div>
   <div id="miniRank"></div>
@@ -271,7 +271,7 @@
     <div id="coinBoxStart">💰 <span id="coinValStart">0</span></div>
 
     <button id="shopBtn" class="btnAlt" style="background:linear-gradient(135deg,#7E57C2,#4527A0);font-size:18px;padding:14px 32px">🛍️ 스킨 상점</button>
-    <div style="height: 24px"></div>
+    <div style="height: 6px"></div>
 
     <div id="streakBox">🔥 <span id="streakDays">0</span>일 연속 출석 중!</div>
 
@@ -281,9 +281,6 @@
     <!-- 🛒 시작 부스터 = 반복 소비형 코인 싱크. 코인이 무한 축적되면 광고 경로가 다시 막힌다 -->
     <div class="charLabel">🛒 시작 부스터 (이번 판만) 🛒</div>
     <div id="boosterShop"></div>
-
-    <div class="charLabel">🏆 명예의 전당 (최고 점수) 🏆</div>
-    <div id="startTopRankings"></div>
 
     <button id="startBtn" class="btn">시작! 🐍</button>
     <div>
@@ -352,6 +349,9 @@
     </div>
 
     <div class="rank" id="rankText"></div>
+    <!-- 🏆 명예의 전당 (2026-08-06 지시: 시작화면 → 게임오버로 이동) -->
+    <div class="charLabel">🏆 명예의 전당 🏆</div>
+    <div id="goTopRankings"></div>
     <div id="goAchMsg"></div>
     <div id="goAdFailMsg" style="display:none"></div>
 
@@ -402,7 +402,9 @@
       ② 🍜 <b>그 나라 음식</b>을 목표 개수만큼 먹으면 <b>랜드마크 완성!</b><br>
       ③ 🚪 완성된 랜드마크 <b>입구로 들어가면 다음 나라</b>로 떠나요<br>
       ④ ⏱️ 시간이 다 되면 끝! 음식을 먹으면 시간이 회복돼요<br>
-      ⑤ ⚠️ 벽·자기 꼬리·🪨돌·🦅천적에 부딪히면 위험!<br>
+      ⑤ ⚡ <b>화면을 빠르게 두 번 탭</b>하면 파워뱀! (판당 3개 무료)<br>
+      　 파워뱀은 돌을 부수고 천적을 쫓아내요 · 소진 시 코인 구매<br>
+      ⑥ ⚠️ 벽·🪨돌·🦅천적에 부딪히면 위험!<br>
       　 💥 죽어도 <b>광고 보고 1번 이어하기</b> 가능 (2초 무적)
     </div>
     <button id="tutorialOkBtn" class="btn">알겠어요! 🐍</button>
@@ -1227,6 +1229,7 @@ function startRound(R, startLen) {
   if (R === 1 && pendingBonus > 0 && dailyStreak % 7 === 0) powerT = POWER_DUR;
   if (R === 1) pendingBonus = 0;   // 출석 보상은 '그날 첫 판' 1회성 — 소비하면 즉시 비운다
   if (R === 1 && boostRun.power) powerT = POWER_DUR;   // 🛒 부스터: 파워 달고 시작
+  if (R === 1) powerStock = POWER_STOCK_FREE;          // ⚡ 판마다 기본 3개 지급 (2026-08-06 개편)
   snapCam();   // 🎥 카메라를 뱀 중앙으로
   if (R > ROCK_FROM_ROUND) ensureRocks();       // 🪨 2R부터 돌 장애물, 라운드마다 증가
   // 🐝 벌 폐지 (2026-08-03 대표님 지시: 벌은 뱀의 천적이 아니다 — 위협은 천적으로 일원화)
@@ -1283,13 +1286,11 @@ function spawnApple() {
   const r = Math.random();
   const goldenTo = festivalRound ? 0.21 : 0.14;
   let type;
-  if (r < 0.07) type = 'power';            // 🌶️ 파워 고추 (돌 부수기!) - 희귀
-  else if (r < goldenTo) type = 'golden';  // 황금 (+3칸, 시간 많이)
+  // 🌶️ 파워 고추 폐지 (2026-08-06): 파워는 먹어서가 아니라 더블탭 스톡으로만 발동
+  if (r < goldenTo) type = 'golden';       // 황금 (+3칸, 시간 많이)
   else if (r < goldenTo + 0.10) type = 'blue';   // 파랑 (점수 보너스)
   else if (r < goldenTo + 0.20) type = 'green';  // 초록 (시간만 회복)
   else type = 'red';                       // 빨강 (기본)
-  // 🌶️ 파워 고추는 부술 바위가 있을 때만 등장 (없으면 일반 사과로)
-  if (type === 'power' && obstacles.length === 0) type = 'red';
   // 썩는 시간: 라운드 난이도(rdRotBase) 기준, 파워/황금은 더 빨리 사라짐
   let rotTime;
   if (type === 'power') rotTime = Math.max(3.5, rdRotBase * 0.6);
@@ -1493,19 +1494,39 @@ function eatApple(a, idx) {
     }
     return;
   }
-  // ⚡ 사과로 파워 게이지 충전 (고추 아니고, 파워 중이 아닐 때)
-  if (a.type !== 'power' && powerT <= 0) {
-    powerGauge++;
-    if (powerGauge >= powerNeed()) activatePower();
-  }
+  // ⚡ 2026-08-06 개편: 먹어서 충전하는 게이지 폐지 — 파워는 더블탭으로 스톡에서 꺼내 쓴다
   updateHUD();
 }
-// ⚡ 파워 충전 (사과를 충분히 먹거나 고추를 먹으면)
+// ⚡ 파워뱀 발동 (더블탭 / 부스터 / 출석 보너스)
 function activatePower() {
   powerT = POWER_DUR; smashCombo = 0; powerGauge = 0;
   sfxPower(); haptic([30, 40, 30]);
-  showCombo('⚡ 파워 충전! 돌을 부숴 ' + curShop().name + '을 지어요! ' + curShop().icon);
+  showCombo('⚡ 파워뱀! 돌도 천적도 무섭지 않다!');
   spawnParticles(headX, headY, '#FFD700', 26);
+}
+// ⚡ 더블탭 → 파워뱀. 기본 3개, 소진 후엔 더블탭 한 번 더로 코인 구매(오발동 방지 2단계 확인)
+function tryPowerTap() {
+  if (!running || dead || paused || wipeY !== null || countdownT > 0) return;
+  if (powerT > 0) return;                      // 이미 파워 중 — 낭비 방지
+  if (powerStock > 0) {
+    powerStock--;
+    activatePower();
+  } else if (performance.now() < powerBuyOfferT) {
+    powerBuyOfferT = 0;
+    if (coins >= POWER_BUY_COST) {
+      coins -= POWER_BUY_COST; saveCoins();
+      showCombo('💰 -' + POWER_BUY_COST + ' 코인 파워!');
+      activatePower();
+    } else {
+      showCombo('🪙 코인 부족! (' + POWER_BUY_COST + ' 필요)');
+      tone(330, 0.15, 'sine', 0.12);
+    }
+  } else {
+    powerBuyOfferT = performance.now() + 4000;
+    showCombo('⚡ 파워 소진! 더블탭 한 번 더 = ' + POWER_BUY_COST + '코인');
+    tone(523, 0.08, 'sine', 0.12);
+  }
+  updateHUD();
 }
 function getRefill() {
   // 라운드 회복량 기준, 길수록 살짝 줄어듦
@@ -1514,6 +1535,10 @@ function getRefill() {
 
 let lowTimePulseT = 0;
 let powerT = 0;          // ⚡ 파워 모드 남은 시간 (돌 부수기)
+const POWER_STOCK_FREE = 3;    // ⚡ 판당 무료 파워 개수
+const POWER_BUY_COST = 300;    // ⚡ 소진 후 1개 코인 가격
+let powerStock = POWER_STOCK_FREE;
+let powerBuyOfferT = 0;        // 구매 확인 더블탭 유효시각 (performance.now 기준)
 let rocksSmashed = 0;    // 총 부순 돌 개수
 let smashCombo = 0;      // 파워 모드 중 연속 부수기 콤보
 // 🏪 꼬마뱀 마을 건설 시스템: 사과→파워→돌깨기→가게 건설→다음라운드
@@ -1872,7 +1897,7 @@ function update(dt) {
     powerT -= dt;
     if (powerT <= 0) {
       powerT = 0; smashCombo = 0;
-      showCombo('파워 끝! 음식 더 먹어요'); tone(330, 0.2, 'sine', 0.15, 165);
+      showCombo('파워 끝! 더블탭으로 다시 ⚡'); tone(330, 0.2, 'sine', 0.15, 165);
       updateHUD();
     }
   }
@@ -2108,8 +2133,8 @@ function updateHUD() {
   // 🏪 먹이=가게 테마 통일: 진행도 아이콘도 이번 라운드 가게로 표시
   const bi = document.getElementById('buildIcon'); if (bi) bi.textContent = curFood();   // 🍜 진행도는 '먹는 음식' 기준
   const pw = document.getElementById('powerWrap');
-  if (pw) pw.style.display = 'none';
-  document.getElementById('powerVal').textContent = (powerT > 0 ? '파워!' : powerGauge + '/' + powerNeed());
+  if (pw) pw.style.display = '';   // ⚡ 스톡제로 개편하며 상시 표시 (더블탭 발동 안내 겸)
+  document.getElementById('powerVal').textContent = (powerT > 0 ? '파워!' : '×' + powerStock);
   document.getElementById('scoreVal').textContent = score;
   const lv = document.getElementById('lenVal'); if (lv) lv.textContent = snakeLen;
 }
@@ -3738,13 +3763,13 @@ function renderGoRankList() {
   }
 }
 
-function renderRankingPanel(id) {
+function renderRankingPanel(id, count) {
   const container = document.getElementById(id);
   if (!container) return;
   container.innerHTML = '';
   const medals = ['🥇','🥈','🥉','4️⃣','5️⃣'];
   const classes = ['gold','silver','bronze','',''];
-  for (let i = 0; i < 5; i++) {
+  for (let i = 0; i < (count || 5); i++) {
     const entry = leaderboard[i];
     const row = document.createElement('div');
     row.className = 'startRankRow ' + classes[i];
@@ -3767,7 +3792,11 @@ function renderMiniRank() {
     c.appendChild(row);
   });
 }
-function renderStartTopRankings() { renderRankingPanel('startTopRankings'); renderMiniRank(); }
+function renderStartTopRankings() {
+  renderRankingPanel('startTopRankings');        // 시작화면 패널은 삭제됨 — 남아 있으면 그대로 갱신 (무해)
+  renderRankingPanel('goTopRankings', 3);        // 🏆 게임오버 명예의 전당 — TOP3만 (화면 안 붐비게)
+  renderMiniRank();
+}
 function saveLbEntry(name, sc, rnd) {
   name = (name || '').trim().slice(0, 8) || '익명';
   const entry = { name, score: sc, round: rnd, skin: selectedSkin, date: todayStr() };   // 🇰🇷 랭킹 날짜도 KST
@@ -4221,13 +4250,18 @@ function stickMove(x, y) {
 }
 function stickEnd() { stickOn = false; }
 
+let lastTapAt = 0;   // ⚡ 더블탭 감지 (280ms 안에 두 번 새 터치)
 canvas.addEventListener('touchstart', function (e) {
   if (e.cancelable) e.preventDefault();
   // 🔊 웹뷰에서 오디오가 잠든 채 남는 경우 첫 터치로 깨운다
   if (bgmOn && running && !dead && !bgmPlaying) { try { startBGM(); } catch (err) {} }
+  const nowT = performance.now();
+  if (nowT - lastTapAt < 280) { lastTapAt = 0; tryPowerTap(); }
+  else lastTapAt = nowT;
   const t = e.touches[0];
   if (t) { stickStart(t.clientX, t.clientY); stickMove(t.clientX, t.clientY); }
 }, { passive: false });
+canvas.addEventListener('dblclick', function (e) { e.preventDefault(); tryPowerTap(); });   // 🖱️ PC 테스트용
 canvas.addEventListener('touchmove', function (e) {
   if (e.cancelable) e.preventDefault();
   const t = e.touches[0]; if (t) stickMove(t.clientX, t.clientY);
