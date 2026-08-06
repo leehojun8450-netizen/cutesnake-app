@@ -3059,6 +3059,7 @@ function render() {
     ctx.fillText(txt, W/2, py + 20);
     ctx.textAlign = 'left';
   }
+  drawStick();   // 🕹️ 가상 조이스틱
   // 🔥 콤보 미터 (크게, 타이머 바와 함께 → 확실히 보이게)
   if (eatCombo >= 2) {
     const mult = comboMult();
@@ -4034,40 +4035,82 @@ function bindDir(id, nx, ny) {
 bindDir('btnUp', 0, -1); bindDir('btnDown', 0, 1);
 bindDir('btnLeft', -1, 0); bindDir('btnRight', 1, 0);
 
-// 🎮 조작 = 상대 스와이프 (2026-08-06 전면 교체)
-//   구방식은 '뱀 머리 기준 절대 위치'였다 → 뱀이 화면 위쪽에 있으면 손가락을 더 위에 둘 공간이 없어
-//   위로 가는 게 거의 불가능했고, 가로 성분이 크면 위 대신 좌우로 꺾였다.
-//   이제는 '손가락을 민 방향'만 본다. 화면 어디를 만지든, 뱀이 어디 있든 똑같이 동작한다.
-const SWIPE_MIN = 20;         // 이만큼 밀면 방향 전환
-let swX = 0, swY = 0, swOn = false;
-function swipeStart(x, y) { swX = x; swY = y; swOn = true; }
-function swipeMove(x, y) {
-  if (!swOn) return;
-  const dx = x - swX, dy = y - swY;
-  if (Math.abs(dx) < SWIPE_MIN && Math.abs(dy) < SWIPE_MIN) return;
+// 🕹️ 조작 = 가상 조이스틱 (2026-08-06 재교체)
+//   [왜 또 바꿨나]
+//   ① 1세대: '뱀 머리 기준 절대 위치' → 뱀이 화면 위쪽이면 손가락 둘 공간이 없어 위로 못 감
+//   ② 2세대: '민 방향 스와이프' → 기준점을 매번 갱신해서, 손가락을 대고만 있으면 무반응이고
+//            조금만 움직여도 방향이 튀었다. 대각선으로 천천히 끌면 좌우·상하가 번갈아 지그재그.
+//   ③ 지금: 터치를 시작한 지점이 조이스틱 중심이 된다. 손가락이 중심의 어느 쪽에 있느냐로 방향이 정해지고,
+//           손가락을 대고 있는 동안 그 방향이 유지된다. 화면 어디를 잡아도 되고, 뱀 위치와 무관하다.
+const STICK_DEAD = 14;        // 중심에서 이만큼 벗어나야 방향이 잡힌다
+const STICK_MAX = 46;         // 조이스틱 손잡이가 움직이는 최대 반경(그림용)
+let stickOn = false, stickCx = 0, stickCy = 0, stickX = 0, stickY = 0;
+
+function stickStart(x, y) { stickOn = true; stickCx = x; stickCy = y; stickX = x; stickY = y; }
+function stickMove(x, y) {
+  if (!stickOn) return;
+  stickX = x; stickY = y;
+  const dx = x - stickCx, dy = y - stickCy;
+  if (Math.hypot(dx, dy) < STICK_DEAD) return;      // 중심 근처는 무시(손떨림)
   if (Math.abs(dx) >= Math.abs(dy)) setDir(dx > 0 ? 1 : -1, 0);
   else setDir(0, dy > 0 ? 1 : -1);
-  swX = x; swY = y;           // 기준점 갱신 → 계속 밀면 연속으로 꺾인다
+  // ⚠️ 기준점을 갱신하지 않는다 — 손가락을 그대로 두면 같은 방향이 계속 유지된다
 }
-function swipeEnd() { swOn = false; }
+function stickEnd() { stickOn = false; }
 
 canvas.addEventListener('touchstart', function (e) {
   if (e.cancelable) e.preventDefault();
-  const t = e.touches[0]; if (t) swipeStart(t.clientX, t.clientY);
+  const t = e.touches[0];
+  if (t) { stickStart(t.clientX, t.clientY); stickMove(t.clientX, t.clientY); }
 }, { passive: false });
 canvas.addEventListener('touchmove', function (e) {
   if (e.cancelable) e.preventDefault();
-  const t = e.touches[0]; if (t) swipeMove(t.clientX, t.clientY);
+  const t = e.touches[0]; if (t) stickMove(t.clientX, t.clientY);
 }, { passive: false });
 canvas.addEventListener('touchend', function (e) {
   if (e.cancelable) e.preventDefault();
-  swipeEnd();
+  stickEnd();
 }, { passive: false });
-canvas.addEventListener('touchcancel', swipeEnd);
-// 마우스(데스크탑)도 같은 방식
-canvas.addEventListener('mousedown', function (e) { swipeStart(e.clientX, e.clientY); });
-canvas.addEventListener('mousemove', function (e) { if (swOn) swipeMove(e.clientX, e.clientY); });
-window.addEventListener('mouseup', swipeEnd);
+canvas.addEventListener('touchcancel', stickEnd);
+// 마우스(데스크탑)도 동일하게
+canvas.addEventListener('mousedown', function (e) { stickStart(e.clientX, e.clientY); });
+canvas.addEventListener('mousemove', function (e) { if (stickOn) stickMove(e.clientX, e.clientY); });
+window.addEventListener('mouseup', stickEnd);
+
+// 🎨 조이스틱 시각 표시 — 손가락 위치를 눈으로 확인할 수 있어야 조작이 안심된다
+function drawStick() {
+  if (!stickOn || !running || dead || paused) return;
+  const r = canvas.getBoundingClientRect();
+  const sx = r.width ? W / r.width : 1, sy = r.height ? H / r.height : 1;
+  const cx = (stickCx - r.left) * sx, cy = (stickCy - r.top) * sy;
+  let dx = (stickX - stickCx) * sx, dy = (stickY - stickCy) * sy;
+  const d = Math.hypot(dx, dy);
+  if (d > STICK_MAX) { dx = dx / d * STICK_MAX; dy = dy / d * STICK_MAX; }
+  ctx.save();
+  // 바깥 링
+  ctx.globalAlpha = 0.30;
+  ctx.fillStyle = '#000';
+  ctx.beginPath(); ctx.arc(cx, cy, STICK_MAX + 12, 0, Math.PI * 2); ctx.fill();
+  ctx.globalAlpha = 0.55;
+  ctx.strokeStyle = '#fff'; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.arc(cx, cy, STICK_MAX + 12, 0, Math.PI * 2); ctx.stroke();
+  // 방향 화살표(현재 진행 방향)
+  ctx.globalAlpha = 0.75;
+  ctx.fillStyle = '#C5E1A5';
+  const ax = cx + dirX * (STICK_MAX + 26), ay = cy + dirY * (STICK_MAX + 26);
+  ctx.beginPath();
+  ctx.moveTo(ax + dirX * 9, ay + dirY * 9);
+  ctx.lineTo(ax - dirY * 7 - dirX * 4, ay + dirX * 7 - dirY * 4);
+  ctx.lineTo(ax + dirY * 7 - dirX * 4, ay - dirX * 7 - dirY * 4);
+  ctx.closePath(); ctx.fill();
+  // 손잡이
+  ctx.globalAlpha = 0.85;
+  ctx.fillStyle = '#8BC34A';
+  ctx.beginPath(); ctx.arc(cx + dx, cy + dy, 22, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = 'rgba(255,255,255,0.9)'; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.arc(cx + dx, cy + dy, 22, 0, Math.PI * 2); ctx.stroke();
+  ctx.restore();
+}
 
 resize();
 reset();
