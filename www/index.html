@@ -262,15 +262,10 @@
   <button id="muteBtn">⚙️</button>
   <button id="pauseBtn" style="display:none">⏸️</button>
 
-  <div id="dirPad">
-    <div class="dirBtn" id="btnUp">▲</div>
-    <div class="dirBtn" id="btnLeft">◀</div>
-    <div class="dirBtn" id="btnDown">▼</div>
-    <div class="dirBtn" id="btnRight">▶</div>
-  </div>
+  <!-- 🕹️ 방향패드는 2026-08-06 대표님 지시로 삭제 — 조이스틱 단일 조작 -->
 
   <div id="startScreen" class="overlay">
-    <h1>🐍 꼬마뱀 세계여행 🌍</h1>
+    <h1 style="font-size:clamp(22px,7.4vw,34px);white-space:nowrap;letter-spacing:0">🐍 꼬마뱀 세계여행 🌍</h1>
     <h2>100개 나라 먹거리 대모험!</h2>
 
     <div id="coinBoxStart">💰 <span id="coinValStart">0</span></div>
@@ -311,7 +306,7 @@
   </div>
 
   <!-- 🛍️ 스킨 상점 (2026-08-06) -->
-  <div id=shopScreen class=overlay style=display:none>
+  <div id="shopScreen" class="overlay" style="display:none;z-index:45">
     <h1>🛍️ 스킨 상점</h1>
     <div id=shopCoins>🪙 <span id=shopCoinVal>0</span> 코인</div>
     <div id=shopList></div>
@@ -425,7 +420,6 @@
     <div class="setRow">🎵 배경음악 <button id="tgBgm" class="tg">ON</button></div>
     <div class="setRow">🔊 효과음 <button id="tgSfx" class="tg">ON</button></div>
     <div class="setRow">📳 진동 <button id="tgVibe" class="tg">ON</button></div>
-    <div class="setRow">🕹️ 방향 버튼 <button id="tgPad" class="tg">ON</button></div>
     <button id="settingsCloseBtn" class="btn">닫기 ✖</button>
   </div>
 
@@ -1421,7 +1415,7 @@ function eatApple(a, idx) {
   stats.apples++;             // 🏅 통계
   bumpMission('apple', 1);    // 🎯 오늘의 미션
   // 💰 2026-08-03: 사과당 +1 코인 폐지 — 코인이 무한히 쌓여 광고·소모 경제가 죽는 원인. 코인은 라운드 클리어/미션/업적에서만
-  haptic([0, 28]); // 📳 먹을 때 — 12ms는 폰에서 거의 안 느껴져 28ms 단발로 (2026-08-06)
+  haptic([0, 45]); // 📳 먹을 때 — 45ms (28도 약하다는 피드백. ⚠️ APK엔 VIBRATE 권한도 필요했음)
   // 🔥 콤보 갱신
   eatCombo++; eatComboT = COMBO_WINDOW;
   if (eatCombo > stats.bestCombo) stats.bestCombo = eatCombo;
@@ -1823,7 +1817,7 @@ function update(dt) {
         if (!wipeSwitched) {              // 덮인 순간 뒤에서 라운드 교체
           wipeSwitched = true;
           startRound(wipeNextR, wipeCarry);
-          startBGM();
+          stopBGM(); startBGM();   // 🎵 라운드마다 곡 교체 — 정지 없이 부르면 조기 리턴돼 같은 곡이 계속된다
           graceT = Math.max(graceT, 0.6);
           showCombo(festivalRound
             ? '🎉 ' + wipeNextR + 'R 축제! 황금 음식 잔치 🌟'
@@ -4109,6 +4103,7 @@ document.addEventListener('keydown', function(e) {
 // 방향 버튼
 function bindDir(id, nx, ny) {
   const b = document.getElementById(id);
+  if (!b) return;   // 방향패드 삭제됨 — 잔여 바인딩 무해화
   const fn = function(e) {
     e.preventDefault();
     try { tone(880, 0.028, 'square', 0.06); } catch (err) {}   // 🔘 버튼 눌림 클릭음
@@ -4130,7 +4125,7 @@ bindDir('btnLeft', -1, 0); bindDir('btnRight', 1, 0);
 //            조금만 움직여도 방향이 튀었다. 대각선으로 천천히 끌면 좌우·상하가 번갈아 지그재그.
 //   ③ 지금: 터치를 시작한 지점이 조이스틱 중심이 된다. 손가락이 중심의 어느 쪽에 있느냐로 방향이 정해지고,
 //           손가락을 대고 있는 동안 그 방향이 유지된다. 화면 어디를 잡아도 되고, 뱀 위치와 무관하다.
-const STICK_DEAD = 14;        // 중심에서 이만큼 벗어나야 방향이 잡힌다
+const STICK_DEAD = 8;         // 중심 이탈 판정 반경 — 14는 둔하다는 피드백으로 8로 (2026-08-06)
 const STICK_MAX = 46;         // 조이스틱 손잡이가 움직이는 최대 반경(그림용)
 let stickOn = false, stickCx = 0, stickCy = 0, stickX = 0, stickY = 0;
 
@@ -4148,6 +4143,8 @@ function stickEnd() { stickOn = false; }
 
 canvas.addEventListener('touchstart', function (e) {
   if (e.cancelable) e.preventDefault();
+  // 🔊 웹뷰에서 오디오가 잠든 채 남는 경우 첫 터치로 깨운다
+  if (bgmOn && running && !dead && !bgmPlaying) { try { startBGM(); } catch (err) {} }
   const t = e.touches[0];
   if (t) { stickStart(t.clientX, t.clientY); stickMove(t.clientX, t.clientY); }
 }, { passive: false });
