@@ -632,6 +632,9 @@ let runStartCoins = 0;   // 💰 이번 판 시작 시 코인
 // ✨ 연출(juice)
 let slowmoT = 0;         // 슬로우모션
 let flashT = 0;          // 화면 번쩍
+// 🪩 싸이키 조명 — 가게 완성 순간부터 문에 들어갈 때까지 축제 모드
+let discoT = 0, discoBeatT = 0;
+const DISCO_COLORS = ['#FF1493', '#FFD700', '#00E5FF', '#7C4DFF', '#8BC34A', '#FF7043'];
 const PRAISE = { 2:'좋아! 👍', 3:'멋져! 🌟', 4:'대단해! 💯', 5:'끝내주는데! 🔥🔥' };
 // 💰 코인 + 🛒 스킨 해제 + 🏅 업적/통계
 let coins = 0;
@@ -1276,6 +1279,7 @@ function reset() {
   computeField();
   running = false; dead = false; paused = false;
   wipeY = null; wipeSwitched = false;   // 🎬 전환 커튼 중단(새 게임)
+  discoT = 0;                           // 🪩 조명 초기화
   adReviveCount = 0;                    // 📺 광고 부활 카운터 — 새 판에서 리셋 (판당 5회)
   hideReviveOffer();
   applesEaten = 0; rocksSmashed = 0; score = 0; scoreMult = 1;
@@ -2245,6 +2249,7 @@ function gateComplete() {
   stopBGM();              // 🎵 BGM 멈추고
   sfxGateComplete();      // 🎵 팡파레!
   flashT = 0.18; slowmoT = 0.4;   // ✨ 번쩍 + 슬로우모션
+  discoT = 0.0001; discoBeatT = 0.7;   // 🪩 싸이키 조명 ON (팡파레 뒤부터 비트)
   showCombo(curShop().icon + ' ' + curShop().name + ' 완성! +' + lastRoundBonus + '점');
   // 화려한 폭죽
   for (let i = 0; i < 55; i++) particles.push({ x: gateSite.x, y: gateSite.y, vx:(Math.random()-0.5)*13, vy:-Math.random()*10-2, life:48, max:48, color: i%3===0?'#FFD700':(i%3===1?'#FF1493':'#8BC34A'), size:Math.random()*4+2 });
@@ -2268,7 +2273,7 @@ function updateGateFly(dt) {
     door = { x: gateToX, y: gateToY, r: Math.round(32 * SHOP_DONE_SCALE), t: 0 };
     gateReady = true;
     timeLeft = Math.max(timeLeft, 8);   // 가게까지 갈 최소 시간 보장
-    startBGM();                          // 🎵 음악 계속 (게임 진행)
+    // 🎵 음악은 여기서 켜지 않는다 — 라운드를 마치면 정지, 다음 라운드 시작(wipe)에서 다시 켠다 (2026-08-07 지시)
     showCombo(curShop().icon + ' ' + curShop().name + '으로 들어가세요! ⏱️');
   }
 }
@@ -2291,6 +2296,8 @@ function openDoor() {
   door = { x: pos.x, y: pos.y, r: 28, t: 0 };
   // 돌이 다 모여 가게 완성 → 비우기(다음 라운드까지 깔끔)
   obstacles = [];
+  stopBGM();                            // 🎵 라운드 마치면 음악 정지 (2026-08-07 지시)
+  discoT = 0.0001; discoBeatT = 0.7;    // 🪩 싸이키 조명 ON
   sfxDoorOpen();
   showCombo(curShop().icon + ' ' + curShop().name + ' 완성! +' + lastRoundBonus + '점 · 들어가세요!');
 }
@@ -2338,6 +2345,7 @@ function enterDoor() {
   placedGates.push({ shop: curShop() });
   doorPhase = false; gateReady = false; door = null;
   // 🎬 커튼 전환 시작(아래→위 상승) — 실제 라운드 교체는 커튼이 화면을 다 덮는 순간(update의 wipe 블록)에서
+  discoT = 0;   // 🪩 문으로 들어갔다 — 조명 끄고 세계여행 패널로
   wipeNextR = nextR; wipeCarry = carry; wipeY = H; wipeSwitched = false;
   wipeHoldMax = 3.8; wipeHold = wipeHoldMax;   // 🗺️ 지도 3.8초 감상 (2026-08-03 +2초 연장)
 }
@@ -3277,6 +3285,27 @@ function render() {
     ctx.textAlign = 'left';
     ctx.restore();
   }
+  // 🪩 싸이키 조명 — 가게가 완성된 자리를 중심으로 빛줄기가 돈다 (그라디언트 없이 가볍게)
+  if (discoT > 0) {
+    const beat = (Math.sin(discoT * 13) + 1) / 2;              // 0~1 명멸
+    const ci = Math.floor(discoT * 3.2) % DISCO_COLORS.length;
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    const sx = gateSite.x - cam.x, sy = gateSite.y - cam.y;    // 월드 → 화면
+    ctx.globalAlpha = 0.11;
+    for (let i = 0; i < 5; i++) {                              // 회전 빔 5줄
+      const a = discoT * 1.5 + i * (Math.PI * 2 / 5);
+      ctx.fillStyle = DISCO_COLORS[(ci + i) % DISCO_COLORS.length];
+      ctx.beginPath(); ctx.moveTo(sx, sy);
+      ctx.lineTo(sx + Math.cos(a - 0.2) * 2200, sy + Math.sin(a - 0.2) * 2200);
+      ctx.lineTo(sx + Math.cos(a + 0.2) * 2200, sy + Math.sin(a + 0.2) * 2200);
+      ctx.closePath(); ctx.fill();
+    }
+    ctx.globalAlpha = 0.07 + beat * 0.10;                      // 전체 색 펄스
+    ctx.fillStyle = DISCO_COLORS[ci];
+    ctx.fillRect(0, 0, W, H);
+    ctx.restore();
+  }
   // ✨ 화면 번쩍
   if (flashT > 0) {
     ctx.fillStyle = 'rgba(255,255,255,' + (flashT / 0.18 * 0.35) + ')';
@@ -3480,6 +3509,18 @@ function loop(t) {
   lastT = t;
   // (슬로우모션 제거 → 속도 항상 일정)
   if (flashT > 0) flashT -= dt;
+  // 🪩 싸이키 조명 진행 + 4비트 클럽 사운드 (BGM 정지 구간을 축제로 채운다)
+  if (discoT > 0) {
+    discoT += dt;
+    discoBeatT -= dt;
+    if (discoBeatT <= 0) {
+      discoBeatT = 0.24;
+      const k = Math.round(discoT / 0.24) % 4;
+      tone(k === 0 ? 65 : 98, 0.09, 'sine', k === 0 ? 0.22 : 0.10);          // 킥
+      if (k % 2 === 1) noise(0.05, 0.05, 7000);                              // 하이햇
+      if (k === 2) tone(1046, 0.06, 'square', 0.07);                         // 반짝
+    }
+  }
   try { update(dt); render(); } catch(e) { console.error(e); }
   requestAnimationFrame(loop);
 }
