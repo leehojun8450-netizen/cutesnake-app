@@ -418,6 +418,11 @@
   <div id="settingsScreen" class="overlay" style="display:none">
     <h1>⚙️ 설정</h1>
     <div class="setRow">🎵 배경음악 <button id="tgBgm" class="tg">ON</button></div>
+    <div class="setRow">🎼 곡 선택 <span style="display:flex;align-items:center;gap:6px">
+      <button id="bgmPrev" class="tg" style="min-width:36px;padding:6px 10px">◀</button>
+      <span id="bgmPickName" style="font-size:13px;min-width:104px;text-align:center;color:#FFEB3B">자동</span>
+      <button id="bgmNext" class="tg" style="min-width:36px;padding:6px 10px">▶</button>
+    </span></div>
     <div class="setRow">🔊 효과음 <button id="tgSfx" class="tg">ON</button></div>
     <div class="setRow">📳 진동 <button id="tgVibe" class="tg">ON</button></div>
     <button id="settingsCloseBtn" class="btn">닫기 ✖</button>
@@ -761,6 +766,7 @@ function saveAudioPrefs() {
     localStorage.setItem('snake_bgm', bgmOn ? '1' : '0');
     localStorage.setItem('snake_vibe', vibeOn ? '1' : '0');
     localStorage.setItem('snake_pad', padOn ? '1' : '0');
+    localStorage.setItem('snake_bgmpick', String(bgmChoice));   // 🎼 곡 선택 (-1=자동)
   } catch(e) {}
 }
 function getAudio() {
@@ -928,7 +934,14 @@ const BGM_TRACKS = [
     bass:['C4','G4','C4','G4','F4','C4','F4','C4','G4','D4','G4','D4','C4','G4','C4','C4'] }
 ];
 let bgmTrack = BGM_TRACKS[0];
-function pickBgmTrack(R) { return BGM_TRACKS[(R - 1) % BGM_TRACKS.length]; }
+// 🎼 곡 선택: -1 = 자동(라운드마다 순환), 0~7 = 고정 트랙 (설정에서 변경)
+let bgmChoice = -1;
+try { bgmChoice = parseInt(localStorage.getItem('snake_bgmpick') || '-1', 10); } catch(e) {}
+if (isNaN(bgmChoice) || bgmChoice < -1 || bgmChoice >= BGM_TRACKS.length) bgmChoice = -1;
+function pickBgmTrack(R) {
+  if (bgmChoice >= 0) return BGM_TRACKS[bgmChoice];
+  return BGM_TRACKS[(R - 1) % BGM_TRACKS.length];
+}
 function bgmNote(freq, dur, type, vol, attack) {
   if (!audioCtx || !bgmOn) return;
   const t0 = audioCtx.currentTime;
@@ -1009,6 +1022,8 @@ function updateMuteUI() {
 function refreshSettingsUI() {
   const set = (id, on) => { const el = document.getElementById(id); if (el) { el.textContent = on ? 'ON' : 'OFF'; el.classList.toggle('on', on); el.classList.toggle('off', !on); } };
   set('tgBgm', bgmOn); set('tgSfx', sfxOn); set('tgVibe', vibeOn); set('tgPad', padOn);
+  const pk = document.getElementById('bgmPickName');
+  if (pk) pk.textContent = bgmChoice < 0 ? '자동 (라운드별)' : '♪ ' + BGM_TRACKS[bgmChoice].name;
   const pad = document.getElementById('dirPad');   // 🕹️ 방향 버튼 표시 반영
   if (pad) pad.classList.toggle('off', !padOn);
 }
@@ -4017,6 +4032,21 @@ bindBtn('tgBgm', function() {
 bindBtn('tgSfx', function() { sfxOn = !sfxOn; saveAudioPrefs(); refreshSettingsUI(); updateMuteUI(); if (sfxOn) tone(800,0.1,'sine',0.15); });
 bindBtn('tgVibe', function() { vibeOn = !vibeOn; saveAudioPrefs(); refreshSettingsUI(); if (vibeOn) haptic(30); });
 bindBtn('tgPad', function() { padOn = !padOn; saveAudioPrefs(); refreshSettingsUI(); haptic(12); });
+// 🎼 곡 선택 ◀▶ — 자동 → 1번 → … → 8번 → 자동 순환. 게임 중이면 즉시 곡 교체, 메뉴에선 4초 미리듣기
+let bgmPreviewTO = null;
+function cycleBgmPick(d) {
+  const n = BGM_TRACKS.length + 1;                       // 자동 포함 n개
+  bgmChoice = ((bgmChoice + 1 + d + n) % n) - 1;
+  saveAudioPrefs(); refreshSettingsUI(); haptic(12);
+  if (bgmPreviewTO) { clearTimeout(bgmPreviewTO); bgmPreviewTO = null; }
+  if (!bgmOn) return;
+  stopBGM(); startBGM();
+  if (!running || dead) bgmPreviewTO = setTimeout(function () {
+    if (!running || dead) stopBGM();   // 그 사이 게임을 시작했으면 곡을 끊지 않는다
+  }, 4000);
+}
+bindBtn('bgmPrev', function() { cycleBgmPick(-1); });
+bindBtn('bgmNext', function() { cycleBgmPick(1); });
 bindBtn('dailyOkBtn', function() {
   document.getElementById('dailyReward').style.display = 'none';
   tone(523,0.1,'square',0.2); tone(784,0.12,'square',0.2,784,0.06); tone(1318,0.2,'square',0.2,1318,0.12);
