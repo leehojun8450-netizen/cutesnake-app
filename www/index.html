@@ -69,10 +69,10 @@
 
   .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 30, 10, 0.9); display: flex; flex-direction: column; justify-content: center; justify-content: safe center; align-items: center; z-index: 30; text-align: center; padding: calc(20px + env(safe-area-inset-top)) 20px calc(28px + env(safe-area-inset-bottom)); overflow-y: auto; -webkit-overflow-scrolling: touch; }
   .overlay h1 { font-size: 40px; color: #8BC34A; text-shadow: 3px 3px 0 #1B5E20, 0 0 25px #8BC34A; margin-bottom: 5px; letter-spacing: 1px; }
-  .overlay h2 { font-size: 19px; color: white; margin-bottom: 12px; opacity: 0.85; }
+  .overlay h2 { font-size: 18px; color: white; margin-bottom: 6px; opacity: 0.85; }
   .info { background: rgba(255,255,255,0.1); border: 2px solid rgba(139,195,74,0.6); border-radius: 14px; padding: 12px 18px; margin: 8px 0; font-size: 14px; color: white; line-height: 1.7; }
   .info b { color: #8BC34A; }
-  .btn { background: linear-gradient(135deg, #8BC34A, #4CAF50); color: #fff; border: none; padding: 16px 50px; font-size: 24px; font-weight: bold; border-radius: 50px; cursor: pointer; margin-top: 12px; box-shadow: 0 8px 25px rgba(76,175,80,0.5); font-family: inherit; transition: transform 0.1s; letter-spacing: 2px; position: relative; z-index: 100; text-shadow: 1px 1px 2px rgba(0,0,0,0.4); }
+  .btn { background: linear-gradient(135deg, #8BC34A, #4CAF50); color: #fff; border: none; padding: 13px 44px; font-size: 22px; font-weight: bold; border-radius: 50px; cursor: pointer; margin-top: 8px; box-shadow: 0 8px 25px rgba(76,175,80,0.5); font-family: inherit; transition: transform 0.1s; letter-spacing: 2px; position: relative; z-index: 100; text-shadow: 1px 1px 2px rgba(0,0,0,0.4); }
   .btn:active { transform: scale(0.95); }
   .btnAlt { background: linear-gradient(135deg, #FF69B4, #FF1493); color: white; border: none; padding: 12px 28px; font-size: 16px; font-weight: bold; border-radius: 30px; cursor: pointer; margin: 6px; box-shadow: 0 4px 15px rgba(255,20,147,0.4); font-family: inherit; }
   .btnAlt:active { transform: scale(0.95); }
@@ -121,6 +121,7 @@
   /* 🛍️ 스킨 상점 (2026-08-06) */
   #shopCoins { font-size: 22px; font-weight: bold; color: #FFD700; text-shadow: 1px 1px 0 #000; margin: 2px 0 12px; }
   #shopList { display: flex; flex-direction: column; gap: 10px; width: 340px; max-width: 94%; max-height: 58vh; overflow-y: auto; padding: 2px; }
+  #itemShop { display: flex; flex-direction: column; gap: 10px; width: 340px; max-width: 94%; padding: 2px; margin-bottom: 10px; }
   #shopList::-webkit-scrollbar { width: 5px; }
   #shopList::-webkit-scrollbar-thumb { background: #8BC34A; border-radius: 3px; }
   .shopCard { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 16px;
@@ -224,7 +225,7 @@
   #dailyStreakBig { font-size: 36px; color: #FF6D00; font-weight: bold; text-shadow: 2px 2px 0 #000, 0 0 20px #FFA726; margin: 10px 0; animation: pulse 0.7s infinite alternate; }
   #dailyRewardInfo { font-size: 17px; }
   /* 💰 코인 / 🛒 잠금 / 🏅 업적 */
-  #coinBoxStart { font-size: 20px; color: #FFD700; font-weight: bold; margin: 6px 0 10px; text-shadow: 1px 1px 0 #000; }
+  #coinBoxStart { font-size: 19px; color: #FFD700; font-weight: bold; margin: 2px 0 6px; text-shadow: 1px 1px 0 #000; }
   .skinOption { position: relative; }
   .lockTag { position: absolute; inset: 0; border-radius: 50%; background: rgba(0,0,0,0.55); color: #FFD700;
     display: none; flex-direction: column; justify-content: center; align-items: center; font-size: 11px; font-weight: bold; }
@@ -270,7 +271,7 @@
 
     <div id="coinBoxStart">💰 <span id="coinValStart">0</span></div>
 
-    <button id="shopBtn" class="btnAlt" style="background:linear-gradient(135deg,#7E57C2,#4527A0);font-size:18px;padding:14px 32px">🛍️ 스킨 상점</button>
+    <button id="shopBtn" class="btnAlt" style="background:linear-gradient(135deg,#7E57C2,#4527A0);font-size:18px;padding:10px 28px">🛍️ 상점</button>
     <div style="height: 6px"></div>
 
     <div id="streakBox">🔥 <span id="streakDays">0</span>일 연속 출석 중!</div>
@@ -302,10 +303,11 @@
     </div>
   </div>
 
-  <!-- 🛍️ 스킨 상점 (2026-08-06) -->
+  <!-- 🛍️ 상점 — 아이템(파워·부활권) + 뱀 스킨 (2026-08-06 통합) -->
   <div id="shopScreen" class="overlay" style="display:none;z-index:45">
-    <h1>🛍️ 스킨 상점</h1>
+    <h1>🛍️ 상점</h1>
     <div id=shopCoins>🪙 <span id=shopCoinVal>0</span> 코인</div>
+    <div id=itemShop></div>
     <div id=shopList></div>
     <button id=shopCloseBtn class=btn>닫기 ✖</button>
   </div>
@@ -364,7 +366,7 @@
 
     <button id="restartBtn" class="btn">다시 도전! 🔄</button>
     <div class="goActions">
-      <button id="goShopBtn" class="btnAlt goAct">🛍️ 스킨 상점</button>
+      <button id="goShopBtn" class="btnAlt goAct">🛍️ 상점</button>
       <button id="reviveBtn" class="btnAlt goAct" style="display:none;background:linear-gradient(135deg,#FF6FA5,#FF1493)">💖 코인 부활</button>
       <button id="shareBtn" class="btnAlt goAct">📤 자랑하기</button>
       <button id="goRankBtn" class="btnAlt goAct">🏆 랭킹</button>
@@ -518,27 +520,16 @@ const SKINS = {
   // ─ 무료 ─
   default:     { name:'기초 뱀',      desc:'클래식 그린 뱀',              head:'#66BB6A', body1:'#81C784', body2:'#4CAF50', belly:'#C5E1A5',
                  beads: BEAD_DEFAULT },
-  // ─ 입문 (100~200) ─
-  cute_cat:    { name:'분홍 냥이',    desc:'귀여운 핑크 고양이',          head:'#F06292', body1:'#F48FB1', body2:'#EC407A', belly:'#F8BBD0',
-                 beads:['#F8BBD0','#F48FB1','#F06292','#EC407A','#D81B60'], ears:true },
-  mint_soda:   { name:'민트 소다',    desc:'톡 쏘는 청량 민트',           head:'#4DD0E1', body1:'#80DEEA', body2:'#26C6DA', belly:'#B2EBF2',
-                 beads:['#E0F7FA','#B2EBF2','#4DD0E1','#26C6DA','#00ACC1'] },
-  choco:       { name:'초코 뱀',      desc:'달콤한 초콜릿빛',             head:'#8D6E63', body1:'#A1887F', body2:'#6D4C41', belly:'#D7CCC8',
-                 beads:['#D7CCC8','#A1887F','#8D6E63','#6D4C41','#4E342E'] },
-  // ─ 중급 (250~400) ─
-  neon_dragon: { name:'네온 드래곤',  desc:'사이버펑크 네온 발광',        head:'#42A5F5', body1:'#64B5F6', body2:'#1E88E5', belly:'#BBDEFB',
-                 beads:['#00E5FF','#18FFFF','#40C4FF','#7C4DFF','#B388FF'], glow:'#00E5FF', horns:true },
-  sakura:      { name:'벚꽃 뱀',      desc:'흩날리는 봄날의 분홍',        head:'#F8BBD0', body1:'#FCE4EC', body2:'#F48FB1', belly:'#FFF0F5',
+  // ─ 중급 — 전부 귀 장식 + 꽃잎/불꽃 이펙트로 기본과 한눈에 다르게 (2026-08-06 축소 개편)
+  sakura:      { name:'벚꽃 뱀',      desc:'고양이 귀 + 꽃잎이 흩날려요',  head:'#F8BBD0', body1:'#FCE4EC', body2:'#F48FB1', belly:'#FFF0F5',
                  beads:['#FFF0F5','#FCE4EC','#F8BBD0','#F48FB1','#EC407A'], ears:true, fx:'petal' },
-  lava:        { name:'용암 뱀',      desc:'이글거리는 화산의 열기',      head:'#FF7043', body1:'#FF8A65', body2:'#E64A19', belly:'#FFCCBC',
+  lava:        { name:'용암 뱀',      desc:'몸이 발광하고 불꽃이 타올라요', head:'#FF7043', body1:'#FF8A65', body2:'#E64A19', belly:'#FFCCBC',
                  beads:['#FFEB3B','#FFA726','#FF7043','#E64A19','#BF360C'], glow:'#FF6D00', fx:'flame' },
   // ─ 상급 (500~700) ─
   golden_king: { name:'골든 킹',      desc:'왕관을 쓴 황금 뱀',           head:'#FFCA28', body1:'#FFD54F', body2:'#FFA000', belly:'#FFECB3',
                  beads:['#FFF176','#FFD54F','#FFCA28','#FFB300','#FF8F00'], glow:'#FFD700', crown:true, fx:'gold' },
   ice_queen:   { name:'얼음 여왕',    desc:'서릿발 왕관의 설원 뱀',       head:'#B3E5FC', body1:'#E1F5FE', body2:'#4FC3F7', belly:'#FFFFFF',
                  beads:['#FFFFFF','#E1F5FE','#B3E5FC','#81D4FA','#4FC3F7'], glow:'#B3E5FC', crown:true, fx:'snow' },
-  shadow:      { name:'그림자 뱀',    desc:'어둠 속을 미끄러지는 존재',   head:'#5E35B1', body1:'#7E57C2', body2:'#4527A0', belly:'#B39DDB',
-                 beads:['#B39DDB','#7E57C2','#5E35B1','#4527A0','#311B92'], glow:'#7C4DFF', horns:true, fx:'shadow' },
   // ─ 최상급 (1000~) ─
   rainbow:     { name:'무지개 스네이크', desc:'알록달록 무지개 그라데이션', head:'#66BB6A', belly:'#FFFFFF', rainbow:true, fx:'rainbow' },
   galaxy:      { name:'은하수 뱀',    desc:'별을 품고 여행하는 전설',     head:'#7C4DFF', body1:'#9575CD', body2:'#512DA8', belly:'#D1C4E9',
@@ -547,14 +538,14 @@ const SKINS = {
 // 💰 스킨 가격 — 등급별 곡선 (무료 → 입문 → 중급 → 상급 → 최상급)
 const SKIN_COST = {
   default:0,
-  cute_cat:100, mint_soda:150, choco:200,
-  neon_dragon:250, sakura:320, lava:400,
-  golden_king:500, ice_queen:620, shadow:700,
+  sakura:320, lava:400,
+  golden_king:500, ice_queen:620,
   rainbow:1000, galaxy:1500
 };
-const SKIN_ORDER = ['default','cute_cat','mint_soda','choco','neon_dragon','sakura','lava','golden_king','ice_queen','shadow','rainbow','galaxy'];
-// 🔁 구 id → 새 id (기존 유저의 보유·착용 스킨이 초기화되지 않도록)
-const SKIN_MIGRATE = { green:'default', pink:'cute_cat', blue:'neon_dragon', orange:'golden_king', rainbow:'rainbow' };
+const SKIN_ORDER = ['default','sakura','lava','golden_king','ice_queen','rainbow','galaxy'];
+// 🔁 구 id → 새 id (기존 유저의 보유·착용 스킨이 초기화되지 않도록. 2026-08-06 축소분은 비슷한 상위로 승계)
+const SKIN_MIGRATE = { green:'default', pink:'sakura', blue:'galaxy', orange:'golden_king',
+  cute_cat:'sakura', mint_soda:'ice_queen', choco:'lava', neon_dragon:'galaxy', shadow:'galaxy' };
 function migrateSkinId(id) { return SKIN_MIGRATE[id] || (SKINS[id] ? id : 'default'); }
 let selectedSkin = 'default';
 try { selectedSkin = migrateSkinId(localStorage.getItem('snake_skin') || 'default'); } catch(e) {}
@@ -1511,6 +1502,9 @@ function tryPowerTap() {
   if (powerStock > 0) {
     powerStock--;
     activatePower();
+  } else if (powerInv > 0) {
+    powerInv--; saveInv();               // 🎒 상점에서 사둔 파워 먼저 소비
+    activatePower();
   } else if (performance.now() < powerBuyOfferT) {
     powerBuyOfferT = 0;
     if (coins >= POWER_BUY_COST) {
@@ -1536,9 +1530,17 @@ function getRefill() {
 let lowTimePulseT = 0;
 let powerT = 0;          // ⚡ 파워 모드 남은 시간 (돌 부수기)
 const POWER_STOCK_FREE = 3;    // ⚡ 판당 무료 파워 개수
-const POWER_BUY_COST = 300;    // ⚡ 소진 후 1개 코인 가격
+const POWER_BUY_COST = 300;    // ⚡ 소진 후 1개 코인 가격 (게임 중 즉석 구매 = 상점가와 동일)
 let powerStock = POWER_STOCK_FREE;
 let powerBuyOfferT = 0;        // 구매 확인 더블탭 유효시각 (performance.now 기준)
+// 🎒 상점 구매 보유분 — 게임을 넘어 유지 (localStorage)
+const REVIVE_TICKET_COST = 800;   // 💖 부활권 사전구매 = 죽고 나서 사는 1000보다 싸게 (선구매 유인)
+let powerInv = 0, reviveInv = 0;
+try {
+  powerInv = parseInt(localStorage.getItem('snake_powerinv') || '0', 10) || 0;
+  reviveInv = parseInt(localStorage.getItem('snake_reviveinv') || '0', 10) || 0;
+} catch (e) {}
+function saveInv() { try { localStorage.setItem('snake_powerinv', powerInv); localStorage.setItem('snake_reviveinv', reviveInv); } catch (e) {} }
 let rocksSmashed = 0;    // 총 부순 돌 개수
 let smashCombo = 0;      // 파워 모드 중 연속 부수기 콤보
 // 🏪 꼬마뱀 마을 건설 시스템: 사과→파워→돌깨기→가게 건설→다음라운드
@@ -2134,7 +2136,7 @@ function updateHUD() {
   const bi = document.getElementById('buildIcon'); if (bi) bi.textContent = curFood();   // 🍜 진행도는 '먹는 음식' 기준
   const pw = document.getElementById('powerWrap');
   if (pw) pw.style.display = '';   // ⚡ 스톡제로 개편하며 상시 표시 (더블탭 발동 안내 겸)
-  document.getElementById('powerVal').textContent = (powerT > 0 ? '파워!' : '×' + powerStock);
+  document.getElementById('powerVal').textContent = (powerT > 0 ? '파워!' : '×' + (powerStock + powerInv));
   document.getElementById('scoreVal').textContent = score;
   const lv = document.getElementById('lenVal'); if (lv) lv.textContent = snakeLen;
 }
@@ -3385,19 +3387,23 @@ function render() {
     ctx.font = 'bold 34px sans-serif'; ctx.textAlign = 'center';
     ctx.lineWidth = 7; ctx.strokeStyle = 'rgba(0,0,0,0.6)';
     ctx.strokeText(wl1, W/2, fy - 40); ctx.fillStyle = '#FFEB3B'; ctx.fillText(wl1, W/2, fy - 40);
-    // 국가명 (크게) + 상징색 견장
+    // 🇰🇷 국기(크게) + 국가명(크게) — 지도 바로 아래 주인공 자리 (2026-08-06 지시)
     const cname = countryNameOf(toIdx);
-    ctx.font = 'bold 32px sans-serif';
+    const flag = (nc[0] || '').split(' ')[0];   // "🇨🇳 중국" → 🇨🇳
+    ctx.font = 'bold 42px sans-serif';
     const cw2 = ctx.measureText(cname).width;
-    ctx.fillStyle = nc[5] || '#888';
-    ctx.fillRect(W/2 - cw2/2 - 36, fy + frameH + 16, 24, 30);
-    ctx.strokeStyle = 'rgba(255,255,255,0.8)'; ctx.lineWidth = 2;
-    ctx.strokeRect(W/2 - cw2/2 - 36, fy + frameH + 16, 24, 30);
-    ctx.lineWidth = 7; ctx.strokeStyle = 'rgba(0,0,0,0.6)';
-    ctx.strokeText(cname, W/2, fy + frameH + 42); ctx.fillStyle = '#FFFFFF'; ctx.fillText(cname, W/2, fy + frameH + 42);
-    // 🏛️🍽️ 상징물·음식 카드 2개 — 게임 스프라이트를 크게 박는다
+    const flagS = 56, rowY = fy + frameH + 18;  // 국기·이름 한 줄 중앙 정렬
+    const rowW = flagS + 14 + cw2;
+    try { ctx.drawImage(emojiSprite(flag), W/2 - rowW/2, rowY, flagS, flagS); } catch (e) {}
+    ctx.textBaseline = 'middle';
+    ctx.lineWidth = 8; ctx.strokeStyle = 'rgba(0,0,0,0.6)';
+    ctx.strokeText(cname, W/2 - rowW/2 + flagS + 14 + cw2/2, rowY + flagS/2);
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillText(cname, W/2 - rowW/2 + flagS + 14 + cw2/2, rowY + flagS/2);
+    ctx.textBaseline = 'alphabetic';
+    // 🏛️🍽️ 상징물·음식 카드 2개 — 하단으로 (국기·이름이 주인공)
     (function () {
-      const cardY = fy + frameH + 58, cardH = 78, cardW = W * 0.44;
+      const cardY = fy + frameH + 88, cardH = 78, cardW = W * 0.44;
       const items = [
         { sp: nc[2], label: nc[1] },
         { sp: nc[4], label: foodNameOf(toIdx) }
@@ -3498,10 +3504,12 @@ function gameOver() {
   const canRevive = reviveCount < MAX_REVIVE && finalRound >= 1;
   if (reviveAdBtn) reviveAdBtn.style.display = 'none';
   if (reviveBtn) {
-    const rCost = REVIVE_COIN_COST[reviveCount];
+    const rCost = reviveInv > 0 ? 0 : REVIVE_COIN_COST[reviveCount];   // 💖 부활권 보유 시 무료 표기
     if (canRevive && coins >= rCost) {
       reviveBtn.style.display = 'inline-block';
-      reviveBtn.textContent = '💰 코인으로 부활 (' + rCost + ')';
+      reviveBtn.textContent = reviveInv > 0
+        ? '💖 부활권 사용 (보유 ' + reviveInv + ')'
+        : '💰 코인으로 부활 (' + rCost + ')';
     } else reviveBtn.style.display = 'none';
   }
   // 새 업적 알림
@@ -3663,9 +3671,15 @@ function reviveByAd() {
     }
   );
 }
-// 💰 코인 부활 — 전 회차 1000 고정. 코인 여유가 없으면 자연히 광고를 택한다
+// 💰 코인 부활 — 부활권 보유 시 티켓 먼저, 없으면 전 회차 1000 고정
 function reviveByCoin() {
   if (reviveCount >= MAX_REVIVE || !dead) return;
+  if (reviveInv > 0) {                        // 💖 상점에서 사둔 부활권 우선 사용
+    reviveInv--; saveInv();
+    doRevive();
+    showCombo('💖 부활권 사용! (남은 ' + reviveInv + '개)');
+    return;
+  }
   const cost = REVIVE_COIN_COST[reviveCount];
   if (coins < cost) return;
   coins -= cost; saveCoins();
@@ -3890,7 +3904,46 @@ function skinPreview(cv, id) {
   }
   drawSnakeHead(c, S * 0.62, S * 0.5, 0, id, S / 44);
 }
+// 🎒 소모품 아이템 매대 — 파워·부활권 (스킨 카드와 같은 골격, 미리보기는 이모지)
+function renderItemShop() {
+  const box = document.getElementById('itemShop');
+  if (!box) return;
+  box.innerHTML = '';
+  const items = [
+    { icon: '⚡', name: '파워 +1', desc: '더블탭 파워 1개 추가 (계속 보유)', cost: POWER_BUY_COST,
+      own: function () { return powerInv; }, buy: function () { powerInv++; saveInv(); } },
+    { icon: '💖', name: '부활권', desc: '죽었을 때 코인 대신 사용 (200 할인)', cost: REVIVE_TICKET_COST,
+      own: function () { return reviveInv; }, buy: function () { reviveInv++; saveInv(); } }
+  ];
+  items.forEach(function (it) {
+    const card = document.createElement('div');
+    card.className = 'shopCard';
+    const ic = document.createElement('div');
+    ic.style.cssText = 'width:56px;height:56px;font-size:38px;line-height:56px;text-align:center;flex-shrink:0';
+    ic.textContent = it.icon;
+    const info = document.createElement('div'); info.className = 'shopInfo';
+    info.innerHTML = '<div class="shopName">' + it.name +
+      (it.own() > 0 ? ' <span style="color:#8BC34A">보유 ' + it.own() + '</span>' : '') + '</div>' +
+      '<div class=shopDesc>' + it.desc + '</div>';
+    const btn = document.createElement('button');
+    if (coins >= it.cost) { btn.className = 'shopBtn buy'; btn.innerHTML = '구매하기<br>🪙 ' + it.cost; }
+    else { btn.className = 'shopBtn poor'; btn.innerHTML = '🪙 ' + it.cost + ' 필요'; btn.disabled = true; }
+    const act = function (ev) {
+      ev.preventDefault();
+      if (coins < it.cost) return;
+      coins -= it.cost; saveCoins();
+      it.buy();
+      tone(880, 0.08, 'square', 0.16); tone(1318, 0.12, 'square', 0.14, 1318, 0.06); haptic([20, 40, 20]);
+      if (typeof showCombo === 'function') showCombo('🎒 ' + it.name + ' 구매!');
+      renderShop(); updateHUD();
+    };
+    if (!btn.disabled) { btn.addEventListener('click', act); btn.addEventListener('touchstart', act, { passive: false }); }
+    card.appendChild(ic); card.appendChild(info); card.appendChild(btn);
+    box.appendChild(card);
+  });
+}
 function renderShop() {
+  renderItemShop();   // 🎒 아이템 매대 먼저
   const list = document.getElementById('shopList');
   const cv = document.getElementById('shopCoinVal');
   if (cv) cv.textContent = coins;
