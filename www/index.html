@@ -252,7 +252,7 @@
       <div id="coinBig">💰 코인<br><span id="coinVal">0</span></div>
       <div id="bestBox">🏆 BEST<br><span id="bestVal">0</span></div>
     </div>
-    <div id="subRow"><span id="buildIcon">🍜</span> <b><span id="buildVal">0</span>/<span id="buildGoalVal">6</span></b> · 🐍 <b><span id="lenVal">4</span></b><span id="powerWrap">⚡ <span id="powerVal">×3</span></span></div>
+    <div id="subRow"><span id="buildIcon">🍜</span> <b><span id="buildVal">0</span>/<span id="buildGoalVal">6</span></b> · 🐍 <b><span id="lenVal">4</span></b> · <span id="powerWrap" style="color:#FFD700;font-weight:bold">⚡<span id="powerVal">×3</span></span></div>
   </div>
   <div id="scorePop"></div>
   <div id="miniRank"></div>
@@ -2594,16 +2594,7 @@ function drawAppleStack() {
   const size = Math.min(22, step - 2);
   const baseY = field.y + field.h - 18;
   const sp = emojiSprite(curFood());   // 먹은 음식이 쌓인다
-  // 🍽️ 음식 이름 세로 표기 (스택 꼭대기 위 — 공부가 되게)
-  const fname = foodNameOf(round - 1);
-  ctx.save();
-  ctx.font = 'bold 13px sans-serif'; ctx.textAlign = 'center';
-  ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(0,0,0,0.6)'; ctx.fillStyle = '#FFE082';
-  for (let ci = 0; ci < fname.length; ci++) {
-    const cy2 = field.y + 106 + ci * 15;
-    ctx.strokeText(fname[ci], x, cy2); ctx.fillText(fname[ci], x, cy2);
-  }
-  ctx.restore();
+  // 🍽️ 음식 이름 세로 표기는 삭제 (2026-08-06 지시: 쌩뚱맞음 — 이름은 세계여행 패널 카드에서 보여준다)
   for (let i = 0; i < goal; i++) {
     const y = baseY - i * step;
     if (i < got) {
