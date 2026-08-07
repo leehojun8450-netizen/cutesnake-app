@@ -637,6 +637,8 @@ let bonusT = 0;                // 남은 시간
 let bonusEaten = 0;            // 이번 보너스에서 먹은 사과 수
 let bonusIdx = 0;              // 몇 번째 보너스인가 (1부터) — 돌 개수 결정
 let bonusStun = 0;             // 돌에 부딪힌 기절 시간
+let bonusIntroT = 0;           // 🎬 보너스 오프닝 패널 (스테이지가 '열리는' 연출)
+const BONUS_INTRO_DUR = 2.4;
 let pendingNextR = 0, pendingCarry = 0;   // 보너스 끝나고 갈 라운드
 let lastCountInt = -1;   // 카운트다운 소리용
 let runStartCoins = 0;   // 💰 이번 판 시작 시 코인
@@ -1291,7 +1293,7 @@ function reset() {
   running = false; dead = false; paused = false;
   wipeY = null; wipeSwitched = false;   // 🎬 전환 커튼 중단(새 게임)
   discoT = 0;                           // 🪩 조명 초기화
-  bonusMode = false; bonusT = 0; bonusStun = 0;   // 🎁 보너스 초기화
+  bonusMode = false; bonusT = 0; bonusStun = 0; bonusIntroT = 0;   // 🎁 보너스 초기화
   adReviveCount = 0;                    // 📺 광고 부활 카운터 — 새 판에서 리셋 (판당 5회)
   hideReviveOffer();
   applesEaten = 0; rocksSmashed = 0; score = 0; scoreMult = 1;
@@ -2397,8 +2399,8 @@ function startBonus(nextR, carry) {
   for (let i = 0; i < rocks; i++) spawnObstacle();
   // 🍎 사과를 아주 많이 — 썩지 않게 깔아둔다
   ensureBonusApples();
-  countdownT = 3; lastCountInt = -1;
-  showCombo('🎁 보너스! ' + BONUS_TIME + '초 동안 먹을 수 있는 만큼!');
+  bonusIntroT = BONUS_INTRO_DUR;       // 🎬 오프닝 패널 먼저 — 끝나면 3초 카운트다운
+  countdownT = 0; lastCountInt = -1;
   sfxGolden(); haptic([30, 40, 30]);
   updateHUD();
 }
@@ -2410,17 +2412,19 @@ function spawnBonusApple() {
 }
 function ensureBonusApples() {
   let guard = 0;
-  while (apples.length < 40 && guard < 80) { spawnBonusApple(); guard++; }
+  while (apples.length < 70 && guard < 140) { spawnBonusApple(); guard++; }   // 🍎 훨씬 수북하게 (2026-08-07 v2)
 }
 // 🎁 보너스 종료 → 코인 정산 → 세계여행 패널로
 function endBonus() {
-  bonusMode = false;
+  bonusMode = false; bonusIntroT = 0;
   let earned;
   if (bonusEaten >= BONUS_GOAL) earned = 200 + (bonusEaten - BONUS_GOAL) * 10;   // 잭팟 + 초과분
   else earned = bonusEaten * 5;                                                  // 위로금
   if (earned > 0) addCoins(earned);
+  // 🐍 보너스에서 키운 꼬리의 절반을 다음 라운드로 이월 — 보너스 성과가 본게임으로 이어진다
+  pendingCarry = Math.max(pendingCarry, Math.max(START_LEN, Math.floor(snakeLen * 0.5)));
   showCombo(bonusEaten >= BONUS_GOAL
-    ? '🎉 목표 달성! 🍎' + bonusEaten + '개 → +' + earned + ' 코인!'
+    ? '🎉 🍎' + bonusEaten + '개·길이 ' + snakeLen + '! +' + earned + ' 코인!'
     : '🎁 🍎' + bonusEaten + '개 → +' + earned + ' 코인');
   sfxGateComplete(); haptic([40, 30, 40, 30, 120]);
   // 세계여행 패널 → 다음 라운드 (원래 enterDoor가 하던 전환)
@@ -2429,6 +2433,12 @@ function endBonus() {
 }
 // 🎁 보너스 진행 — 죽음 없음: 벽은 미끄러지고, 돌은 부딪히면 잠깐 기절
 function updateBonus(dt) {
+  // 🎬 오프닝: 패널이 화면을 덮고 규칙을 보여준다 → 끝나면 3·2·1 카운트다운
+  if (bonusIntroT > 0) {
+    bonusIntroT -= dt;
+    if (bonusIntroT <= 0) { bonusIntroT = 0; countdownT = 3; lastCountInt = -1; }
+    return;
+  }
   // 방향 전환
   if (pendingDir) { dirX = pendingDir.x; dirY = pendingDir.y; pendingDir = null; sfxTurn(); haptic(8); }
   // 기절 중엔 이동만 멈춘다 (시간은 흐른다 — 돌이 진짜 '방해'가 되도록)
@@ -2462,6 +2472,8 @@ function updateBonus(dt) {
     if (Math.hypot(headX - a.x, headY - a.y) < HEAD_R + er + 3) {
       apples.splice(i, 1);
       bonusEaten++; applesEaten++; stats.apples++;
+      // 🐍 ★성취감 코어★ 먹는 대로 꼬리가 쭉쭉 — 빨강 +1칸, 황금 +3칸 (상한 150)
+      snakeLen = Math.min(150, snakeLen + (a.type === 'golden' ? 3 : 1));
       addScore(15, true);
       spawnParticles(a.x, a.y, a.type === 'golden' ? '#FFD700' : '#FF5252', 8);
       eatCombo = Math.min(eatCombo + 1, 10); eatComboT = 2;
@@ -3383,8 +3395,45 @@ function render() {
       ctx.textAlign = 'left';
     }
   }
+  // 🎬 보너스 오프닝 패널 — 스테이지가 '열리는' 연출 (규칙 안내 + 마지막 0.5초 페이드아웃)
+  if (bonusMode && bonusIntroT > 0) {
+    const fadeIn = Math.min(1, (BONUS_INTRO_DUR - bonusIntroT) * 5);   // 첫 0.2초 슥 들어오고
+    const alpha = bonusIntroT < 0.5 ? bonusIntroT / 0.5 : 1;           // 마지막 0.5초 걷힌다
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = '#1A0B33';                                          // 보라 밤하늘 — 세계여행 패널과 구분
+    ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = 'rgba(255,215,0,0.25)';
+    ctx.fillRect(0, 0, W, 5); ctx.fillRect(0, H - 5, W, 5);
+    // 반짝이 배경
+    for (let i = 0; i < 24; i++) {
+      const sx = (i * 97.3) % W, sy = (i * 173.7) % H;
+      const tw = (Math.sin(performance.now() / 300 + i) + 1) / 2;
+      ctx.fillStyle = 'rgba(255,235,59,' + (0.15 + tw * 0.35) + ')';
+      ctx.beginPath(); ctx.arc(sx, sy, 1.6 + tw * 1.4, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.globalAlpha = alpha * fadeIn;
+    ctx.textAlign = 'center';
+    ctx.font = 'bold 44px sans-serif';
+    ctx.lineWidth = 8; ctx.strokeStyle = 'rgba(0,0,0,0.6)';
+    ctx.strokeText('🎁 보너스 게임!', W / 2, H * 0.32);
+    ctx.fillStyle = '#FFD700'; ctx.fillText('🎁 보너스 게임!', W / 2, H * 0.32);
+    ctx.font = 'bold 22px sans-serif'; ctx.lineWidth = 5;
+    const lines = [
+      '⏱ ' + BONUS_TIME + '초 동안 사과 폭식!',
+      '🐍 먹을수록 꼬리가 쭉쭉 길어져요',
+      '🍎 ' + BONUS_GOAL + '개 넘기면 코인 잭팟!'
+    ];
+    if (bonusIdx >= 2) lines.push('🪨 이번엔 돌 ' + Math.min(20, (bonusIdx - 1) * 5) + '개가 방해해요');
+    lines.forEach(function (ln, i) {
+      const ly = H * 0.44 + i * 40;
+      ctx.strokeText(ln, W / 2, ly);
+      ctx.fillStyle = '#FFFFFF'; ctx.fillText(ln, W / 2, ly);
+    });
+    ctx.restore(); ctx.textAlign = 'left';
+  }
   // 🎁 보너스 카운트다운 — 상단 중앙 크게, 마지막 10초는 빨갛게 두근두근
-  if (bonusMode && running && !dead && countdownT <= 0) {
+  if (bonusMode && running && !dead && bonusIntroT <= 0 && countdownT <= 0) {
     const sec = Math.ceil(bonusT);
     const hot = bonusT < 10;
     const pulse = hot ? 1 + Math.sin(performance.now() / 120) * 0.08 : 1;
@@ -3398,7 +3447,7 @@ function render() {
     ctx.fillText('⏱ ' + sec, 0, 0);
     ctx.font = 'bold 19px sans-serif';
     ctx.lineWidth = 5;
-    const sub = '🍎 ' + bonusEaten + '개 · 목표 ' + BONUS_GOAL + '개 넘으면 코인!';
+    const sub = '🍎 ' + bonusEaten + '개 · 🐍 ' + snakeLen + '칸 · 목표 ' + BONUS_GOAL + '개!';
     ctx.strokeText(sub, 0, 42);
     ctx.fillStyle = '#FFFFFF'; ctx.fillText(sub, 0, 42);
     ctx.restore(); ctx.textBaseline = 'alphabetic'; ctx.textAlign = 'left';
