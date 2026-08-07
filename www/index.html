@@ -32,14 +32,15 @@
   #roundBig span { font-size: 32px; font-weight: bold; color: #C5E1A5; text-shadow: 2px 2px 0 #000, 0 0 12px rgba(139,195,74,0.5); }
   #bestBox { font-size: 14px; background: rgba(0,0,0,0.5); padding: 5px 12px; border-radius: 18px; border: 2px solid #FFD700; color: #FFD700; text-align: right; }
   #subRow { margin-top: 4px; color: #fff; font-size: 15px; font-weight: bold; text-shadow: 1px 1px 0 #000; opacity: 0.95; }
+  #powerBadge { position: absolute; right: calc(12px + env(safe-area-inset-right)); bottom: calc(86px + env(safe-area-inset-bottom));
+    z-index: 11; pointer-events: none; display: flex; flex-direction: column; align-items: center; line-height: 1.15;
+    background: rgba(0,0,0,0.45); border: 2px solid #FFD700; border-radius: 16px; padding: 7px 12px;
+    color: #FFD700; font-size: 21px; font-weight: bold; text-shadow: 1px 1px 0 #000; }
+  #powerBadge small { font-size: 11px; color: #FFF; opacity: 0.85; letter-spacing: 1px; }
+  #powerBadge.zero { border-color: #9E9E9E; color: #BDBDBD; }
+  #powerBadge.active { border-color: #FF6D00; color: #FFAB40; animation: powPulse 0.5s infinite alternate; }
+  @keyframes powPulse { from { transform: scale(1); } to { transform: scale(1.12); } }
   #subRow b { color: #8BC34A; }
-  /* ⚡ 파워 배지 — 개수 + 더블탭 사용법 상시 안내 (2026-08-07 지시: 사용법이 어디에도 없었다) */
-  #powerBadge { position: absolute; left: 50%; transform: translateX(-50%); bottom: calc(16px + env(safe-area-inset-bottom));
-    background: rgba(0,0,0,0.55); border: 2px solid #FFD700; color: #FFD700; font-weight: bold; font-size: 15px;
-    padding: 7px 16px; border-radius: 22px; z-index: 11; pointer-events: none; display: none;
-    text-shadow: 1px 1px 0 #000; white-space: nowrap; transition: opacity 0.3s; }
-  #powerBadge.ready { animation: pbPulse 1.6s ease-in-out infinite; }
-  @keyframes pbPulse { 0%,100% { box-shadow: 0 0 0 rgba(255,215,0,0); } 50% { box-shadow: 0 0 16px rgba(255,215,0,0.75); } }
   /* 점수 획득 팝업 */
   #scorePop { position: absolute; top: 96px; right: 16px; color: #FFEB3B; font-size: 18px; font-weight: bold; text-shadow: 1px 1px 0 #000; opacity: 0; pointer-events: none; z-index: 11; transition: all 0.4s; }
   #miniRank { display: none !important; }   /* 2026-08-06 대표님 지시: 화면 가림 → 삭제 */
@@ -263,12 +264,13 @@
       <div id="coinBig">💰 코인<br><span id="coinVal">0</span></div>
       <div id="bestBox">🏆 BEST<br><span id="bestVal">0</span></div>
     </div>
-    <div id="subRow"><span id="buildIcon">🍜</span> <b><span id="buildVal">0</span>/<span id="buildGoalVal">6</span></b> · 🐍 <b><span id="lenVal">4</span></b> · <span id="powerWrap" style="color:#FFD700;font-weight:bold">⚡<span id="powerVal">×3</span></span></div>
+    <div id="subRow"><span id="buildIcon">🍜</span> <b><span id="buildVal">0</span>/<span id="buildGoalVal">6</span></b> · 🐍 <b><span id="lenVal">4</span></b></div>
   </div>
   <div id="scorePop"></div>
   <div id="miniRank"></div>
   <div id="comboMsg"></div>
-  <div id="powerBadge"></div>
+  <!-- ⚡ 파워뱀 배지 — 오른쪽 아래 (2026-08-07 지시: 개수 + 더블탭 사용법이 한눈에) -->
+  <div id="powerBadge" style="display:none">⚡×3<small>더블탭!</small></div>
   <div id="ratingBanner">전체이용가 · 게임물내용정보 해당사항 없음 · 코다리컴퍼니</div>
 
   <button id="muteBtn">⚙️</button>
@@ -1308,7 +1310,10 @@ function farFromSnake(x, y, minD) {
 
 function spawnApple() {
   let pos, tries = 0;
-  do { pos = randInField(24); tries++; } while (!farFromSnake(pos.x, pos.y, 30) && tries < 40);
+  // 🏛️ 짓는 건물 자리(gateSite) 위에는 음식을 놓지 않는다 (2026-08-07 지시: 건물에 가려 안 보임)
+  const nearGate = (p) => gateSite && Math.hypot(p.x - gateSite.x, p.y - gateSite.y) < 110;
+  do { pos = randInField(24); tries++; } while ((!farFromSnake(pos.x, pos.y, 30) || nearGate(pos)) && tries < 40);
+  if (nearGate(pos)) pos.y = gateSite.y + 130;   // 시도 소진 시에도 건물 아래로 밀어낸다
   // 사과 종류 (확률) — 🎉 축제 라운드는 황금 확률 2배(7%→14%)
   const r = Math.random();
   const goldenTo = festivalRound ? 0.21 : 0.14;
@@ -1881,6 +1886,9 @@ function setHudHidden(v) {
 }
 function haptic(ms) {
   if (!vibeOn) return;
+  // 📳 토스 앱 안에서는 SDK 햅틱을 쓴다 — navigator.vibrate는 iOS 웹뷰에서 아예 동작하지 않는다
+  const tb = window.__tossHaptic;
+  if (tb && tb.isSupportedEnv && tb.isSupportedEnv()) { try { tb.fire(ms); return; } catch (e) {} }
   if (navigator.vibrate) { try { navigator.vibrate(ms); } catch(e) {} }
 }
 
@@ -2173,18 +2181,21 @@ function updateHUD() {
   document.getElementById('buildGoalVal').textContent = roundApplesGoal;
   // 🏪 먹이=가게 테마 통일: 진행도 아이콘도 이번 라운드 가게로 표시
   const bi = document.getElementById('buildIcon'); if (bi) bi.textContent = curFood();   // 🍜 진행도는 '먹는 음식' 기준
-  const pw = document.getElementById('powerWrap');
-  if (pw) pw.style.display = '';   // ⚡ 스톡제로 개편하며 상시 표시 (더블탭 발동 안내 겸)
-  document.getElementById('powerVal').textContent = (powerT > 0 ? '파워!' : '×' + (powerStock + powerInv));
-  // ⚡ 하단 배지 — 개수와 사용법(더블탭)을 한 줄로
+  // ⚡ 파워 배지 (오른쪽 아래) — 쓸 때마다 개수가 하나씩 줄어드는 게 눈에 보인다
   const pb = document.getElementById('powerBadge');
   if (pb) {
-    const tot = powerStock + powerInv;
-    pb.textContent = powerT > 0 ? '⚡ 파워뱀 발동 중! ' + powerT.toFixed(1) + '초'
-      : tot > 0 ? '⚡ ×' + tot + ' · 화면 두 번 탭하면 파워뱀!'
-      : '⚡ 소진 · 두 번 탭 = ' + POWER_BUY_COST + '코인으로 충전';
-    pb.classList.toggle('ready', powerT <= 0 && tot > 0);
-    pb.style.display = (running && !dead) ? 'block' : 'none';
+    const total = powerStock + powerInv;
+    pb.style.display = (running && !dead) ? 'flex' : 'none';
+    if (powerT > 0) {
+      pb.className = 'active';
+      pb.innerHTML = '⚡' + powerT.toFixed(1) + 's<small>파워뱀!</small>';
+    } else if (total > 0) {
+      pb.className = '';
+      pb.innerHTML = '⚡×' + total + '<small>더블탭!</small>';
+    } else {
+      pb.className = 'zero';
+      pb.innerHTML = '⚡×0<small>' + POWER_BUY_COST + '코인</small>';
+    }
   }
   document.getElementById('scoreVal').textContent = score;
   const lv = document.getElementById('lenVal'); if (lv) lv.textContent = snakeLen;
