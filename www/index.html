@@ -4299,6 +4299,16 @@ function shareScore() {
   const text = '나는 🐍꼬마뱀 세계여행에서 ' + score + '점 (' + round + '번째 나라)! 너도 도전해봐 🌍 #꼬마뱀세계여행';
   const cvs = makeShareCard();
   tone(880, 0.1, 'square', 0.16); tone(1318, 0.15, 'square', 0.16, 1318, 0.08);
+  // 📤 토스 앱 안이면 네이티브 공유 시트 + 미니앱 초대 링크 (navigator.share는 토스 웹뷰에서 막힐 수 있다)
+  const tb = window.__tossShare;
+  if (tb && tb.isSupportedEnv && tb.isSupportedEnv()) {
+    haptic(12);
+    tb.send(text, function (ok) {
+      if (ok) showCombo('📤 공유 창을 열었어요!');
+      else fallbackShare(text, null);          // 공유 실패 → 클립보드 폴백
+    });
+    return;
+  }
   cvs.toBlob(function(blob) {
     const file = blob ? new File([blob], 'snake_score.png', { type: 'image/png' }) : null;
     // 1) 파일 공유 가능하면 이미지 공유
@@ -4326,6 +4336,62 @@ function fallbackShare(text, blob) {
   }
   showCombo('📋 복사됨! 이미지 저장됨!');
 }
+//======================================================================
+// ⬅️ 뒤로가기 처리 — 토스 래퍼(main.js)의 backEvent와 브라우저 popstate가 함께 호출한다.
+//    true를 반환하면 "게임이 처리했다" → 미니앱을 닫지 않는다.
+//    false면 더 닫을 게 없다는 뜻 → 래퍼가 미니앱을 닫는다.
+//======================================================================
+function isShown(id) {
+  // 게임은 오버레이를 열 때 항상 style.display='flex'를 명시한다.
+  // 인라인 값이 비어 있으면(=아직 한 번도 안 열림) 숨김으로 본다 — 이걸 '보임'으로 치면
+  // 시작 직후 뒤로가기가 엉뚱한 분기를 타 미니앱이 닫히지 않는다.
+  const el = document.getElementById(id);
+  if (!el) return false;
+  const d = el.style.display;
+  return d === 'flex' || d === 'block';
+}
+function hideEl(id) { const el = document.getElementById(id); if (el) el.style.display = 'none'; }
+window.__onBackPressed = function () {
+  // 1) ⚖️ 등급 표시 화면은 법정 노출(3초)이라 뒤로가기로 건너뛸 수 없다
+  if (isShown('ratingScreen')) return true;
+  // 2) 📺 부활 제안 중 → 포기와 동일 처리 (카운트다운 타이머까지 정리된다)
+  if (isShown('reviveOffer')) {
+    if (typeof hideReviveOffer === 'function') hideReviveOffer();
+    if (typeof gameOver === 'function') gameOver();
+    return true;
+  }
+  // 3) 서브 화면이 떠 있으면 그것부터 닫는다 (위에 있는 것 우선)
+  const layers = ['confirmScreen', 'shopScreen', 'settingsScreen', 'achScreen', 'rankScreen', 'tutorial', 'dailyReward'];
+  for (const id of layers) {
+    if (isShown(id)) { hideEl(id); haptic(10); return true; }
+  }
+  // 4) ⏸️ 일시정지 상태에서 한 번 더 → 정말 그만둘지 확인
+  if (typeof paused !== 'undefined' && paused) {
+    showConfirm('게임을 그만두고 시작 화면으로 갈까요?<br><span style="font-size:13px;opacity:0.8">지금까지의 점수는 저장되지 않아요</span>', quitToStart);
+    return true;
+  }
+  // 5) 🎮 게임 중이면 종료가 아니라 일시정지 (판이 통째로 날아가는 사고 방지)
+  if (typeof running !== 'undefined' && running && !dead) { pauseGame(); return true; }
+  // 6) 결과 화면들에서는 시작 화면으로
+  if (isShown('gameOver') || isShown('roundClear') || isShown('gameClear')) { backToStartFromResult(); return true; }
+  // 7) 시작 화면 — 더 닫을 게 없다 → 미니앱 종료 허용
+  return false;
+};
+// 🏠 홈 버튼 — 판을 지킬 수 없으니 최소한 일시정지로 멈춰 둔다
+window.__onAppHome = function () {
+  try { if (running && !dead && !paused) pauseGame(); } catch (e) {}
+};
+// 🌐 브라우저·웹뷰 폴백: history를 한 칸 쌓아두고 popstate를 뒤로가기로 해석한다
+//    (토스 앱에서는 main.js의 backEvent가 주 경로이고, 이건 브라우저 테스트용 보조 경로)
+try {
+  history.pushState({ snake: 1 }, '');
+  window.addEventListener('popstate', function () {
+    const handled = window.__onBackPressed();
+    // 처리했든 아니든 스택을 다시 채워 둬야 다음 뒤로가기도 받을 수 있다
+    if (handled) history.pushState({ snake: 1 }, '');
+  });
+} catch (e) {}
+
 document.getElementById('nameInput').addEventListener('keydown', function(e) {
   if (e.key === 'Enter') { e.preventDefault(); saveAndContinue(); }
 });
