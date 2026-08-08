@@ -625,6 +625,11 @@ const BOOSTERS = {
 let boostPick = { time: false, power: false, apple: false };  // 상점에서 고른 것(다음 판에 적용)
 let boostRun  = { time: false, power: false, apple: false };  // 이번 판에 적용 중인 것
 let boostPaid = { time: 0, power: 0, apple: 0 };              // 실지불 코인(📺광고로 얻으면 0 → 취소해도 환불 없음)
+let boostBuys = { time: 0, power: 0, apple: 0 };              // 💰 누적 구매 횟수 — 살수록 비싸져(+50%씩, 최대 5배) 코인이 쌓여도 📺광고 경로가 계속 매력 있게
+try { const _bb = JSON.parse(localStorage.getItem('snake_boostbuys') || '{}');
+  for (const k in boostBuys) if (typeof _bb[k] === 'number') boostBuys[k] = _bb[k]; } catch (e) {}
+function saveBoostBuys() { try { localStorage.setItem('snake_boostbuys', JSON.stringify(boostBuys)); } catch (e) {} }
+function boosterCost(key) { return Math.round(BOOSTERS[key].cost * Math.min(5, 1 + boostBuys[key] * 0.5) / 10) * 10; }
 let graceT = 0;          // 부활/시작 직후 무적 시간
 const INVINCIBLE_SEC = 2.0;   // 🛡️ 부활 후 무적 지속(초) — 사양 확정값
 function isInvincible() { return graceT > 0; }   // 지시서의 isInvincible 상태 (setTimeout 대신 프레임 감산 → 일시정지·탭전환에도 안 어긋남)
@@ -2239,9 +2244,10 @@ function roundClear() {
   const timeBonus = Math.floor(timeLeft * 10);
   lastRoundBonus = clearBonus + timeBonus;
   addScore(lastRoundBonus, false);
-  // 💰 코인은 가게(라운드) 완성으로만 획득 — "가게 지으면 +15" 한 곳에 몰아 소모·획득이 눈에 보이게
-  addCoins(15);
-  showCombo('🏛️ ' + curShop().name + ' 완성! 💰+15');
+  // 💰 라운드 보상은 여기 한 곳에서만 — round×5 (08-08 통일: gateComplete의 round×5와 이중지급되던 +15 제거)
+  const roundCoins = round * 5;
+  addCoins(roundCoins);
+  showCombo('🏛️ ' + curShop().name + ' 완성! 💰+' + roundCoins);
   haptic([40, 30, 40, 30, 120]);
   // 최고 점수 갱신
   if (score > best) {
@@ -2263,8 +2269,7 @@ function roundClear() {
 function gateComplete() {
   gateFly = true; gateFlyT = 0;
   // (돌은 그대로 유지 — 완성 후에도 장애물로 남음)
-  // 💰🏅 라운드 보상 + 통계
-  addCoins(round * 5);
+  // 🏅 통계 (코인 지급은 roundClear 한 곳으로 통일 — 08-08)
   stats.gates++;
   bumpMission('gate', 1);     // 🎯 오늘의 미션
   if (round > stats.bestRound) stats.bestRound = round;
@@ -2418,7 +2423,7 @@ function ensureBonusApples() {
 function endBonus() {
   bonusMode = false; bonusIntroT = 0;
   let earned;
-  if (bonusEaten >= BONUS_GOAL) earned = 200 + (bonusEaten - BONUS_GOAL) * 10;   // 잭팟 + 초과분
+  if (bonusEaten >= BONUS_GOAL) earned = Math.min(450, 200 + (bonusEaten - BONUS_GOAL) * 5);   // 잭팟 + 초과분 — 초과 5/개·총 450 상한 (무상한 10/개는 한 판 +700까지 새서 코인경제 붕괴)
   else earned = bonusEaten * 5;                                                  // 위로금
   if (earned > 0) addCoins(earned);
   // 🐍 보너스에서 키운 꼬리의 절반을 다음 라운드로 이월 — 보너스 성과가 본게임으로 이어진다
@@ -4151,11 +4156,11 @@ function renderBoosters() {
     const b = BOOSTERS[key];
     const on = boostPick[key];
     const d = document.createElement('div');
-    d.className = 'bItem' + (on ? ' on' : '') + (!on && coins < b.cost ? ' poor' : '');
+    d.className = 'bItem' + (on ? ' on' : '') + (!on && coins < boosterCost(key) ? ' poor' : '');
     d.setAttribute('data-boost', key);
     d.innerHTML = '<div class="bIcon">' + b.icon + '</div>' +
                   '<div class="bName">' + b.name + '</div>' +
-                  '<div class="bCost">' + (on ? '✅ 장착' : '💰' + b.cost) + '</div>';
+                  '<div class="bCost">' + (on ? '✅ 장착' : '💰' + boosterCost(key)) + '</div>';
     el.appendChild(d);
   }
 }
@@ -4165,15 +4170,17 @@ function buyBooster(key) {
   if (!b) return;
   if (boostPick[key]) {                       // 해제 → 실지불분만 환불(광고로 얻은 건 0원이라 환불 없음)
     boostPick[key] = false;
-    if (boostPaid[key]) { coins += boostPaid[key]; saveCoins(); }
+    if (boostPaid[key]) { coins += boostPaid[key]; saveCoins(); boostBuys[key] = Math.max(0, boostBuys[key] - 1); saveBoostBuys(); }
     boostPaid[key] = 0;
     tone(400, 0.08, 'sine', 0.12);
     renderBoosters();
     return;
   }
-  if (coins >= b.cost) {
-    coins -= b.cost; saveCoins();
-    boostPick[key] = true; boostPaid[key] = b.cost;
+  const c = boosterCost(key);
+  if (coins >= c) {
+    coins -= c; saveCoins();
+    boostPick[key] = true; boostPaid[key] = c;
+    boostBuys[key]++; saveBoostBuys();
     tone(880, 0.08, 'square', 0.14);
     renderBoosters();
     return;
