@@ -401,7 +401,7 @@
     <div class="info" style="font-size:15px">
       🎬 <b>광고를 보면 바로 이어서</b> 플레이할 수 있어요!<br>
       부활 직후 <b>2초 무적</b>으로 안전하게 시작합니다.<br>
-      <span style="font-size:13px;opacity:0.8">※ 한 판에 5번까지 쓸 수 있어요</span>
+      <span style="font-size:13px;opacity:0.8">※ 한 판에 2번까지 쓸 수 있어요</span>
     </div>
     <button id="reviveAdOfferBtn" class="btn" style="background:linear-gradient(135deg,#7B68EE,#4B0082)">🎬 광고 보고 이어하기</button>
     <button id="reviveGiveUpBtn" class="btnAlt" style="background:linear-gradient(135deg,#9E9E9E,#616161)">포기하기</button>
@@ -615,7 +615,10 @@ try { dailyStreak = parseInt(localStorage.getItem('snake_streak') || '0') || 0; 
 // 💖 부활: 판당 최대 3회. 코인 비용은 회차마다 체증(코인 경로 억제 → 📺 광고 경로 유도)
 const REVIVE_COIN_COST = [1000, 1000, 1000, 1000, 1000];   // 2026-08-03 대표님 지시: 전 회차 1000 통일 — 코인 부활은 확실한 사치재, 광고가 기본 경로
 const MAX_REVIVE = 5;        // 💰 코인(부활권) 부활 판당 한도
-const AD_REVIVE_MAX = 5;     // 📺 광고 부활 판당 한도 (2026-08-06 지시: 1회 → 5회)
+const AD_REVIVE_MAX = 2;     // 📺 광고 부활 판당 한도
+                             //    5회였으나 2026-08-09 외부 자문(GPT) 지적으로 2회로 축소.
+                             //    판당 5회 × 하루 10판 = 이론상 일 50회 노출 → GRAC·토스 심사에서
+                             //    '광고 과다노출'로 반려될 수 있다. 코인 부활(MAX_REVIVE)은 5회 유지.
 // 🛒 시작 부스터 — 판마다 소비되는 코인 싱크(스킨은 1회성이라 싱크가 못 된다)
 const BOOSTERS = {
   time:  { icon: '⏱️', name: '시작시간<br>+3초',  cost: 60,  bonus: 3 },
@@ -644,7 +647,10 @@ let bonusIdx = 0;              // 몇 번째 보너스인가 (1부터) — 돌 �
 let bonusStun = 0;             // (구) 기절 — v3에서 죽음으로 대체, 호환용으로만 남김
 let bonusDeadT = 0;            // 💥 보너스 중 충돌 연출 시간 (끝나면 조기 정산)
 let bonusRockT = 0;            // 🪨 다음 돌이 생겨나기까지 남은 시간
-const BONUS_ROCK_EVERY = 2.4;  // 🪨 이 간격마다 돌이 하나씩 '만들어진다'
+const BONUS_ROCK_EVERY = 4.0;  // 🪨 이 간격마다 돌이 하나씩 '만들어진다'
+                               //    2.4초는 꼬리가 길어진 뒤 회피 공간이 없어져 '억울한 죽음'을 만든다
+                               //    (2026-08-09 외부 자문 지적) → 4초로 완화 + 아래 상한도 함께 축소
+const BONUS_ROCK_CAP = 24;     // 🪨 이만큼 쌓이면 더 생기지 않는다 (30초 × 4초 = 최대 +7개)
 let bonusIntroT = 0;           // 🎬 보너스 오프닝 패널 (스테이지가 '열리는' 연출)
 const BONUS_INTRO_DUR = 2.4;
 let pendingNextR = 0, pendingCarry = 0;   // 보너스 끝나고 갈 라운드
@@ -2483,7 +2489,7 @@ function updateBonus(dt) {
   bonusRockT -= dt;
   if (bonusRockT <= 0) {
     bonusRockT = BONUS_ROCK_EVERY;
-    if (obstacles.length < 40) { spawnObstacle(); tone(300, 0.08, 'square', 0.06); }
+    if (obstacles.length < BONUS_ROCK_CAP) { spawnObstacle(); tone(300, 0.08, 'square', 0.06); }
   }
   // 카메라
   const camFollow = Math.min(1, dt * 6);
