@@ -635,13 +635,16 @@ const INVINCIBLE_SEC = 2.0;   // 🛡️ 부활 후 무적 지속(초) — 사�
 function isInvincible() { return graceT > 0; }   // 지시서의 isInvincible 상태 (setTimeout 대신 프레임 감산 → 일시정지·탭전환에도 안 어긋남)
 let countdownT = 0;      // 🔢 시작 카운트다운
 // 🎁 보너스 게임 (3라운드 클리어마다) — 60초 사과 폭식 스테이지
-const BONUS_TIME = 60;         // 제한시간(초) — 대표님 지시로 1분
+const BONUS_TIME = 30;         // 제한시간(초) — 2026-08-07 지시로 30초 (죽음이 생겨 짧고 굵게)
 const BONUS_GOAL = 20;         // 이만큼 먹으면 코인 잭팟
 let bonusMode = false;
 let bonusT = 0;                // 남은 시간
 let bonusEaten = 0;            // 이번 보너스에서 먹은 사과 수
 let bonusIdx = 0;              // 몇 번째 보너스인가 (1부터) — 돌 개수 결정
-let bonusStun = 0;             // 돌에 부딪힌 기절 시간
+let bonusStun = 0;             // (구) 기절 — v3에서 죽음으로 대체, 호환용으로만 남김
+let bonusDeadT = 0;            // 💥 보너스 중 충돌 연출 시간 (끝나면 조기 정산)
+let bonusRockT = 0;            // 🪨 다음 돌이 생겨나기까지 남은 시간
+const BONUS_ROCK_EVERY = 2.4;  // 🪨 이 간격마다 돌이 하나씩 '만들어진다'
 let bonusIntroT = 0;           // 🎬 보너스 오프닝 패널 (스테이지가 '열리는' 연출)
 const BONUS_INTRO_DUR = 2.4;
 let pendingNextR = 0, pendingCarry = 0;   // 보너스 끝나고 갈 라운드
@@ -903,7 +906,8 @@ const NOTE_X = { 'C4':261.63,'Db4':277.18,'D4':293.66,'Eb4':311.13,'E4':329.63,'
 // 각 트랙: 멜로디(16스텝×4마디=64) + 베이스(4스텝당 1개=16) + 템포 + 음색
 const BGM_TRACKS = [
   // ★ 진짜 노래 — Suno 제작 타이틀곡. R1과 9라운드마다 돌아온다
-  { name:'Pulse On Me ♪', tempo:140, mp3:'mp3Bgm2', vol:0.5 },
+  // 🎁 보너스 전용곡 — 자동 순환에서는 빠지고(pickOnly) 보너스에서만 강제 재생된다 (2026-08-07 지시)
+  { name:'Pulse On Me ♪', tempo:140, mp3:'mp3Bgm2', vol:0.5, pickOnly:true, bonus:true },
   { name:'Pulse On Me B ♪', tempo:140, mp3:'mp3Bgm', vol:0.5, pickOnly:true },   // 구버전 — 자동 순환 제외, 곡 선택으로만
   // ① 캔디 비트 — 장조 통통 튀는 훅, 따라 부르기 쉬운 3음 모티프 반복
   { name:'Candy Beat', tempo:130, wave:'square', bassWave:'triangle', kickEvery:4, clapAt:8, hatOff:true, vol:0.06,
@@ -968,7 +972,9 @@ let bgmChoice = -1;
 try { bgmChoice = parseInt(localStorage.getItem('snake_bgmpick') || '-1', 10); } catch(e) {}
 if (isNaN(bgmChoice) || bgmChoice < -1 || bgmChoice >= BGM_TRACKS.length) bgmChoice = -1;
 const BGM_ROT = BGM_TRACKS.filter(function (t) { return !t.pickOnly; });   // 자동 순환 대상 (선택 전용 제외)
+const BONUS_TRACK = BGM_TRACKS.filter(function (t) { return t.bonus; })[0] || BGM_TRACKS[0];
 function pickBgmTrack(R) {
+  if (bonusMode) return BONUS_TRACK;   // 🎁 보너스는 곡 선택과 무관하게 항상 수노 곡
   if (bgmChoice >= 0 && BGM_TRACKS[bgmChoice]) return BGM_TRACKS[bgmChoice];
   return BGM_ROT[(R - 1) % BGM_ROT.length];
 }
@@ -1298,7 +1304,7 @@ function reset() {
   running = false; dead = false; paused = false;
   wipeY = null; wipeSwitched = false;   // 🎬 전환 커튼 중단(새 게임)
   discoT = 0;                           // 🪩 조명 초기화
-  bonusMode = false; bonusT = 0; bonusStun = 0; bonusIntroT = 0;   // 🎁 보너스 초기화
+  bonusMode = false; bonusT = 0; bonusStun = 0; bonusIntroT = 0; bonusDeadT = 0;   // 🎁 보너스 초기화
   adReviveCount = 0;                    // 📺 광고 부활 카운터 — 새 판에서 리셋 (판당 5회)
   hideReviveOffer();
   applesEaten = 0; rocksSmashed = 0; score = 0; scoreMult = 1;
@@ -2388,7 +2394,8 @@ function startBonus(nextR, carry) {
   pendingNextR = nextR; pendingCarry = carry;
   bonusMode = true;
   bonusIdx = Math.floor(round / 3);          // R3=1번째, R6=2번째 …
-  bonusT = BONUS_TIME; bonusEaten = 0; bonusStun = 0;
+  bonusT = BONUS_TIME; bonusEaten = 0; bonusStun = 0; bonusDeadT = 0;
+  bonusRockT = BONUS_ROCK_EVERY;
   apples = []; obstacles = []; predators = []; predatorRespawnQueue = []; bees = []; tunnels = []; flyingStones = [];
   gateReady = false; door = null; doorPhase = false; gateFly = false;
   // 뱀을 중앙으로
@@ -2399,13 +2406,14 @@ function startBonus(nextR, carry) {
   const initN = Math.ceil((snakeLen + 4) * SEG_SPACING / 4) + 6;
   for (let i = 0; i < initN; i++) path.push({ x: headX - i * 4, y: headY });
   snapCam();
-  // 🪨 방해 돌: 1번째는 0개, 이후 회차마다 +5개 (상한 20)
-  const rocks = Math.min(20, (bonusIdx - 1) * 5);
+  // 🪨 시작 돌: 1번째는 0개, 이후 회차마다 +4개 (상한 16). 여기에 더해 진행 중에도 계속 생겨난다
+  const rocks = Math.min(16, (bonusIdx - 1) * 4);
   for (let i = 0; i < rocks; i++) spawnObstacle();
   // 🍎 사과를 아주 많이 — 썩지 않게 깔아둔다
   ensureBonusApples();
   bonusIntroT = BONUS_INTRO_DUR;       // 🎬 오프닝 패널 먼저 — 끝나면 3초 카운트다운
   countdownT = 0; lastCountInt = -1;
+  stopBGM(); startBGM();               // 🎵 보너스 전용곡(수노)으로 교체 — 정지 없이 부르면 조기 리턴된다
   sfxGolden(); haptic([30, 40, 30]);
   updateHUD();
 }
@@ -2420,24 +2428,47 @@ function ensureBonusApples() {
   while (apples.length < 70 && guard < 140) { spawnBonusApple(); guard++; }   // 🍎 훨씬 수북하게 (2026-08-07 v2)
 }
 // 🎁 보너스 종료 → 코인 정산 → 세계여행 패널로
-function endBonus() {
-  bonusMode = false; bonusIntroT = 0;
+function endBonus(crashed) {
+  bonusMode = false; bonusIntroT = 0; bonusDeadT = 0;
+  stopBGM();                           // 🎵 수노 곡 정지 — 다음 라운드는 전환 패널에서 신스 곡으로 다시 켜진다
   let earned;
   if (bonusEaten >= BONUS_GOAL) earned = Math.min(450, 200 + (bonusEaten - BONUS_GOAL) * 5);   // 잭팟 + 초과분 — 초과 5/개·총 450 상한 (무상한 10/개는 한 판 +700까지 새서 코인경제 붕괴)
   else earned = bonusEaten * 5;                                                  // 위로금
   if (earned > 0) addCoins(earned);
   // 🐍 보너스에서 키운 꼬리의 절반을 다음 라운드로 이월 — 보너스 성과가 본게임으로 이어진다
   pendingCarry = Math.max(pendingCarry, Math.max(START_LEN, Math.floor(snakeLen * 0.5)));
-  showCombo(bonusEaten >= BONUS_GOAL
-    ? '🎉 🍎' + bonusEaten + '개·길이 ' + snakeLen + '! +' + earned + ' 코인!'
-    : '🎁 🍎' + bonusEaten + '개 → +' + earned + ' 코인');
+  showCombo(crashed
+    ? '💥 부딪혔다! 🍎' + bonusEaten + '개 → +' + earned + ' 코인'
+    : (bonusEaten >= BONUS_GOAL
+        ? '🎉 🍎' + bonusEaten + '개·길이 ' + snakeLen + '! +' + earned + ' 코인!'
+        : '🎁 🍎' + bonusEaten + '개 → +' + earned + ' 코인'));
   sfxGateComplete(); haptic([40, 30, 40, 30, 120]);
   // 세계여행 패널 → 다음 라운드 (원래 enterDoor가 하던 전환)
   wipeNextR = pendingNextR; wipeCarry = pendingCarry; wipeY = H; wipeSwitched = false;
   wipeHoldMax = 3.8; wipeHold = wipeHoldMax;
 }
-// 🎁 보너스 진행 — 죽음 없음: 벽은 미끄러지고, 돌은 부딪히면 잠깐 기절
+// 💥 보너스 중 충돌 — 여기서 본게임까지 끝내면 '보상 스테이지'가 벌이 된다.
+//    그래서 dead 플래그(게임오버 경로)는 건드리지 않고, 보너스만 조기 종료해 정산한다.
+function bonusCrash() {
+  if (bonusDeadT > 0) return;
+  bonusDeadT = 1.1;
+  shake = 16;
+  sfxCrash(); haptic([60, 50, 120]);
+  spawnParticles(headX, headY, '#FF4500', 30);
+  eatCombo = 0; eatComboT = 0;
+}
+// 🎁 보너스 진행 — 돌·벽에 부딪히면 죽는다(보너스 조기 종료)
 function updateBonus(dt) {
+  // 💥 충돌 연출 중 — 다 끝나면 지금까지 먹은 만큼 정산하고 다음 라운드로
+  if (bonusDeadT > 0) {
+    bonusDeadT -= dt;
+    for (let i = particles.length - 1; i >= 0; i--) {
+      const p = particles[i]; p.x += p.vx; p.y += p.vy; p.vy += 0.3; p.life--;
+      if (p.life <= 0) particles.splice(i, 1);
+    }
+    if (bonusDeadT <= 0) endBonus(true);
+    return;
+  }
   // 🎬 오프닝: 패널이 화면을 덮고 규칙을 보여준다 → 끝나면 3·2·1 카운트다운
   if (bonusIntroT > 0) {
     bonusIntroT -= dt;
@@ -2446,21 +2477,27 @@ function updateBonus(dt) {
   }
   // 방향 전환
   if (pendingDir) { dirX = pendingDir.x; dirY = pendingDir.y; pendingDir = null; sfxTurn(); haptic(8); }
-  // 기절 중엔 이동만 멈춘다 (시간은 흐른다 — 돌이 진짜 '방해'가 되도록)
-  if (bonusStun > 0) bonusStun -= dt;
-  else {
-    headX += dirX * speed * dt;
-    headY += dirY * speed * dt;
+  headX += dirX * speed * dt;
+  headY += dirY * speed * dt;
+  // 🪨 돌이 계속 '만들어진다' — 시간이 갈수록 판이 좁아진다
+  bonusRockT -= dt;
+  if (bonusRockT <= 0) {
+    bonusRockT = BONUS_ROCK_EVERY;
+    if (obstacles.length < 40) { spawnObstacle(); tone(300, 0.08, 'square', 0.06); }
   }
   // 카메라
   const camFollow = Math.min(1, dt * 6);
   cam.x += ((headX - W / 2) - cam.x) * camFollow;
   cam.y += ((headY - H / 2) - cam.y) * camFollow;
   clampCam();
-  // 벽 — 죽지 않고 미끄러진다
+  // 🧱 벽 — 부딪히면 죽는다 (2026-08-07 지시)
   const WALLM = HEAD_R + 5;
-  headX = Math.max(field.x + WALLM, Math.min(field.x + field.w - WALLM, headX));
-  headY = Math.max(field.y + WALLM, Math.min(field.y + field.h - WALLM, headY));
+  if (headX <= field.x + WALLM || headX >= field.x + field.w - WALLM ||
+      headY <= field.y + WALLM || headY >= field.y + field.h - WALLM) {
+    headX = Math.max(field.x + WALLM, Math.min(field.x + field.w - WALLM, headX));
+    headY = Math.max(field.y + WALLM, Math.min(field.y + field.h - WALLM, headY));
+    bonusCrash(); return;
+  }
   // 경로 기록
   path.unshift({ x: headX, y: headY });
   const needed = (snakeLen + 2) * SEG_SPACING;
@@ -2489,20 +2526,11 @@ function updateBonus(dt) {
       break;
     }
   }
-  // 🪨 돌 — 부딪히면 기절 + 튕겨남 (죽지 않음)
-  if (bonusStun <= 0) {
-    for (const o of obstacles) {
-      const d = Math.hypot(headX - o.x, headY - o.y);
-      if (d < HEAD_R + o.r - 4) {
-        const px = (headX - o.x) / (d || 1), py = (headY - o.y) / (d || 1);
-        headX = o.x + px * (HEAD_R + o.r + 6);   // 돌 밖으로 밀어냄
-        headY = o.y + py * (HEAD_R + o.r + 6);
-        bonusStun = 0.4; shake = 10;
-        eatCombo = 0; eatComboT = 0;
-        tone(220, 0.15, 'sawtooth', 0.15, 110); haptic([0, 40]);
-        spawnParticles(headX, headY, '#9E9E9E', 8);
-        break;
-      }
+  // 🪨 돌 — 부딪히면 죽는다 (2026-08-07 지시)
+  for (const o of obstacles) {
+    if (Math.hypot(headX - o.x, headY - o.y) < HEAD_R + o.r - 4) {
+      spawnParticles(o.x, o.y, '#9E9E9E', 10);
+      bonusCrash(); return;
     }
   }
   // 파티클
@@ -3427,9 +3455,9 @@ function render() {
     const lines = [
       '⏱ ' + BONUS_TIME + '초 동안 사과 폭식!',
       '🐍 먹을수록 꼬리가 쭉쭉 길어져요',
-      '🍎 ' + BONUS_GOAL + '개 넘기면 코인 잭팟!'
+      '🍎 ' + BONUS_GOAL + '개 넘기면 코인 잭팟!',
+      '⚠️ 돌이 계속 생겨요 · 돌·벽에 닿으면 끝!'
     ];
-    if (bonusIdx >= 2) lines.push('🪨 이번엔 돌 ' + Math.min(20, (bonusIdx - 1) * 5) + '개가 방해해요');
     lines.forEach(function (ln, i) {
       const ly = H * 0.44 + i * 40;
       ctx.strokeText(ln, W / 2, ly);
