@@ -1281,6 +1281,10 @@ function startRound(R, startLen) {
   // 🏪 가게 건설 목표 + 짓는 자리(상단 중앙 고정)
   roundMode = roundModeFor(R);
   roundApples = 0;
+  halfCheered = false;                          // 💪 라운드마다 절반 응원 재장전
+  // 🏅 이월 길이는 축하하지 않는다 — 시작 길이보다 큰 마일스톤부터 발화
+  lenMilestoneIdx = 0;
+  while (lenMilestoneIdx < LEN_MILESTONES.length && LEN_MILESTONES[lenMilestoneIdx] <= snakeLen) lenMilestoneIdx++;
   roundApplesGoal = applesGoalForRound(R);
   powerGauge = 0;
   flyingStones = []; gateFly = false; gateFlyT = 0;
@@ -1318,6 +1322,7 @@ function reset() {
   adReviveCount = 0;                    // 📺 광고 부활 카운터 — 새 판에서 리셋 (판당 5회)
   hideReviveOffer();
   applesEaten = 0; rocksSmashed = 0; score = 0; scoreMult = 1;
+  bestBeatenThisGame = false;   // 🏆 새 판 — 최고점 돌파 알림 재장전
   tongueT = 0; tongueOut = 0; shake = 0;
   placedGates = [];   // 🏯 정착한 광화문 초기화(새 게임)
   startRound(1);
@@ -1429,12 +1434,20 @@ function predatorSpeed() {
 }
 function updatePredators(dt) {
   const sp = predatorSpeed();
+  if (predWarnT > 0) predWarnT -= dt;
   for (const p of predators) {
     p.t += dt;
     const dx = headX - p.x, dy = headY - p.y;
     const d = Math.hypot(dx, dy) || 1;
     p.vx = (dx / d) * sp; p.vy = (dy / d) * sp;
     p.x += p.vx * dt; p.y += p.vy * dt;
+    // ❗ 바짝 붙었다 — 경고 진동 + 느낌표 (0.6초 쿨다운). '잡힐 뻔'을 체감시키는 장치
+    if (d < 90 && predWarnT <= 0 && graceT <= 0 && powerT <= 0) {
+      predWarnT = 0.6;
+      haptic(15); tone(880, 0.06, 'square', 0.1);
+      p.warnT = 0.5;
+    }
+    if (p.warnT > 0) p.warnT -= dt;
     p.x = Math.max(field.x + p.r, Math.min(field.x + field.w - p.r, p.x));
     p.y = Math.max(field.y + p.r, Math.min(field.y + field.h - p.r, p.y));
   }
@@ -1459,6 +1472,17 @@ function drawPredator(p) {
   const D = p.r * 2.5;
   ctx.drawImage(sp, -D / 2, -D / 2, D, D);
   ctx.restore();
+  // ❗ 바짝 붙었을 때 머리 위 경고 (근접 경고와 세트 — '잡힐 뻔' 체감)
+  if (p.warnT > 0) {
+    ctx.save();
+    ctx.font = 'bold 22px sans-serif'; ctx.textAlign = 'center';
+    ctx.globalAlpha = Math.min(1, p.warnT * 3);
+    ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(0,0,0,0.6)';
+    ctx.strokeText('❗', p.x, p.y - p.r * 2 - 6 + Math.sin(performance.now()/80) * 2);
+    ctx.fillStyle = '#FF1744';
+    ctx.fillText('❗', p.x, p.y - p.r * 2 - 6 + Math.sin(performance.now()/80) * 2);
+    ctx.restore();
+  }
 }
 
 // 🌀 터널 한 쌍 생성 (입구 A ↔ 출구 B, 서로 멀리) — 다양한 모양/색깔
@@ -1546,6 +1570,15 @@ function eatApple(a, idx) {
     spawnSparkle(headX, headY, '#FFF176', 8 + mult * 2);
     if (mult >= 3) { slowmoT = 0.3; haptic([0,30,40,60]); }     // 대박 콤보
   }
+  // 🏅 마이크로 성취: 길이 돌파 + 최고점수 실시간 갱신 (판 끝나고 알면 성취감이 안 된다)
+  checkLenMilestone();
+  if (!bestBeatenThisGame && best > 0 && score > best) {
+    bestBeatenThisGame = true;
+    showCombo('🏆 최고 기록 돌파! ' + best + '점을 넘었어요!');
+    sfxGateComplete(); haptic([30, 40, 30, 40, 100]);
+    spawnRing(headX, headY, '#FF6FA5', 20, 110, 22);
+    flashT = Math.max(flashT, 0.15);
+  }
   // 혀 날름 + 사과 제거 (⚠️ 아래 roundClear로 빠지기 전에 반드시 먼저 처리)
   tongueOut = 1;
   apples.splice(idx, 1);
@@ -1557,6 +1590,12 @@ function eatApple(a, idx) {
     //    사과를 먹을 때마다 roundClear가 다시 불려 가게가 반복 완성된다 (돌깨기 경로의 !gateReady 가드와 동일)
     if (!gateFly && !gateReady) {
       roundApples++;
+      // 💪 절반 지점 응원 — 목표가 멀게 느껴지지 않게 중간 이정표 (라운드당 1회)
+      if (!halfCheered && roundApplesGoal >= 8 && roundApples === Math.ceil(roundApplesGoal / 2)) {
+        halfCheered = true;
+        showCombo('💪 절반 왔어요! ' + roundApples + '/' + roundApplesGoal);
+        tone(659, 0.1, 'square', 0.15); tone(784, 0.14, 'square', 0.15, 784, 0.1);
+      }
       // 사과가 가게로 날아가 색을 칠하는 연출
       for (let k = 0; k < 3; k++) {
         flyingStones.push({
@@ -1614,6 +1653,22 @@ function getRefill() {
 
 let lowTimePulseT = 0;
 let headPop = 0;         // 🐍 먹은 직후 머리가 부푸는 정도 (1 → 0으로 감쇠)
+// 🏅 마이크로 성취 — 아이들의 보상 주기(5~10초)에 맞춘 중간 축하 (2026-08-16)
+const LEN_MILESTONES = [10, 20, 30, 50, 75, 100];
+let lenMilestoneIdx = 0;     // 다음에 축하할 마일스톤 인덱스
+let bestBeatenThisGame = false;   // 최고점수 돌파 알림은 판당 1회
+let halfCheered = false;          // 라운드 절반 응원은 라운드당 1회
+let predWarnT = 0;                // 🦅 천적 근접 경고 쿨다운
+function checkLenMilestone() {
+  while (lenMilestoneIdx < LEN_MILESTONES.length && snakeLen >= LEN_MILESTONES[lenMilestoneIdx]) {
+    const m = LEN_MILESTONES[lenMilestoneIdx++];
+    showCombo('🎉 길이 ' + m + '칸 돌파!');
+    sfxGolden(); haptic([20, 30, 20, 30, 60]);
+    spawnRing(headX, headY, '#FFD700', 16, 90, 20);
+    spawnSparkle(headX, headY, '#FFF176', 14);
+    flashT = Math.max(flashT, 0.12);
+  }
+}
 let powerT = 0;          // ⚡ 파워 모드 남은 시간 (돌 부수기)
 const POWER_STOCK_FREE = 3;    // ⚡ 판당 무료 파워 개수
 const POWER_BUY_COST = 300;    // ⚡ 소진 후 1개 코인 가격 (게임 중 즉석 구매 = 상점가와 동일)
@@ -2556,6 +2611,7 @@ function updateBonus(dt) {
       bonusEaten++; applesEaten++; stats.apples++;
       // 🐍 ★성취감 코어★ 먹는 대로 꼬리가 쭉쭉 — 빨강 +1칸, 황금 +3칸 (상한 150)
       snakeLen = Math.min(150, snakeLen + (a.type === 'golden' ? 3 : 1));
+      checkLenMilestone();   // 보너스 폭식 중에도 10·20·30칸 축하
       addScore(15, true);
       spawnParticles(a.x, a.y, a.type === 'golden' ? '#FFD700' : '#FF5252', 8);
       eatCombo = Math.min(eatCombo + 1, 10); eatComboT = 2;
@@ -3627,6 +3683,15 @@ function render() {
     ctx.fillStyle = DISCO_COLORS[ci];
     ctx.fillRect(0, 0, W, H);
     ctx.restore();
+  }
+  // 🫀 시간 임박 — 화면 가장자리가 심장박동처럼 빨갛게 고동친다 (긴장감의 시각화)
+  if (running && !dead && !paused && !bonusMode && wipeY === null && countdownT <= 0 && timeLeft < 3) {
+    const urg = 1 - timeLeft / 3;                                  // 0→1 임박도
+    const beat = (Math.sin(performance.now() / 90) + 1) / 2;       // 빠른 고동
+    ctx.fillStyle = 'rgba(255,30,30,' + (0.10 + urg * 0.16 + beat * 0.10) + ')';
+    const bw = 14 + urg * 14;                                      // 테두리 두께도 커진다
+    ctx.fillRect(0, 0, W, bw); ctx.fillRect(0, H - bw, W, bw);
+    ctx.fillRect(0, bw, bw, H - bw * 2); ctx.fillRect(W - bw, bw, bw, H - bw * 2);
   }
   // ✨ 화면 번쩍
   if (flashT > 0) {
