@@ -1243,10 +1243,10 @@ function roundBeeCount(R) { return R < 8 ? 0 : (R < 20 ? 1 : (R < 40 ? 2 : 3)); 
 
 // 🐍 속도 규칙 (2026-08-06): 시작은 느긋하게, 라운드마다 아주 조금씩만 빨라진다.
 //    라운드 '안'에서는 절대 변하지 않는다 — 예전 '속도가 들쭉날쭉하다'던 문제의 재발 방지.
-const SPEED_START = 108;   // R1 체감 속도 (구버전처럼 천천히)
-const SPEED_MAX   = 150;   // R25 이후 상한
+const SPEED_START = 130;   // R1 체감 속도 — 2026-08-17 대표님 지시로 전체 1.2배 (108→130)
+const SPEED_MAX   = 180;   // R25 이후 상한 (150→180, 동일 1.2배)
 const SPEED_BASE  = SPEED_START;
-function computeSpeed() { return Math.min(SPEED_MAX, SPEED_START + (round - 1) * 1.7); }
+function computeSpeed() { return Math.min(SPEED_MAX, SPEED_START + (round - 1) * 2.0); }   // 증가폭도 1.2배(1.7→2.0) — 커브 모양 유지
 // 🎉 축제 라운드(10의 배수): 황금사과 2배·돌 30% 감소 — 10라운드마다 쉬어가는 리듬
 let festivalRound = false;
 // 📈 2026-08-03 100R 커브: 시간 경제는 R60에 상한 도달 후 고정(인내 구간), 이후는 실수 누적과의 싸움
