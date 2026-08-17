@@ -338,12 +338,12 @@
 
   <!-- 🎁 보너스 결과 — 성취를 숫자로 보여준다 (2026-08-16 지시) -->
   <div id="bonusResult" class="overlay" style="display:none;z-index:44">
-    <h1>🎁 보너스 결과</h1>
+    <h1>🍜 먹방 타임 결과</h1>
     <div id="brJackpot" style="display:none;color:#FFD700;font-size:22px;font-weight:bold;margin:2px 0">🎰 잭팟 달성!</div>
     <div class="goCard" style="max-width:330px">
       <div id="brStats" style="display:flex;flex-direction:column;gap:12px;font-size:19px;color:#fff;text-align:left;padding:6px 4px"></div>
     </div>
-    <div id="brBest" style="display:none;color:#FF6FA5;font-size:21px;font-weight:bold;margin-top:6px">👑 보너스 신기록!</div>
+    <div id="brBest" style="display:none;color:#FF6FA5;font-size:21px;font-weight:bold;margin-top:6px">👑 먹방 신기록!</div>
     <button id="brContinueBtn" class="btn">계속 여행 →</button>
   </div>
 
@@ -2507,7 +2507,7 @@ function enterDoor() {
 function startBonus(nextR, carry) {
   pendingNextR = nextR; pendingCarry = carry;
   bonusMode = true;
-  bonusIdx = Math.floor(round / 3);          // R3=1번째, R6=2번째 …
+  bonusIdx = round < 3 ? 1 : Math.floor(round / 3) + 1;   // 개막 먹방=1번째(빈 마당), R3 문=2번째(지형 시작)…
   bonusT = 0; bonusEaten = 0; bonusStun = 0; bonusDeadT = 0;
   bonusNextPredT = BONUS_PRED_EVERY; bonusPredN = 0; bonusStartLen = snakeLen;
   bonusRockT = BONUS_ROCK_EVERY;
@@ -3683,8 +3683,8 @@ function render() {
     ctx.textAlign = 'center';
     ctx.font = 'bold 44px sans-serif';
     ctx.lineWidth = 8; ctx.strokeStyle = 'rgba(0,0,0,0.6)';
-    ctx.strokeText('🎁 보너스 게임!', W / 2, H * 0.32);
-    ctx.fillStyle = '#FFD700'; ctx.fillText('🎁 보너스 게임!', W / 2, H * 0.32);
+    ctx.strokeText('🍜 먹방 타임!', W / 2, H * 0.32);
+    ctx.fillStyle = '#FFD700'; ctx.fillText('🍜 먹방 타임!', W / 2, H * 0.32);
     ctx.font = 'bold 22px sans-serif'; ctx.lineWidth = 5;
     const lines = [
       '⏱ 시간 무제한 — 먹을 수 있을 때까지!',
@@ -4005,7 +4005,17 @@ function render() {
         ctx.textBaseline = 'alphabetic';
       });
     })();
-    ctx.textAlign = 'left';
+    // 🍜 먹방 안내 — 3개 나라마다. 먹방 직전 나라는 금색으로 강조 (2026-08-17 지시)
+    (function () {
+      const ly = fy + frameH + 88 + 78 + 30;
+      const gate = wipeNextR % 3 === 0;   // 이 나라를 완성하면 먹방
+      ctx.font = 'bold 17px sans-serif'; ctx.textAlign = 'center';
+      ctx.lineWidth = 5; ctx.strokeStyle = 'rgba(0,0,0,0.6)';
+      const msg = gate ? '🍜 이 나라를 완성하면 먹방 타임!' : '🍜 3개 나라마다 먹방 타임!';
+      ctx.strokeText(msg, W / 2, ly);
+      ctx.fillStyle = gate ? '#FFD700' : 'rgba(255,255,255,0.85)';
+      ctx.fillText(msg, W / 2, ly);
+    })();
     ctx.textAlign = 'left';
   }
   ctx.restore();
@@ -4046,9 +4056,10 @@ function startGame() {
   if (typeof renderBoosters === 'function') renderBoosters();
   reviveCount = 0; coinReviveCount = 0; graceT = 0;
   countdownT = 3; lastCountInt = -1;   // 🔢 3·2·1 카운트다운
-  // 🌍 시작 인트로: 세계지도에 출발점(🇨🇳 1번째 나라)을 잠시 보여준 뒤 패널이 위로 걷힌다
-  wipeNextR = 1; wipeCarry = 0; wipeSwitched = true; wipeY = 0;
-  wipeHoldMax = 3.0; wipeHold = wipeHoldMax;   // 출발 지도도 여유 있게 (2026-08-03 연장)
+  // 🍜 개막 먹방 타임 (2026-08-17 지시: 첫 먹방을 1라운드 앞에)
+  //    시작 → 먹방 오프닝 → 폭식 → 결과 화면 → '세계여행 출발' 지도 → 1라운드.
+  //    구 시작 인트로 지도는 먹방 뒤의 출발 지도가 대체한다.
+  wipeY = null; wipeSwitched = false;
   runStartCoins = coins;               // 💰 이번 판 코인 시작값
   document.getElementById('startScreen').style.display = 'none';
   document.getElementById('gameOver').style.display = 'none';
@@ -4059,8 +4070,20 @@ function startGame() {
   document.getElementById('pauseBtn').style.display = 'flex';
   running = true;
   sfxStart();
-  startBGM(); // 🎵 배경음악 시작
+  startBonus(1, snakeLen);   // 🍜 개막 먹방 — 내부에서 먹방 전용 BGM(수노)까지 켠다
 }
+// 🧪 테스트 하네스 전용 — 개막 먹방을 건너뛰고 구(舊) 시작 흐름(출발 지도 → 카운트다운 → R1)을 재현한다.
+//    본게임 회귀 하네스들이 startGame 직후 이걸 불러 기존 시나리오를 그대로 돌린다. UI에서는 호출되지 않는다.
+window.__skipOpeningBonus = function () {
+  if (!bonusMode) return;
+  bonusMode = false; bonusIntroT = 0; bonusDeadT = 0; bonusResultUp = false;
+  const el = document.getElementById('bonusResult'); if (el) el.style.display = 'none';
+  stopBGM();
+  startRound(1, START_LEN);
+  countdownT = 3; lastCountInt = -1;
+  wipeNextR = 1; wipeCarry = 0; wipeSwitched = true; wipeY = 0;
+  wipeHoldMax = 3.0; wipeHold = 3.0;
+};
 
 let goMyEntry = null; // 게임오버 시 내 엔트리 (미리보기/저장 후)
 let reviveCount = 0;       // 💖 이번 판 총 부활 횟수 (통계용)
