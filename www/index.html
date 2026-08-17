@@ -336,6 +336,17 @@
     <button id="achCloseBtn" class="btn">닫기 ✖</button>
   </div>
 
+  <!-- 🎁 보너스 결과 — 성취를 숫자로 보여준다 (2026-08-16 지시) -->
+  <div id="bonusResult" class="overlay" style="display:none;z-index:44">
+    <h1>🎁 보너스 결과</h1>
+    <div id="brJackpot" style="display:none;color:#FFD700;font-size:22px;font-weight:bold;margin:2px 0">🎰 잭팟 달성!</div>
+    <div class="goCard" style="max-width:330px">
+      <div id="brStats" style="display:flex;flex-direction:column;gap:12px;font-size:19px;color:#fff;text-align:left;padding:6px 4px"></div>
+    </div>
+    <div id="brBest" style="display:none;color:#FF6FA5;font-size:21px;font-weight:bold;margin-top:6px">👑 보너스 신기록!</div>
+    <button id="brContinueBtn" class="btn">계속 여행 →</button>
+  </div>
+
   <div id="roundClear" class="overlay" style="display:none">
     <h1 id="rcTitle">🎉 1라운드 클리어! 🎉</h1>
     <div class="deathLen" id="rcRound" style="font-size:48px">2</div>
@@ -642,10 +653,14 @@ const INVINCIBLE_SEC = 2.0;   // 🛡️ 부활 후 무적 지속(초) — 사�
 function isInvincible() { return graceT > 0; }   // 지시서의 isInvincible 상태 (setTimeout 대신 프레임 감산 → 일시정지·탭전환에도 안 어긋남)
 let countdownT = 0;      // 🔢 시작 카운트다운
 // 🎁 보너스 게임 (3라운드 클리어마다) — 60초 사과 폭식 스테이지
-const BONUS_TIME = 30;         // 제한시간(초) — 2026-08-07 지시로 30초 (죽음이 생겨 짧고 굵게)
+const BONUS_PRED_EVERY = 30;   // 🦉 이 간격(초)마다 천적이 1마리씩 늘어난다 (2026-08-16 서바이벌 전환)
 const BONUS_GOAL = 20;         // 이만큼 먹으면 코인 잭팟
 let bonusMode = false;
-let bonusT = 0;                // 남은 시간
+let bonusT = 0;                // 경과 시간 — 서바이벌이라 위로 센다 (제한시간 폐지)
+let bonusNextPredT = 0;        // 다음 천적까지 남은 시간
+let bonusPredN = 0;            // 이번 보너스에 등장시킨 천적 수 (부엉이/멧돼지 번갈아)
+let bonusStartLen = 0;         // 시작 길이 — 결과 화면의 성장량 계산용
+let bonusResultUp = false;     // 🏅 결과 화면 표시 중 (게임 일시정지)
 let bonusEaten = 0;            // 이번 보너스에서 먹은 사과 수
 let bonusIdx = 0;              // 몇 번째 보너스인가 (1부터) — 돌 개수 결정
 let bonusStun = 0;             // (구) 기절 — v3에서 죽음으로 대체, 호환용으로만 남김
@@ -1319,6 +1334,8 @@ function reset() {
   wipeY = null; wipeSwitched = false;   // 🎬 전환 커튼 중단(새 게임)
   discoT = 0;                           // 🪩 조명 초기화
   bonusMode = false; bonusT = 0; bonusStun = 0; bonusIntroT = 0; bonusDeadT = 0;   // 🎁 보너스 초기화
+  bonusResultUp = false; bonusPredN = 0;
+  (function () { const el = document.getElementById('bonusResult'); if (el) el.style.display = 'none'; })();
   adReviveCount = 0;                    // 📺 광고 부활 카운터 — 새 판에서 리셋 (판당 5회)
   hideReviveOffer();
   applesEaten = 0; rocksSmashed = 0; score = 0; scoreMult = 1;
@@ -1509,6 +1526,7 @@ function spawnTunnel() {
 
 function setDir(nx, ny) {
   if (!running || dead || paused) return;
+  if (bonusResultUp) return;   // 🏅 보너스 결과 감상 중 — 게임 정지
   // 180도 반대 금지
   if (nx === -dirX && ny === -dirY) return;
   if (nx === dirX && ny === dirY) return;
@@ -2003,6 +2021,7 @@ function update(dt) {
   shake *= 0.9; if (shake < 0.1) shake = 0;
 
   if (!running || dead || paused) return;
+  if (bonusResultUp) return;   // 🏅 보너스 결과 감상 중 — 게임 정지 (⚠️ 없으면 결과 화면 뒤에서 본게임이 계속 돌아 돌 위의 뱀이 진짜로 죽는다)
 
   // 🎬 라운드 전환 3단계: ① 패널 상승·덮기 → ② 지도 홀드(경로·비행 감상) → ③ 위로 걷히며 새 라운드 공개
   setHudHidden(wipeY !== null);   // 🗺️ 지도 패널 중엔 상단 HUD 2줄 숨김 (2026-08-06 지시: 심플하게)
@@ -2489,7 +2508,8 @@ function startBonus(nextR, carry) {
   pendingNextR = nextR; pendingCarry = carry;
   bonusMode = true;
   bonusIdx = Math.floor(round / 3);          // R3=1번째, R6=2번째 …
-  bonusT = BONUS_TIME; bonusEaten = 0; bonusStun = 0; bonusDeadT = 0;
+  bonusT = 0; bonusEaten = 0; bonusStun = 0; bonusDeadT = 0;
+  bonusNextPredT = BONUS_PRED_EVERY; bonusPredN = 0; bonusStartLen = snakeLen;
   bonusRockT = BONUS_ROCK_EVERY;
   apples = []; obstacles = []; predators = []; predatorRespawnQueue = []; bees = []; tunnels = []; flyingStones = [];
   gateReady = false; door = null; doorPhase = false; gateFly = false;
@@ -2501,9 +2521,8 @@ function startBonus(nextR, carry) {
   const initN = Math.ceil((snakeLen + 4) * SEG_SPACING / 4) + 6;
   for (let i = 0; i < initN; i++) path.push({ x: headX - i * 4, y: headY });
   snapCam();
-  // 🪨 시작 돌: 1번째는 0개, 이후 회차마다 +4개 (상한 16). 여기에 더해 진행 중에도 계속 생겨난다
-  const rocks = Math.min(16, (bonusIdx - 1) * 4);
-  for (let i = 0; i < rocks; i++) spawnObstacle();
+  // 🏟️ 지형: 1번째는 빈 마당, 2번째부터 4가지 패턴 순환 — 매번 다른 화면 (2026-08-16 지시)
+  buildBonusArena(bonusIdx);
   // 🍎 사과를 아주 많이 — 썩지 않게 깔아둔다
   ensureBonusApples();
   bonusIntroT = BONUS_INTRO_DUR;       // 🎬 오프닝 패널 먼저 — 끝나면 3초 카운트다운
@@ -2538,7 +2557,30 @@ function endBonus(crashed) {
         ? '🎉 🍎' + bonusEaten + '개·길이 ' + snakeLen + '! +' + earned + ' 코인!'
         : '🎁 🍎' + bonusEaten + '개 → +' + earned + ' 코인'));
   sfxGateComplete(); haptic([40, 30, 40, 30, 120]);
-  // 세계여행 패널 → 다음 라운드 (원래 enterDoor가 하던 전환)
+  // 🏅 결과 화면 — 성취를 숫자로 감상하고 [계속]을 눌러야 다음 라운드 (2026-08-16 지시)
+  const grew = Math.max(0, snakeLen - bonusStartLen);
+  let bestE = 0;
+  try { bestE = parseInt(localStorage.getItem('snake_bonusbest') || '0') || 0; } catch (e) {}
+  const isNewBest = bonusEaten > bestE && bonusEaten > 0;
+  if (isNewBest) { try { localStorage.setItem('snake_bonusbest', bonusEaten); } catch (e) {} }
+  const st = document.getElementById('brStats');
+  if (st) st.innerHTML =
+    '<span>🍎 먹은 음식 <b style="color:#FFEB3B;font-size:27px">' + bonusEaten + '</b>개' +
+      (bestE > 0 && !isNewBest ? ' <small style="opacity:0.65">(최고 ' + bestE + ')</small>' : '') + '</span>' +
+    '<span>🐍 꼬리 성장 <b style="color:#8BC34A;font-size:27px">+' + grew + '</b>칸 <small style="opacity:0.65">(' + bonusStartLen + '→' + snakeLen + ')</small></span>' +
+    '<span>⏱ 버틴 시간 <b style="color:#4FC3F7;font-size:27px">' + Math.floor(bonusT) + '</b>초' +
+      (bonusPredN > 0 ? ' <small style="opacity:0.65">· 천적 ' + bonusPredN + '마리</small>' : '') + '</span>' +
+    '<span>💰 획득 코인 <b style="color:#FFD700;font-size:27px">+' + earned + '</b></span>';
+  const jp = document.getElementById('brJackpot'); if (jp) jp.style.display = bonusEaten >= BONUS_GOAL ? 'block' : 'none';
+  const nb = document.getElementById('brBest'); if (nb) nb.style.display = isNewBest ? 'block' : 'none';
+  const el = document.getElementById('bonusResult'); if (el) el.style.display = 'flex';
+  bonusResultUp = true;
+}
+// 🎁 결과 화면 [계속] → 세계여행 패널로 (뒤로가기도 여기로 온다)
+function proceedAfterBonus() {
+  if (!bonusResultUp) return;
+  bonusResultUp = false;
+  const el = document.getElementById('bonusResult'); if (el) el.style.display = 'none';
   wipeNextR = pendingNextR; wipeCarry = pendingCarry; wipeY = H; wipeSwitched = false;
   wipeHoldMax = 3.8; wipeHold = wipeHoldMax;
 }
@@ -2635,20 +2677,96 @@ function updateBonus(dt) {
     p.x += p.vx; p.y += p.vy; p.vy += 0.3; p.life--;
     if (p.life <= 0) particles.splice(i, 1);
   }
-  // ⏱️ 60초 카운트다운
-  bonusT -= dt;
+  // ⏱️ 서바이벌 — 시간은 위로 흐른다. 끝내는 건 시간이 아니라 충돌 (2026-08-16 지시)
+  bonusT += dt;
+  if (powerT > 0) { powerT -= dt; if (powerT <= 0) { powerT = 0; smashCombo = 0; updateHUD(); } }
+  // 🦉 30초마다 천적 +1 — 판이 점점 뜨거워진다
+  bonusNextPredT -= dt;
+  if (bonusNextPredT <= 0) {
+    bonusNextPredT = BONUS_PRED_EVERY;
+    spawnBonusPredator();
+  }
+  // 타임바 = 다음 천적까지 남은 시간 (바닥나면 온다)
   const tb = document.getElementById('timeBar');
   if (tb) {
-    tb.style.width = Math.max(0, bonusT / BONUS_TIME * 100) + '%';
-    tb.style.background = bonusT < 10
+    tb.style.width = Math.max(0, bonusNextPredT / BONUS_PRED_EVERY * 100) + '%';
+    tb.style.background = bonusNextPredT < 6
       ? 'linear-gradient(90deg, #FF0000, #FF6347, #FF0000)'
       : 'linear-gradient(90deg, #FFD700, #FFEB3B, #FFD700)';
   }
-  if (bonusT < 10) {
+  if (bonusNextPredT < 5) {
     lowTimePulseT -= dt;
     if (lowTimePulseT <= 0) { sfxLowTime(); lowTimePulseT = 0.5; }
   }
-  if (bonusT <= 0) { bonusT = 0; endBonus(); }
+  // 🦉 천적 추격 + 충돌 — 파워뱀이면 처치, 아니면 보너스 종료
+  updatePredators(dt);
+  for (let i = predators.length - 1; i >= 0; i--) {
+    const p = predators[i];
+    if (Math.hypot(headX - p.x, headY - p.y) < HEAD_R + p.r - 4) {
+      if (powerT > 0) {
+        predators.splice(i, 1);
+        addScore(60, true); addCoins(3);
+        sfxSmash(); shake = 14; haptic([20, 30, 20]);
+        spawnParticles(p.x, p.y, '#FF1744', 22);
+        showCombo('💥 천적 처치!');
+      } else {
+        spawnParticles(p.x, p.y, '#FF1744', 14);
+        bonusCrash(); return;
+      }
+    }
+  }
+}
+// 🏟️ 보너스 아레나 — 패턴 돌담. 어떤 패턴이든 뱀 시작점(중앙 0.5, 0.55) 근처는 비운다
+function bonusRock(x, y) {
+  const cx = field.x + field.w * 0.5, cy = field.y + field.h * 0.55;
+  if (Math.hypot(x - cx, y - cy) < 110) return;                 // 시작 즉사 방지
+  if (x < field.x + 30 || x > field.x + field.w - 30 ||
+      y < field.y + 30 || y > field.y + field.h - 30) return;   // 벽에 너무 붙이지 않기
+  obstacles.push({ x: x, y: y, r: 14 });
+}
+function buildBonusArena(idx) {
+  if (idx <= 1) return;                                          // 1번째 = 빈 마당 (입문)
+  const L = 1 + ((idx - 2) % 4);                                 // 2번째부터 패턴 1~4 순환
+  const fx = field.x, fy = field.y, fw = field.w, fh = field.h;
+  if (L === 1) {
+    // 🪨 기둥밭 — 넓은 격자. 사이 통로가 넓어 돌아다니는 맛
+    for (let gx = 0.2; gx <= 0.8; gx += 0.3)
+      for (let gy = 0.18; gy <= 0.85; gy += 0.22)
+        bonusRock(fx + fw * gx, fy + fh * gy);
+  } else if (L === 2) {
+    // 🧱 두 줄 담장 — 위·아래 가로 담. 가운데에 문(틈) 2개
+    for (let gx = 0.08; gx <= 0.92; gx += 0.08) {
+      if (gx > 0.38 && gx < 0.6) continue;                       // 문
+      bonusRock(fx + fw * gx, fy + fh * 0.3);
+      bonusRock(fx + fw * (1 - gx), fy + fh * 0.72);
+    }
+  } else if (L === 3) {
+    // ⭕ 원형 돌담 — 중앙을 감싸는 링. 동서남북 4개 출입구
+    const cx = fx + fw * 0.5, cy = fy + fh * 0.52, r = Math.min(fw, fh) * 0.36;
+    for (let a = 0; a < Math.PI * 2; a += Math.PI / 14) {
+      const deg = a % (Math.PI / 2);
+      if (deg < 0.24 || deg > Math.PI / 2 - 0.24) continue;      // 출입구
+      bonusRock(cx + Math.cos(a) * r, cy + Math.sin(a) * r);
+    }
+  } else {
+    // ➿ 대각선 줄무늬 — 비스듬한 두 줄. 흐름을 꺾는 지형
+    for (let t = 0.05; t <= 0.95; t += 0.09) {
+      if (t > 0.4 && t < 0.62) continue;                         // 틈
+      bonusRock(fx + fw * t, fy + fh * (0.12 + t * 0.5));
+      bonusRock(fx + fw * (1 - t), fy + fh * (0.4 + t * 0.5));
+    }
+  }
+}
+// 🦉 보너스 천적 — 부엉이·멧돼지가 번갈아 등장 (2026-08-16 지시)
+function spawnBonusPredator() {
+  spawnPredator();
+  const p = predators[predators.length - 1];
+  if (p) { p.icon = bonusPredN % 2 === 0 ? '🦉' : '🐗'; p.warnT = 0.9; }
+  bonusPredN++;
+  showCombo((p && p.icon === '🦉' ? '🦉 부엉이' : '🐗 멧돼지') + ' 등장! (' + predators.length + '마리)');
+  tone(220, 0.25, 'sawtooth', 0.18, 110); haptic([30, 40, 30]);
+  shake = Math.max(shake, 8);
+  flashT = Math.max(flashT, 0.1);
 }
 
 function die(cause) {
@@ -3569,11 +3687,13 @@ function render() {
     ctx.fillStyle = '#FFD700'; ctx.fillText('🎁 보너스 게임!', W / 2, H * 0.32);
     ctx.font = 'bold 22px sans-serif'; ctx.lineWidth = 5;
     const lines = [
-      '⏱ ' + BONUS_TIME + '초 동안 사과 폭식!',
+      '⏱ 시간 무제한 — 먹을 수 있을 때까지!',
       '🐍 먹을수록 꼬리가 쭉쭉 길어져요',
       '🍎 ' + BONUS_GOAL + '개 넘기면 코인 잭팟!',
-      '⚠️ 돌이 계속 생겨요 · 돌·벽에 닿으면 끝!'
+      '🦉 30초마다 부엉이·멧돼지가 와요',
+      '⚠️ 돌·벽·천적에 닿으면 끝!'
     ];
+    if (bonusIdx >= 2) lines.push('🏟️ 이번엔 지형이 달라요!');
     lines.forEach(function (ln, i) {
       const ly = H * 0.44 + i * 40;
       ctx.strokeText(ln, W / 2, ly);
@@ -3583,20 +3703,21 @@ function render() {
   }
   // 🎁 보너스 카운트다운 — 상단 중앙 크게, 마지막 10초는 빨갛게 두근두근
   if (bonusMode && running && !dead && bonusIntroT <= 0 && countdownT <= 0) {
-    const sec = Math.ceil(bonusT);
-    const hot = bonusT < 10;
+    const sec = Math.ceil(bonusNextPredT);
+    const hot = bonusNextPredT < 6;
     const pulse = hot ? 1 + Math.sin(performance.now() / 120) * 0.08 : 1;
+    const nextIcon = bonusPredN % 2 === 0 ? '🦉' : '🐗';
     ctx.save();
     ctx.translate(W / 2, 118);
     ctx.scale(pulse, pulse);
     ctx.font = 'bold 58px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.lineWidth = 8; ctx.strokeStyle = 'rgba(0,0,0,0.65)';
-    ctx.strokeText('⏱ ' + sec, 0, 0);
+    ctx.strokeText(nextIcon + ' ' + sec, 0, 0);
     ctx.fillStyle = hot ? '#FF5252' : '#FFEB3B';
-    ctx.fillText('⏱ ' + sec, 0, 0);
+    ctx.fillText(nextIcon + ' ' + sec, 0, 0);
     ctx.font = 'bold 19px sans-serif';
     ctx.lineWidth = 5;
-    const sub = '🍎 ' + bonusEaten + '개 · 🐍 ' + snakeLen + '칸 · 목표 ' + BONUS_GOAL + '개!';
+    const sub = '🍎 ' + bonusEaten + '개 · 🐍 ' + snakeLen + '칸 · ⏱ ' + Math.floor(bonusT) + '초 생존';
     ctx.strokeText(sub, 0, 42);
     ctx.fillStyle = '#FFFFFF'; ctx.fillText(sub, 0, 42);
     ctx.restore(); ctx.textBaseline = 'alphabetic'; ctx.textAlign = 'left';
@@ -4555,6 +4676,7 @@ bindBtn('shopBtn', openShop);
 bindBtn('goShopBtn', openShop);                       // 🛍️ 게임오버에서도 바로 상점
 bindBtn('goRankBtn', function(){ document.getElementById('rankScreen').style.display = 'flex'; });
 bindBtn('rankCloseBtn', function(){ document.getElementById('rankScreen').style.display = 'none'; });
+bindBtn('brContinueBtn', proceedAfterBonus);   // 🎁 보너스 결과 → 계속
 bindBtn('shopCloseBtn', function(){ document.getElementById('shopScreen').style.display = 'none'; });
 bindBtn('achBtn', function() { renderAchList(); document.getElementById('achScreen').style.display = 'flex'; });
 bindBtn('achCloseBtn', function() { document.getElementById('achScreen').style.display = 'none'; });
@@ -4744,6 +4866,8 @@ function hideEl(id) { const el = document.getElementById(id); if (el) el.style.d
 window.__onBackPressed = function () {
   // 1) ⚖️ 등급 표시 화면은 법정 노출(3초)이라 뒤로가기로 건너뛸 수 없다
   if (isShown('ratingScreen')) return true;
+  // 1.5) 🎁 보너스 결과 화면 → [계속]과 동일 처리
+  if (isShown('bonusResult')) { proceedAfterBonus(); return true; }
   // 2) 📺 부활 제안 중 → 포기와 동일 처리 (카운트다운 타이머까지 정리된다)
   if (isShown('reviveOffer')) {
     if (typeof hideReviveOffer === 'function') hideReviveOffer();
