@@ -670,7 +670,9 @@ function bonusPredInterval() {
   if (bonusT < 180) return 9;                 // 2~3분: 몰려온다
   return 5;                                   // 3분 이후: 사실상 마무리 구간
 }
-const BONUS_GOAL = 20;         // 이만큼 먹으면 코인 잭팟
+const BONUS_GOAL = 45;         // 이만큼 먹으면 코인 잭팟
+                               //   20이던 것을 2026-08-30 상향. 100판 실측상 먹방 1회 평균 102개를 먹어
+                               //   달성률이 96%라 목표로서 의미가 없었다.
 let bonusMode = false;
 let bonusT = 0;                // 경과 시간 — 서바이벌이라 위로 센다 (제한시간 폐지)
 let bonusNextPredT = 0;        // 다음 천적까지 남은 시간
@@ -2572,8 +2574,10 @@ function endBonus(crashed) {
   bonusMode = false; bonusIntroT = 0; bonusDeadT = 0;
   stopBGM();                           // 🎵 수노 곡 정지 — 다음 라운드는 전환 패널에서 신스 곡으로 다시 켜진다
   let earned;
-  if (bonusEaten >= BONUS_GOAL) earned = Math.min(450, 200 + (bonusEaten - BONUS_GOAL) * 5);   // 잭팟 + 초과분 — 초과 5/개·총 450 상한 (무상한 10/개는 한 판 +700까지 새서 코인경제 붕괴)
-  else earned = bonusEaten * 5;                                                  // 위로금
+  // 💰 2026-08-30 코인 인플레 조정: 100판 실측 판당 694코인 유입 -> 최고급 스킨(1,500)을 2판에 사버렸다.
+  //    상한 450 -> 250으로 낮춰 판당 ~390코인. 스킨 하나에 1~4판이 걸려 수집 재미가 산다.
+  if (bonusEaten >= BONUS_GOAL) earned = Math.min(250, 120 + (bonusEaten - BONUS_GOAL) * 4);   // 잭팟 + 초과분
+  else earned = bonusEaten * 3;                                                  // 위로금 (5->3, 상한 조정에 맞춤)
   if (earned > 0) addCoins(earned);
   // 🐍 보너스에서 키운 꼬리의 절반을 다음 라운드로 이월 — 보너스 성과가 본게임으로 이어진다
   // 🐍 이월 상한 16칸 — 실측(diag_bonus 20회): 먹방에서 평균 76개를 먹어 꼬리가 상한 150칸까지 자랐고
