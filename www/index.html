@@ -2044,7 +2044,10 @@ function update(dt) {
   if (bonusResultUp) return;   // 🏅 보너스 결과 감상 중 — 게임 정지 (⚠️ 없으면 결과 화면 뒤에서 본게임이 계속 돌아 돌 위의 뱀이 진짜로 죽는다)
 
   // 🎬 라운드 전환 3단계: ① 패널 상승·덮기 → ② 지도 홀드(경로·비행 감상) → ③ 위로 걷히며 새 라운드 공개
-  setHudHidden(wipeY !== null);   // 🗺️ 지도 패널 중엔 상단 HUD 2줄 숨김 (2026-08-06 지시: 심플하게)
+  // 🗺️ 지도 패널 중엔 상단 HUD 2줄 숨김 (2026-08-06 지시)
+  // 🍜 먹방 중에도 숨긴다 — 먹방은 전용 표시(먹은 수·길이·생존)를 쓰는데 일반 라운드 진행바
+  //    ('만리장성 짓기 0/8')가 겹쳐 떠서 화면이 어지러웠다 (2026-09-01 녹화 영상에서 확인).
+  setHudHidden(wipeY !== null || bonusMode);
   if (wipeY !== null) {
     if (wipeY > 0) {
       wipeY -= dt * H * 2.4;              // ① 빠르게 올라와 덮는다
@@ -2303,7 +2306,12 @@ function update(dt) {
 }
 
 const PARTICLE_CAP = 220;   // 🎆 총량 상한 — 넘치면 오래된 것부터 버린다 (먹방 폭식 프레임 보호)
-function capParticles() { if (particles.length > PARTICLE_CAP) particles.splice(0, particles.length - PARTICLE_CAP); }
+function capParticles() {
+  // 🍜 먹방은 초당 여러 개를 먹어 파티클이 순식간에 쌓인다 → 상한을 절반으로 낮춰 프레임을 지킨다
+  //    (2026-09-01 실기기: "먹방에서 화면이 느려지고 끊긴다")
+  const cap = bonusMode ? Math.floor(PARTICLE_CAP * 0.55) : PARTICLE_CAP;
+  if (particles.length > cap) particles.splice(0, particles.length - cap);
+}
 function spawnParticles(x, y, color, n) {
   for (let i = 0; i < n; i++) particles.push({ x: x, y: y, vx: (Math.random()-0.5)*7, vy: -Math.random()*5-1, life: 26, max: 26, color: color, size: Math.random()*3+2 });
   capParticles();
@@ -3310,15 +3318,21 @@ function drawSnake() {
         ctx.drawImage(glowSprite(skin.glow), p.x - r * 2.1, p.y - r * 2.1, r * 4.2, r * 4.2);
         ctx.restore();
       }
-      // 외곽선
-      ctx.fillStyle = 'rgba(0,0,0,0.30)';
-      ctx.beginPath(); ctx.arc(p.x, p.y, r + 2.2, 0, Math.PI * 2); ctx.fill();
+      // 🚀 긴 꼬리 성능 보호 — 앞쪽 28마디만 외곽선·광택을 다 그리고, 뒤쪽은 본체만 그린다.
+      //    먹방에서 꼬리가 150칸까지 자라면 구슬 하나당 3번씩 총 450회를 그려 프레임이 무너졌다
+      //    (2026-09-01 실기기: "먹방에서 화면이 느려지고 끊긴다").
+      const detail = i < 28;
+      if (detail) {   // 외곽선
+        ctx.fillStyle = 'rgba(0,0,0,0.30)';
+        ctx.beginPath(); ctx.arc(p.x, p.y, r + 2.2, 0, Math.PI * 2); ctx.fill();
+      }
       // 구슬 본체
       ctx.fillStyle = col;
       ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, Math.PI * 2); ctx.fill();
-      // 광택
-      ctx.fillStyle = 'rgba(255,255,255,0.38)';
-      ctx.beginPath(); ctx.arc(p.x - r * 0.3, p.y - r * 0.34, r * 0.42, 0, Math.PI * 2); ctx.fill();
+      if (detail) {   // 광택
+        ctx.fillStyle = 'rgba(255,255,255,0.38)';
+        ctx.beginPath(); ctx.arc(p.x - r * 0.3, p.y - r * 0.34, r * 0.42, 0, Math.PI * 2); ctx.fill();
+      }
     }
   }
 
@@ -3346,6 +3360,17 @@ function drawSnake() {
   const angle = Math.atan2(dirY, dirX);
   // 🍽️ 먹은 직후 머리가 뽕 부푼다 — 씹는 손맛 (2026-08-10 아이들 피드백)
   const headScale = (HEAD_R / 13) * (1 + headPop * 0.35);
+  // 🎯 머리 식별 링 — 몸통 구슬에 밝은 색(은하수 스킨은 흰색)이 섞여 있으면
+  //    어느 쪽이 머리인지 헷갈린다(2026-09-01 실기기 지적). 머리 뒤에 어두운 테두리를 깔아
+  //    항상 머리가 도드라지게 한다. 링 하나만 더 그리므로 비용은 무시할 수준.
+  const HEAD_RING = HEAD_R * 1.32 * (1 + headPop * 0.35);
+  ctx.save();
+  ctx.fillStyle = 'rgba(0,0,0,0.42)';
+  ctx.beginPath(); ctx.arc(headX, headY, HEAD_RING, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = 'rgba(255,255,255,0.85)';
+  ctx.lineWidth = 2.2;
+  ctx.beginPath(); ctx.arc(headX, headY, HEAD_RING, 0, Math.PI * 2); ctx.stroke();
+  ctx.restore();
   drawSnakeHead(ctx, headX, headY, angle, selectedSkin, headScale);
 
   // ⚡ 파워 남은 시간 — 머리 부근에 표시
