@@ -26,6 +26,9 @@ jobs:
 
       - name: Android SDK 설치
         uses: android-actions/setup-android@v3
+        with:
+          # 2026-09-15: 러너 cmdline-tools 16.0에서 구형 'tools' 패키지가 사라져 기본값(tools platform-tools)이 실패한다
+          packages: platform-tools
 
       - name: 의존성 설치
         run: npm install
