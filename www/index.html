@@ -23,15 +23,15 @@
   #timeBar { height: 100%; width: 100%; background: linear-gradient(90deg, #00FF7F, #00FFAA, #00FF7F); transition: width 0.1s linear, background 0.3s; border-radius: 20px 0 0 20px; }
   #scoreRow { margin-top: 8px; display: flex; justify-content: space-between; align-items: flex-start; color: white; font-weight: bold; }
   #scoreBig { font-size: 16px; color: #fff; text-shadow: 2px 2px 0 #000; line-height: 1; }
-  #scoreVal { font-size: 40px; color: #FFEB3B; text-shadow: 2px 2px 0 #000, 0 0 15px rgba(255,235,59,0.6); }
+  #scoreVal { font-size: 28px; color: #FFEB3B; text-shadow: 2px 2px 0 #000, 0 0 15px rgba(255,235,59,0.6); }
   /* 💰 코인 — 점수 못지않게 잘 보이도록 중앙 크게 (2026-08-03) */
   #coinBig { font-size: 16px; color: #FFD700; text-shadow: 2px 2px 0 #000; line-height: 1; text-align: center; }
   #coinBig span { font-size: 32px; font-weight: bold; text-shadow: 2px 2px 0 #000, 0 0 12px rgba(255,215,0,0.6); }
   /* 🏁 라운드 — 코인 옆에 크게 (2026-08-03) */
   #roundBig { font-size: 14px; max-width: 92px; white-space: nowrap; color: #8BC34A; text-shadow: 2px 2px 0 #000; line-height: 1; text-align: center; }
-  #roundBig span { font-size: 32px; font-weight: bold; color: #C5E1A5; text-shadow: 2px 2px 0 #000, 0 0 12px rgba(139,195,74,0.5); }
+  #roundBig span { font-size: 24px; font-weight: bold; color: #C5E1A5; text-shadow: 2px 2px 0 #000, 0 0 12px rgba(139,195,74,0.5); }
   #bestBox { font-size: 14px; background: rgba(0,0,0,0.5); padding: 5px 12px; border-radius: 18px; border: 2px solid #FFD700; color: #FFD700; text-align: right; }
-  #subRow { margin-top: 4px; color: #fff; font-size: 15px; font-weight: bold; text-shadow: 1px 1px 0 #000; opacity: 0.95; }
+  #subRow { margin-top: 2px; color: #fff; font-size: 15px; font-weight: bold; text-shadow: 1px 1px 0 #000; opacity: 0.95; }
   #powerBadge { position: absolute; right: calc(12px + env(safe-area-inset-right)); bottom: calc(86px + env(safe-area-inset-bottom));
     z-index: 11; pointer-events: none; display: flex; flex-direction: column; align-items: center; line-height: 1.15;
     background: rgba(0,0,0,0.45); border: 2px solid #FFD700; border-radius: 16px; padding: 7px 12px;
@@ -42,7 +42,7 @@
   @keyframes powPulse { from { transform: scale(1); } to { transform: scale(1.12); } }
   #subRow b { color: #8BC34A; }
   /* 점수 획득 팝업 */
-  #scorePop { position: absolute; top: 96px; right: 16px; color: #FFEB3B; font-size: 30px; font-weight: bold;
+  #scorePop { position: absolute; top: 96px; right: 16px; color: #FFEB3B; font-size: 16px; font-weight: bold;
     text-shadow: 2px 2px 0 #000, 0 0 14px rgba(255,235,59,0.7); opacity: 0; pointer-events: none; z-index: 11;
     transition: all 0.4s; }
   #scorePop.pop { animation: scorePopAnim 0.42s ease-out; }
@@ -77,7 +77,7 @@
   #btnDown { grid-column: 2; grid-row: 2; }
   #btnRight { grid-column: 3; grid-row: 2; }
 
-  #comboMsg { position: absolute; top: 150px; left: 50%; transform: translateX(-50%) scale(0.5); font-size: 30px; color: #FFEB3B; font-weight: bold; text-shadow: 2px 2px 0 #2E7D32, 0 0 15px #FFEB3B; pointer-events: none; opacity: 0; transition: all 0.3s; z-index: 12; white-space: nowrap; text-align: center; }
+  #comboMsg { position:absolute; top:calc(94px + env(safe-area-inset-top)); right:8px; width:60%; height:20px; line-height:20px; font-size:12px; color:#fff3ba; pointer-events:none; opacity:0; z-index:12; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; text-align:right; }
 
   .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 30, 10, 0.9); display: flex; flex-direction: column; justify-content: center; justify-content: safe center; align-items: center; z-index: 30; text-align: center; padding: calc(20px + env(safe-area-inset-top)) 20px calc(28px + env(safe-area-inset-bottom)); overflow-y: auto; -webkit-overflow-scrolling: touch; }
   .overlay h1 { font-size: 40px; color: #8BC34A; text-shadow: 3px 3px 0 #1B5E20, 0 0 25px #8BC34A; margin-bottom: 5px; letter-spacing: 1px; }
@@ -251,6 +251,27 @@
   .achRow .aName { flex: 1; font-weight: bold; font-size: 14px; }
   .achRow .aName small { display: block; font-weight: normal; opacity: 0.8; font-size: 12px; }
   .achRow .aRew { color: #FFD700; font-size: 13px; font-weight: bold; }
+
+  /* GPT 개선판: 여행 시작과 영구 여권 */
+  #startScreen { background:linear-gradient(160deg,#102b3a,#163e32); gap:8px; justify-content:flex-start; padding-top:calc(32px + env(safe-area-inset-top)); }
+  #startScreen h1 { font-size:clamp(21px,6vw,30px); }
+  .tripCard { width:100%; max-width:360px; padding:18px; border-radius:20px; background:#f7f5e9; color:#173d36; box-shadow:0 8px 22px #0003; }
+  .tripCard strong { display:block; font-size:22px; margin:5px 0; }
+  .tripCard p { font-size:14px; line-height:1.6; margin:4px 0; }
+  .tripActions { display:flex; flex-wrap:wrap; justify-content:center; gap:4px; }
+  #startScreen .btn { width:100%; max-width:360px; margin:0; letter-spacing:0; }
+  #startScreen details { width:100%; max-width:360px; color:#fff; }
+  #startScreen summary { cursor:pointer; padding:12px; border:1px solid #ffffff40; border-radius:12px; }
+  #passportScreen,#travelComplete { background:#102e2b; z-index:46; }
+  #passportList { width:100%; max-width:410px; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin:16px 0; }
+  .stamp { background:#f6f2dc; color:#153e36; border:2px dashed #b59b62; padding:12px 8px; border-radius:12px; min-height:100px; }
+  .stamp b,.stamp small { display:block; margin:5px 0; }
+  .tripNote { font-size:12px; line-height:1.6; color:#d0ded8; max-width:360px; }
+  #journeySaveWarning { position:absolute; bottom:8px; left:5%; width:90%; z-index:65; background:#6a340c; color:#fff; border-radius:10px; padding:10px; font-size:13px; }
+  #coachHint { position:absolute; bottom:22px; left:8%; width:84%; z-index:14; border-radius:14px; padding:12px; color:#fff; background:#102e2be8; text-align:center; pointer-events:none; font-size:15px; }
+  #deathReason { color:#ffe7aa; font-size:17px; margin:8px; }
+  .shopBtn.trial { background:#6d4fc2; color:#fff; }
+
 </style>
 </head>
 <body>
@@ -283,29 +304,35 @@
   <!-- 🕹️ 방향패드는 2026-08-06 대표님 지시로 삭제 — 조이스틱 단일 조작 -->
 
   <div id="startScreen" class="overlay">
-    <h1 style="font-size:clamp(22px,7.4vw,34px);white-space:nowrap;letter-spacing:0">🐍 꼬마뱀 세계여행 🌍</h1>
-    <h2>100개 나라 먹거리 대모험!</h2>
-
+    <h1>🐍 꼬마뱀 세계여행 🌍</h1>
+    <h2>먹고, 피하고, 내 여권을 채워요</h2>
+    <div class="tripCard"><span id="journeyProgress">나의 여행 여권</span><strong id="journeyNext">첫 여행을 떠나요</strong><p id="journeyGoal">음식을 모아 랜드마크를 완성하세요.</p></div>
+    <button id="startBtn" class="btn">첫 여행 시작 🐍</button>
+    <p class="tripNote">화면을 누른 채 원하는 방향으로 움직여요.<br>PC에서는 방향키로 움직일 수 있어요.</p>
+    <button id="depthViewBtn" class="btnAlt" aria-pressed="true">첫 나라 입체 표현 ON · 눌러 비교</button>
+    <button id="depthTryBtn" class="btnAlt">🐍 첫 나라 입체 시안 체험</button>
+    <div class="tripActions"><button id="passportBtn" class="btnAlt">📖 여행 여권</button><button id="shopBtn" class="btnAlt">🛍️ 상점</button><button id="howToBtn" class="btnAlt">❓ 방법</button></div>
     <div id="coinBoxStart">💰 <span id="coinValStart">0</span></div>
-
-    <button id="shopBtn" class="btnAlt" style="background:linear-gradient(135deg,#7E57C2,#4527A0);font-size:18px;padding:10px 28px">🛍️ 상점</button>
-    <div style="height: 6px"></div>
-
     <div id="streakBox">🔥 <span id="streakDays">0</span>일 연속 출석 중!</div>
-
-    <!-- 🎯 오늘의 미션 (앱인토스 리텐션 골격 — JS renderMissions()가 채움) -->
-    <div id="missionBox"></div>
-
-    <!-- 🛒 시작 부스터 = 반복 소비형 코인 싱크. 코인이 무한 축적되면 광고 경로가 다시 막힌다 -->
-    <div class="charLabel">🛒 시작 부스터 (이번 판만) 🛒</div>
-    <div id="boosterShop"></div>
-
-    <button id="startBtn" class="btn">시작! 🐍</button>
-    <div>
-      <button id="achBtn" class="btnAlt">🏅 업적</button>
-      <button id="howToBtn" class="btnAlt">❓ 방법</button>
-    </div>
+    <details><summary>오늘의 미션 · 준비물</summary><div id="missionBox"></div><div class="charLabel">이번 판 부스터</div><div id="boosterShop"></div><button id="achBtn" class="btnAlt">🏅 업적</button></details>
   </div>
+  <div id="passportScreen" class="overlay" style="display:none">
+    <h1>📖 나의 여행 여권</h1><h2 id="passportSummary"></h2>
+    <p class="tripNote">완성한 나라의 도장과 대표 음식이 함께 남아요.</p>
+    <div id="passportList"></div><p class="tripNote">이 기기에 저장돼요. 다른 기기에는 자동으로 이어지지 않아요.</p>
+    <button id="passportCloseBtn" class="btn">닫기</button>
+  </div>
+  <div id="travelComplete" class="overlay" style="display:none">
+    <h1>여행 도장 획득!</h1><div class="tripCard"><strong id="travelCountry"></strong><p id="travelStamp"></p><p id="travelFood"></p></div>
+    <button id="travelNextBtn" class="btn">다음 나라로 →</button>
+    <button id="travelBonusBtn" class="btnAlt" style="display:none">🍜 먹방 들렀다 가기</button>
+    <button id="travelExtraBtn" class="btnAlt">🎬 광고 보고 코인 +20</button>
+    <p id="travelAdStatus" class="tripNote" aria-live="polite"></p>
+    <button id="travelHomeBtn" class="btnAlt">오늘 여행 마치기</button>
+    <p class="tripNote">여행 도장은 이미 받았어요. 다음에 이어서 떠날 수 있어요.</p>
+  </div>
+  <div id="coachHint" style="display:none">👆 누른 채 방향을 바꿔 음식을 먹어보세요.</div>
+  <div id="journeySaveWarning" role="status" style="display:none">여행 기록을 저장하지 못했어요. 저장 공간과 브라우저 설정을 확인해 주세요.</div>
 
   <!-- ⚖️ 게임물 등급 표시 (게임산업법 제33조 — 초기화면 3초 이상 노출 의무)
        ※ 표시 항목은 법정 3종: 상호 / 등급 / 게임물내용정보
@@ -378,21 +405,21 @@
       </div>
     </div>
 
-    <div class="rank" id="rankText"></div>
+    <div id="deathReason" role="status"></div><div id="personalChallenge" class="info" style="font-size:15px"></div><div class="rank" id="rankText"></div>
     <!-- 🏆 명예의 전당 (2026-08-06 지시: 시작화면 → 게임오버로 이동) -->
-    <div class="charLabel">🏆 명예의 전당 🏆</div>
+    <div class="charLabel">🏆 이 기기의 여행 기록</div>
     <div id="goTopRankings"></div>
     <div id="goAchMsg"></div>
     <div id="goAdFailMsg" style="display:none"></div>
 
-    <div id="top10Banner">🏆 TOP 10 진입! 이름을 남겨요!</div>
+    <div id="top10Banner">🏆 이 기기의 TOP 10! 기록을 남겨요!</div>
     <div id="nameInputSection">
       <input type="text" id="nameInput" maxlength="8" placeholder="이름 8자 이내">
       <button id="saveNameBtn" class="btnAlt">기록 저장 💾</button>
     </div>
     <div id="myRankMsg"></div>
 
-    <button id="restartBtn" class="btn">다시 도전! 🔄</button>
+    <button id="restartBtn" class="btn">🔄 이 나라 다시 도전 · 무료</button><button id="resultHomeBtn" class="btnAlt">여행 홈으로</button>
     <div class="goActions">
       <button id="goShopBtn" class="btnAlt goAct">🛍️ 상점</button>
       <button id="reviveBtn" class="btnAlt goAct" style="display:none;background:linear-gradient(135deg,#FF6FA5,#FF1493)">💖 코인 부활</button>
@@ -404,7 +431,7 @@
 
   <!-- 🏆 랭킹 (게임오버에서 분리 — 화면이 붐비지 않게) -->
   <div id="rankScreen" class="overlay" style="display:none">
-    <h1>🏆 랭킹 TOP 10</h1>
+    <h1>🏆 이 기기의 TOP 10</h1>
     <div id="goRankList"></div>
     <button id="rankCloseBtn" class="btn">닫기 ✖</button>
   </div>
@@ -418,8 +445,10 @@
       부활 직후 <b>2초 무적</b>으로 안전하게 시작합니다.<br>
       <span style="font-size:13px;opacity:0.8">※ 한 판에 2번까지 쓸 수 있어요</span>
     </div>
+    <div class="info" style="font-size:13px">이어하기: 점수·먹은 음식 유지 / 다시 도전: 이번 나라 진행 초기화</div><button id="coinOfferBtn" class="btnAlt">🪙 코인으로 이어하기</button>
+    <button id="quickRetryBtn" class="btn">🔄 이 나라 다시 도전 · 무료</button>
     <button id="reviveAdOfferBtn" class="btn" style="background:linear-gradient(135deg,#7B68EE,#4B0082)">🎬 광고 보고 이어하기</button>
-    <button id="reviveGiveUpBtn" class="btnAlt" style="background:linear-gradient(135deg,#9E9E9E,#616161)">포기하기</button>
+    <button id="reviveGiveUpBtn" class="btnAlt" style="background:linear-gradient(135deg,#9E9E9E,#616161)">이번 기록 보기</button>
   </div>
 
   <!-- 📖 튜토리얼 (첫 1회) -->
@@ -428,13 +457,13 @@
     <div class="info" style="font-size:15px; line-height:1.95">
       🎯 <b>목표: 100개 나라를 여행하며 랜드마크를 세우자!</b><br>
       ① 📱 <b>화면을 원하는 방향으로 쓱 밀면</b> 뱀이 그쪽으로 가요<br>
-      　 (화면 아래 <b>🕹️ 방향 버튼</b>을 눌러도 돼요 · PC는 방향키)<br>
+      　 (PC는 방향키로 움직여요)<br>
       ② 🍜 <b>그 나라 음식</b>을 목표 개수만큼 먹으면 <b>랜드마크 완성!</b><br>
       ③ 🚪 완성된 랜드마크 <b>입구로 들어가면 다음 나라</b>로 떠나요<br>
       ④ ⏱️ 시간이 다 되면 끝! 음식을 먹으면 시간이 회복돼요<br>
       ⑤ ⚡ <b>화면을 빠르게 두 번 탭</b>하면 파워뱀! (판당 3개 무료)<br>
       　 파워뱀은 돌을 부수고 천적을 쫓아내요 · 소진 시 코인 구매<br>
-      ⑥ 🍜 <b>3개 나라마다 먹방 타임!</b> 음식이 쏟아져요<br>
+      ⑥ 🍜 <b>3개 나라마다 선택하는 먹방 타임!</b> 음식이 쏟아져요<br>
       　 먹을수록 꼬리가 쭉쭉 길어지고, 코인도 왕창 벌어요<br>
       ⑦ ⚠️ 벽·🪨돌·🦅천적에 부딪히면 위험!<br>
       　 💥 죽어도 <b>광고 보고 2번까지 이어하기</b> 가능 (2초 무적)
@@ -527,7 +556,7 @@ function readSafeInsets() {
 let safeIn = { top: 0, bottom: 0, left: 0, right: 0 };
 function computeField() {
   safeIn = readSafeInsets();
-  const top = 116 + safeIn.top, bottom = 26 + safeIn.bottom, side = 10;
+  const top = 120 + safeIn.top, bottom = 12 + safeIn.bottom, side = 6;
   WORLD_W = W; WORLD_H = H;             // 월드 = 화면
   field.x = side + safeIn.left; field.y = top;
   field.w = W - side * 2 - safeIn.left - safeIn.right; field.h = H - top - bottom;
@@ -584,9 +613,9 @@ try { selectedSkin = migrateSkinId(localStorage.getItem('snake_skin') || 'defaul
 //=========================================
 // 게임 상태
 //=========================================
-const SEG_SPACING = 10;   // 몸통 마디 간격(px) - 작게(모바일 공간 확보)
-const HEAD_R = 10;        // 머리 반지름(충돌)
-const BODY_R = 8;         // 몸통 반지름
+const SEG_SPACING = 8;   // 몸통 마디 간격(px) - 작게(모바일 공간 확보)
+const HEAD_R = 8;        // 머리 반지름(충돌)
+const BODY_R = 6;         // 몸통 반지름
 const START_LEN = 4;
 const BONUS_CARRY_CAP = 16;   // 🍜 먹방에서 다음 라운드로 이월되는 꼬리 상한(칸)
 
@@ -642,23 +671,31 @@ const AD_REVIVE_MAX = 2;     // 📺 광고 부활 판당 한도
 const BOOSTERS = {
   time:  { icon: '⏱️', name: '시작시간<br>+3초',  cost: 60,  bonus: 3 },
   power: { icon: '⚡', name: '파워 달고<br>시작', cost: 80 },
+  shield: { icon:'🛡️', name:'충돌 1회 방어', cost:120 },
+  combo: { icon:'🔥', name:'콤보 여유 4초', cost:90 },
   apple: { icon: '🍜', name: '음식 2배<br>등장',  cost: 100, mult: 2 }
 };
-let boostPick = { time: false, power: false, apple: false };  // 상점에서 고른 것(다음 판에 적용)
-let boostRun  = { time: false, power: false, apple: false };  // 이번 판에 적용 중인 것
-let boostPaid = { time: 0, power: 0, apple: 0 };              // 실지불 코인(📺광고로 얻으면 0 → 취소해도 환불 없음)
-let boostBuys = { time: 0, power: 0, apple: 0 };              // 💰 누적 구매 횟수 — 살수록 비싸져(+50%씩, 최대 5배) 코인이 쌓여도 📺광고 경로가 계속 매력 있게
+let boostPick = { time: false, power: false, apple: false, shield:false, combo:false };  // 상점에서 고른 것(다음 판에 적용)
+let boostRun  = { time: false, power: false, apple: false, shield:false, combo:false };  // 이번 판에 적용 중인 것
+let boostPaid = { time: 0, power: 0, apple: 0, shield:0, combo:0 };              // 실지불 코인(📺광고로 얻으면 0 → 취소해도 환불 없음)
+let boostBuys = { time: 0, power: 0, apple: 0, shield:0, combo:0 };              // 💰 누적 구매 횟수 — 살수록 비싸져(+50%씩, 최대 5배) 코인이 쌓여도 📺광고 경로가 계속 매력 있게
 try { const _bb = JSON.parse(localStorage.getItem('snake_boostbuys') || '{}');
   for (const k in boostBuys) if (typeof _bb[k] === 'number') boostBuys[k] = _bb[k]; } catch (e) {}
 function saveBoostBuys() { try { localStorage.setItem('snake_boostbuys', JSON.stringify(boostBuys)); } catch (e) {} }
-function boosterCost(key) { return Math.round(BOOSTERS[key].cost * Math.min(5, 1 + boostBuys[key] * 0.5) / 10) * 10; }
+function boosterCost(key) { return BOOSTERS[key].cost; }
+try{
+ const prep=JSON.parse(localStorage.getItem('snake_prep_v1')||'{}');
+ for(const key of Object.keys(BOOSTERS))if(prep[key] && prep[key].selected===true){boostPick[key]=true;boostPaid[key]=Math.max(0,Math.min(BOOSTERS[key].cost,Number(prep[key].paid)||0));}
+}catch(e){}
+function savePreparation(){try{const prep={};for(const key of Object.keys(BOOSTERS))prep[key]={selected:!!boostPick[key],paid:boostPaid[key]||0};localStorage.setItem('snake_prep_v1',JSON.stringify(prep));}catch(e){}}
+
 let graceT = 0;          // 부활/시작 직후 무적 시간
 const INVINCIBLE_SEC = 2.0;   // 🛡️ 부활 후 무적 지속(초) — 사양 확정값
 function isInvincible() { return graceT > 0; }   // 지시서의 isInvincible 상태 (setTimeout 대신 프레임 감산 → 일시정지·탭전환에도 안 어긋남)
 let countdownT = 0;      // 🔢 시작 카운트다운
 // 🎁 보너스 게임 (3라운드 클리어마다) — 60초 사과 폭식 스테이지
 const BONUS_PRED_EVERY = 30;   // 🦉 첫 천적까지의 간격(초)
-const BONUS_PRED_MAX = 12;     // 🦉 동시 등장 상한 — 그 이상은 화면·성능만 해친다
+const BONUS_PRED_MAX = 5;      // 🦉 동시 등장 상한 (2026-09-13 서연: 12→5, 다수 천적이 머리로 수렴해 뭉치는 문제 완화)
 const BONUS_REFILL_UNTIL = 120;  // 🍽️ 이 시간(초)까지만 음식이 다시 채워진다. 이후엔 남은 것뿐 —
                                  //     다 먹으면 판이 끝난다. 시간이 아니라 '먹을 게 떨어져서' 끝나는 마무리.
 let bonusLastCallShown = false;  // 🔔 '음식이 떨어져 갑니다' 안내를 한 번만
@@ -702,6 +739,99 @@ let flashT = 0;          // 화면 번쩍
 let discoT = 0, discoBeatT = 0;
 const DISCO_COLORS = ['#FF1493', '#FFD700', '#00E5FF', '#7C4DFF', '#8BC34A', '#FF7043'];
 const PRAISE = { 2:'좋아! 👍', 3:'멋져! 🌟', 4:'대단해! 💯', 5:'끝내주는데! 🔥🔥' };
+// 여행 기록·진단: 게임과 같은 저장소, 개인정보 없이 최근 200개 사건만 보관.
+const GAME_VERSION = 'seoyeon-2026.09.13.1';
+let runStartRound = 1, runActive = false, firstFoodSeen = false;
+let scoreCoinsSettled = 0, resultRecorded = false, deathCause = '';
+let travelPending = null, travelExtraClaimed = false, roundRecorded = false;
+let journeySaveFailed = false;
+let journey = { version:1, next:1, stamps:{} };
+try {
+  const saved = JSON.parse(localStorage.getItem('snake_journey_v1') || 'null');
+  if (saved && saved.version === 1 && saved.stamps && typeof saved.stamps === 'object' && !Array.isArray(saved.stamps)) {
+    const stamps = {};
+    for (const k of Object.keys(saved.stamps)) {
+      const x = saved.stamps[k];
+      if (!/^[1-9][0-9]?$|^100$/.test(k) || !x || typeof x !== 'object') continue;
+      stamps[k] = { firstAt: typeof x.firstAt === 'string' ? x.firstAt.slice(0,10) : '', bestScore: Math.max(0,Number(x.bestScore)||0), visits: Math.max(1,Math.min(100000,Number(x.visits)||1)) };
+    }
+    journey = { version:1, next:1, stamps:stamps };
+    while (journey.next < 100 && stamps[journey.next]) journey.next++;
+  }
+} catch(e) { journeySaveFailed = true; }
+let eventHistory = [];
+try { const e = JSON.parse(localStorage.getItem('snake_events_v1') || '[]'); if (Array.isArray(e)) eventHistory = e.slice(-200); } catch(e) {}
+function trackGame(name, props) {
+  const event = { name:name, at:Date.now(), version:GAME_VERSION, props:props || {} };
+  eventHistory.push(event); eventHistory = eventHistory.slice(-200);
+  try { localStorage.setItem('snake_events_v1', JSON.stringify(eventHistory)); } catch(e) {}
+  try {
+    if (typeof window.__snakeAnalytics === 'function') window.__snakeAnalytics(event);
+    else { const q = window.__snakeEventQueue || (window.__snakeEventQueue = []); q.push(event); if(q.length>100)q.shift(); }
+  } catch(e) {}
+}
+window.__snakeDiagnostics = { version:GAME_VERSION, events:()=>JSON.parse(JSON.stringify(eventHistory)) };
+function saveJourney() {
+  try { localStorage.setItem('snake_journey_v1', JSON.stringify(journey)); journeySaveFailed=false; }
+  catch(e) { journeySaveFailed=true; }
+  const warning=document.getElementById('journeySaveWarning');
+  if(warning)warning.style.display=journeySaveFailed?'block':'none';
+  return !journeySaveFailed;
+}
+function recordCountry(R) {
+  if (roundRecorded) return;
+  roundRecorded=true;
+  const old=journey.stamps[R];
+  journey.stamps[R]={firstAt:old?old.firstAt:todayStr(),bestScore:Math.max(old?old.bestScore:0,score),visits:(old?old.visits:0)+1};
+  while(journey.next<100 && journey.stamps[journey.next])journey.next++;
+  saveJourney(); refreshJourney();
+  trackGame('country_complete',{country:R,first:!old,score:score,start_country:runStartRound});
+}
+function refreshJourney() {
+  const n=Object.keys(journey.stamps).length, next=n===100?1:journey.next;
+  document.getElementById('journeyProgress').textContent='여행 도장 '+n+' / 100 · 음식 '+n+'종';
+  document.getElementById('journeyNext').textContent=(n===100?'다시 떠나는 ':'다음 여행 · ')+countryNameOf(next-1);
+  document.getElementById('journeyGoal').textContent=COUNTRIES[next-1][1]+'을 완성하고 '+foodNameOf(next-1)+' 도감을 채워요.';
+  document.getElementById('startBtn').textContent=n===0?'첫 여행 시작 🐍':countryNameOf(next-1)+'부터 이어하기 →';
+  const list=document.getElementById('passportList');
+  document.getElementById('passportSummary').textContent=n+'개 나라 · '+n+'가지 대표 음식';
+  list.innerHTML=n?Object.keys(journey.stamps).sort((a,b)=>Number(a)-Number(b)).map(k=>{
+    const c=COUNTRIES[Number(k)-1];return '<div class="stamp"><b>'+c[2]+' '+countryNameOf(Number(k)-1)+'</b><small>'+c[1]+'</small><span>'+c[4]+' '+foodNameOf(Number(k)-1)+'</span></div>';
+  }).join(''):'<div class="tripNote">첫 나라를 완성하면 여기에 도장이 생겨요.</div>';
+}
+function beginJourney() { startGame(Object.keys(journey.stamps).length===100?1:journey.next); }
+function showTravelArrival(nextR, carry) {
+  paused=true; travelPending={next:nextR,carry:carry,country:round}; travelExtraClaimed=false;
+  document.getElementById('travelCountry').textContent=curShop().icon+' '+countryNameOf(round-1);
+  document.getElementById('travelStamp').textContent=curShop().name+' 완성 · 최고 '+stageComboBest+'연속 · 여권 저장';
+  document.getElementById('travelFood').textContent=curFood()+' '+foodNameOf(round-1)+' 도감 획득';
+  document.getElementById('travelBonusBtn').style.display=round%3===0?'inline-block':'none';
+  document.getElementById('travelExtraBtn').disabled=false;
+  document.getElementById('travelAdStatus').textContent='광고는 선택이에요. 바로 다음 나라로 가도 돼요.';
+  document.getElementById('travelComplete').style.display='flex'; stopBGM();
+  trackGame('country_result',{country:round});
+}
+function proceedTravel(withBonus) {
+  if(!travelPending || adShowing)return;
+  const p=travelPending; travelPending=null; paused=false;
+  document.getElementById('travelComplete').style.display='none';
+  if(withBonus && p.country%3===0){startBonus(p.next,p.carry);return;}
+  wipeNextR=p.next;wipeCarry=p.carry;wipeY=H;wipeSwitched=false;wipeHoldMax=0.6;wipeHold=wipeHoldMax;
+}
+function finishTravelToday() {
+  if(adShowing)return;
+  travelPending=null;document.getElementById('travelComplete').style.display='none';quitToStart();refreshJourney();
+}
+function claimTravelExtra() {
+  if(!travelPending || travelExtraClaimed || adShowing)return;
+  const p=travelPending;
+  showRewardAd(function(){
+    if(travelPending!==p || travelExtraClaimed)return;
+    travelExtraClaimed=true;addCoins(20);document.getElementById('travelExtraBtn').disabled=true;
+    document.getElementById('travelAdStatus').textContent='추가 코인 +20을 받았어요!';
+  },function(){document.getElementById('travelAdStatus').textContent='광고를 완료하지 못했어요. 추가 보상 없이 바로 계속할 수 있어요.';},'country_bonus');
+}
+
 // 💰 코인 + 🛒 스킨 해제 + 🏅 업적/통계
 let coins = 0;
 try { coins = parseInt(localStorage.getItem('snake_coins') || '0') || 0; } catch(e) {}
@@ -1256,30 +1386,46 @@ function getPointAtDist(d) {
 //=========================================
 function roundGoalLength(R) { return Math.min(60, 20 + (R - 1) * 2); } // 목표 길이 (1R=20칸 시작)
 // ⏱️ 시작 시간: R1≈9.5초 → R100=6.5초 바닥 (2026-08-03 100R 커브 개편)
-function roundStartTime(R) { return Math.max(6.5, 9.5 - R * 0.03); }
+function roundStartTime(R) { return R <= 3 ? 12 - (R - 1) : Math.max(9, 12 - R * 0.025); }
 // 🐝 벌: R8 1마리 → R20 2마리 → R40 3마리 상한
 function roundBeeCount(R) { return R < 8 ? 0 : (R < 20 ? 1 : (R < 40 ? 2 : 3)); }
 
 // 🐍 속도 규칙 (2026-08-06): 시작은 느긋하게, 라운드마다 아주 조금씩만 빨라진다.
 //    라운드 '안'에서는 절대 변하지 않는다 — 예전 '속도가 들쭉날쭉하다'던 문제의 재발 방지.
-const SPEED_START = 130;   // R1 체감 속도 — 2026-08-17 대표님 지시로 전체 1.2배 (108→130)
-const SPEED_MAX   = 180;   // R25 이후 상한 (150→180, 동일 1.2배)
+const SPEED_START = 100;   // R1 체감 속도 — 2026-08-17 대표님 지시로 전체 1.2배 (108→130)
+const SPEED_MAX   = 140;   // R25 이후 상한 (150→180, 동일 1.2배)
 const SPEED_BASE  = SPEED_START;
-function computeSpeed() { return Math.min(SPEED_MAX, SPEED_START + (round - 1) * 2.0); }   // 증가폭도 1.2배(1.7→2.0) — 커브 모양 유지
+function computeSpeed() { return Math.min(SPEED_MAX, SPEED_START + (round - 1) * 1.4); }   // 증가폭도 1.2배(1.7→2.0) — 커브 모양 유지
 // 🎉 축제 라운드(10의 배수): 황금사과 2배·돌 30% 감소 — 10라운드마다 쉬어가는 리듬
 let festivalRound = false;
 // 📈 2026-08-03 100R 커브: 시간 경제는 R60에 상한 도달 후 고정(인내 구간), 이후는 실수 누적과의 싸움
 function applyRoundDifficulty(R) {
   rdSpeed = computeSpeed();                        // 라운드별 고정 속도
   // 초당 시간 감소: R1~5 완화 계수(0.82→1.0)로 초반 진입장벽↓ (2026-08-03 봇 10판 실측: R1 아사 다발 → 완화)
-  rdDrain = Math.min(1.6, (0.75 + R * 0.014) * Math.min(1, 0.82 + (R - 1) * 0.045));
+  rdDrain = Math.min(1.15, (0.64 + R * 0.009) * Math.min(1, 0.82 + (R - 1) * 0.045));
   rdRefill = Math.max(1.8, 3.2 - R * 0.023);       // 사과당 회복: R1=3.2초 → R60=1.8초 바닥
-  rdRotBase = Math.max(6, 15 - R * 0.15);          // 썩는 시간: 15초 → R60에 6초 바닥
+  rdRotBase = Math.max(9, 18 - R * 0.12);          // 썩는 시간: 15초 → R60에 6초 바닥
   rdBeeSpeed = Math.min(120, 55 + R * 1.2);        // 벌 속도: 뱀(140)보다 항상 느리게
 }
 
+let stageComboBest=0, runComboBest=0, runComboTarget=3, stageComboRewarded=false;
+const CHAPTER_INTROS={1:'🌟 첫 여행 · 황금 음식을 먹고 쑥쑥 성장!',2:'🪨 골목 여행 · 돌을 피해 음식을 모아요',3:'🔥 연속 먹기 · 3연속에 도전! 천적도 조심해요'};
+function retryCountry(){
+  if(adShowing || !dead)return;
+  const retryAt=round;
+  hideReviveOffer();
+  if(!resultRecorded)gameOver();
+  trackGame('free_retry',{country:retryAt,combo:runComboBest});
+  startGame(retryAt);
+}
+function updatePersonalChallenge(){
+ const el=document.getElementById('personalChallenge');
+ if(el)el.textContent='이번 판 최고 '+runComboBest+'연속 · 목표 '+runComboTarget+'연속'+(runComboBest>=runComboTarget?' 달성! 🎉':' — 다음 판에 도전해요');
+}
 function startRound(R, startLen) {
-  round = R;
+  stageComboBest=0;stageComboRewarded=false;
+  round = R; roundRecorded = false;
+  if(runActive)trackGame("country_start",{country:R,start_country:runStartRound});
   festivalRound = (R % 10 === 0);   // 🎉 10의 배수 = 축제 라운드 (황금사과 2배·돌 30%↓)
   applyRoundDifficulty(R);
   roundGoalLen = roundGoalLength(R);
@@ -1300,11 +1446,11 @@ function startRound(R, startLen) {
   timeLeft = roundStartTime(R);
   if (R === 2) bumpMission('round', 1);   // 🎯 오늘의 미션: 2라운드 도달
   // 🎁 1라운드 시작 시 출석 보너스 적용
-  if (R === 1 && pendingBonus > 0) {
+  if (R === runStartRound && pendingBonus > 0) {
     timeLeft = Math.min(maxTime, timeLeft + pendingBonus);
   }
   // 🛒 1라운드 시작 시 부스터(시작시간) 적용 — maxTime 상한도 같이 올려야 실제로 늘어난다
-  if (R === 1 && boostRun.time) {
+  if (R === runStartRound && boostRun.time) {
     maxTime += BOOSTERS.time.bonus;
     timeLeft = Math.min(maxTime, timeLeft + BOOSTERS.time.bonus);
   }
@@ -1325,10 +1471,10 @@ function startRound(R, startLen) {
   flyingStones = []; gateFly = false; gateFlyT = 0;
   gateSite = { x: field.x + field.w / 2, y: field.y + field.h * 0.26 };
   // 🎁 7일 연속 출석 보너스: 1라운드에 파워로 시작
-  if (R === 1 && pendingBonus > 0 && dailyStreak % 7 === 0) powerT = POWER_DUR;
-  if (R === 1) pendingBonus = 0;   // 출석 보상은 '그날 첫 판' 1회성 — 소비하면 즉시 비운다
-  if (R === 1 && boostRun.power) powerT = POWER_DUR;   // 🛒 부스터: 파워 달고 시작
-  if (R === 1) powerStock = POWER_STOCK_FREE;          // ⚡ 판마다 기본 3개 지급 (2026-08-06 개편)
+  if (R === runStartRound && pendingBonus > 0 && dailyStreak % 7 === 0) powerT = POWER_DUR;
+  if (R === runStartRound) pendingBonus = 0;   // 출석 보상은 '그날 첫 판' 1회성 — 소비하면 즉시 비운다
+  if (R === runStartRound && boostRun.power) powerT = POWER_DUR;   // 🛒 부스터: 파워 달고 시작
+  if (R === runStartRound) powerStock = POWER_STOCK_FREE;          // ⚡ 판마다 기본 3개 지급 (2026-08-06 개편)
   snapCam();   // 🎥 카메라를 뱀 중앙으로
   if (R > ROCK_FROM_ROUND) ensureRocks();       // 🪨 2R부터 돌 장애물, 라운드마다 증가
   // 🐝 벌 폐지 (2026-08-03 대표님 지시: 벌은 뱀의 천적이 아니다 — 위협은 천적으로 일원화)
@@ -1344,11 +1490,17 @@ function startRound(R, startLen) {
     if (bees.length > 1) bees.length = 1;
   }
   ensureApples();
+  if(R===1 && apples.length){
+    // 첫 황금 음식은 시작 방향 앞에 놓아 성장 효과를 일찍 경험한다.
+    apples[0]={x:Math.min(field.x+field.w-30,headX+75),y:headY,type:'golden',t:0,rotTime:20};
+  }
+  const hint=document.getElementById('coachHint');
+  if(hint){hint.textContent=CHAPTER_INTROS[R] || '🎯 이번 판 '+runComboTarget+'연속 먹기에 도전!';hint.style.display=R<=3?'block':'none';}
   updateHUD();
   document.getElementById('timeBar').style.width = '100%';
 }
 
-function reset() {
+function reset(startAt) {
   computeField();
   running = false; dead = false; paused = false;
   wipeY = null; wipeSwitched = false;   // 🎬 전환 커튼 중단(새 게임)
@@ -1362,7 +1514,7 @@ function reset() {
   bestBeatenThisGame = false;   // 🏆 새 판 — 최고점 돌파 알림 재장전
   tongueT = 0; tongueOut = 0; shake = 0;
   placedGates = [];   // 🏯 정착한 광화문 초기화(새 게임)
-  startRound(1);
+  startRound(startAt || 1);
 }
 
 function randInField(margin) {
@@ -1386,9 +1538,9 @@ function farFromSnake(x, y, minD) {
 function spawnApple() {
   let pos, tries = 0;
   // 🏛️ 짓는 건물 자리(gateSite) 위에는 음식을 놓지 않는다 (2026-08-07 지시: 건물에 가려 안 보임)
-  const nearGate = (p) => gateSite && Math.hypot(p.x - gateSite.x, p.y - gateSite.y) < 110;
+  const nearGate = (p) => gateSite && Math.hypot(p.x - gateSite.x, p.y - gateSite.y) < 75;
   do { pos = randInField(24); tries++; } while ((!farFromSnake(pos.x, pos.y, 30) || nearGate(pos)) && tries < 40);
-  if (nearGate(pos)) pos.y = gateSite.y + 130;   // 시도 소진 시에도 건물 아래로 밀어낸다
+  if (nearGate(pos)) pos.y = gateSite.y + 90;   // 시도 소진 시에도 건물 아래로 밀어낸다
   // 사과 종류 (확률) — 🎉 축제 라운드는 황금 확률 2배(7%→14%)
   const r = Math.random();
   const goldenTo = festivalRound ? 0.21 : 0.14;
@@ -1403,6 +1555,12 @@ function spawnApple() {
   if (type === 'power') rotTime = Math.max(3.5, rdRotBase * 0.6);
   else if (type === 'golden') rotTime = Math.max(4, rdRotBase * 0.7);
   else rotTime = rdRotBase + Math.random() * 4;
+  if(round===3 && eatCombo>0 && eatCombo<3){
+    const candidate={x:headX+dirX*70,y:headY+dirY*70};
+    if(candidate.x>field.x+30 && candidate.x<field.x+field.w-30 && candidate.y>field.y+30 && candidate.y<field.y+field.h-30 && farFromSnake(candidate.x,candidate.y,30) && !nearGate(candidate)){
+      pos=candidate;type='blue';rotTime=Math.max(rotTime,6);
+    }
+  }
   apples.push({ x: pos.x, y: pos.y, type: type, t: 0, rotTime: rotTime });
 }
 
@@ -1434,7 +1592,7 @@ function spawnObstacle() {
   while ((Math.hypot(pos.x - headX, pos.y - headY) < 120 ||  // 머리 주변 안전지대
           inFrontCorridor(pos.x, pos.y) ||                    // 진행 방향 앞 비우기
           !farFromSnake(pos.x, pos.y, 44)) && tries < 60);
-  obstacles.push({ x: pos.x, y: pos.y, r: 14 });
+  obstacles.push({ x: pos.x, y: pos.y, r: 10 });
 }
 // 판에 돌을 항상 채워둠 (계속 존재)
 function ensureRocks() {
@@ -1476,7 +1634,16 @@ function updatePredators(dt) {
     p.t += dt;
     const dx = headX - p.x, dy = headY - p.y;
     const d = Math.hypot(dx, dy) || 1;
-    p.vx = (dx / d) * sp; p.vy = (dy / d) * sp;
+    let ax = dx / d, ay = dy / d;
+    // 🦉 천적끼리 겹침 방지 — 서로 가까우면 밀어내 뭉침을 막는다 (2026-09-13 서연)
+    const SEP = p.r * 3;
+    for (const q of predators) {
+      if (q === p) continue;
+      const ex = p.x - q.x, ey = p.y - q.y, ed = Math.hypot(ex, ey);
+      if (ed > 0 && ed < SEP) { const w = (1 - ed / SEP) * 1.4; ax += (ex / ed) * w; ay += (ey / ed) * w; }
+    }
+    const an = Math.hypot(ax, ay) || 1;
+    p.vx = (ax / an) * sp; p.vy = (ay / an) * sp;
     p.x += p.vx * dt; p.y += p.vy * dt;
     // ❗ 바짝 붙었다 — 경고 진동 + 느낌표 (0.6초 쿨다운). '잡힐 뻔'을 체감시키는 장치
     if (d < 90 && predWarnT <= 0 && graceT <= 0 && powerT <= 0) {
@@ -1555,12 +1722,22 @@ function setDir(nx, ny) {
 
 function eatApple(a, idx) {
   applesEaten++;
+  if(!firstFoodSeen){firstFoodSeen=true;trackGame("first_food",{country:round});}
+  const coach=document.getElementById("coachHint");if(coach && roundApples>=2)coach.style.display="none";
   stats.apples++;             // 🏅 통계
   bumpMission('apple', 1);    // 🎯 오늘의 미션
   // 💰 2026-08-03: 사과당 +1 코인 폐지 — 코인이 무한히 쌓여 광고·소모 경제가 죽는 원인. 코인은 라운드 클리어/미션/업적에서만
   haptic([0, 60]); // 📳 먹을 때마다 진동 — 45→60ms 증폭 (2026-08-06 지시. ⚠️ 구 APK엔 VIBRATE 권한 없음 → 최신 APK 필수)
   // 🔥 콤보 갱신
-  eatCombo++; eatComboT = COMBO_WINDOW;
+  const earnedStreakNow=!stageComboRewarded && eatCombo===2;
+  eatCombo++; eatComboT = comboWindow();
+  stageComboBest=Math.max(stageComboBest,eatCombo);runComboBest=Math.max(runComboBest,eatCombo);
+  if(eatCombo>=3 && !stageComboRewarded && !gateReady && !gateFly){
+    stageComboRewarded=true;timeLeft=Math.min(maxTime,timeLeft+2);
+    sfxCombo();haptic([20,30,40]);
+    trackGame('streak_time_reward',{country:round,combo:eatCombo});
+  }
+  if(eatCombo===runComboTarget)trackGame('combo_target_complete',{country:round,target:runComboTarget});
   if (eatCombo > stats.bestCombo) stats.bestCombo = eatCombo;
   const mult = comboMult();
   let base = 10;
@@ -1603,11 +1780,12 @@ function eatApple(a, idx) {
     sfxCombo(); haptic(20);
     // 🎆 2026-08-10: 문턱 하향 — x4·x5는 아이들이 도달하지 못해 연출을 평생 못 봤다
     flashT = Math.max(flashT, mult >= 4 ? 0.18 : 0.10);        // x2부터 번쩍
-    shake = Math.max(shake, 6 + mult * 2);                     // 콤보가 오를수록 세게
+    shake = Math.max(shake, 1);                     // 콤보가 오를수록 세게
     spawnRing(headX, headY, '#FFD700', 14, 70 + mult * 12, 18);
     spawnSparkle(headX, headY, '#FFF176', 8 + mult * 2);
     if (mult >= 3) haptic([0,30,40,60]);                       // 대박 콤보 — 진동 3연타
   }
+  if(earnedStreakNow && stageComboRewarded)showCombo('🔥 3연속 성공 · +2초!');
   // 🏅 마이크로 성취: 길이 돌파 + 최고점수 실시간 갱신 (판 끝나고 알면 성취감이 안 된다)
   checkLenMilestone();
   if (!bestBeatenThisGame && best > 0 && score > best) {
@@ -1749,8 +1927,8 @@ let gateSite = { x: 0, y: 0 }; // 🏯 광화문 짓는 자리(고정)
 let flyingStones = [];   // 깨진 돌이 광화문으로 날아가는 연출
 // ✈️ 광화문 완성 → 하늘로 떴다가 마당에 정착하는 연출
 let gateFly = false, gateFlyT = 0;
-const GATE_FLY_DUR = 1.3;   // 제자리 완성 연출이라 짧게(예전엔 날아가느라 2.4초)
-const SHOP_DONE_SCALE = 1.45;  // 🏪 완성된 가게는 짓는 중보다 더 크게 — 성취감·목표 가시성
+const GATE_FLY_DUR = 0.8;   // 제자리 완성 연출이라 짧게(예전엔 날아가느라 2.4초)
+const SHOP_DONE_SCALE = 1.05;  // 🏪 완성된 가게는 짓는 중보다 더 크게 — 성취감·목표 가시성
 
 //=========================================
 // ⚖️ 게임물 등급 표시 (게임산업법 제33조)
@@ -1809,10 +1987,10 @@ function POWER_NEED_FOR(R) { return R <= APPLE_ROUNDS + 1 ? 3 : 5; }   // 🎯 �
 function powerNeed() { return POWER_NEED_FOR(round); }
 const POWER_DUR = 5.5;   // 파워 지속(초)
 // 🍎 매 라운드 사과 목표 — R1=6개, 완만히 늘어 R30에 24개 상한 (구 5+R은 R25에 30개로 너무 가팔랐다)
-function applesGoalForRound(R) { return Math.min(28, 8 + Math.floor(R * 0.7)); }   // 🍽️ 2026-08-06 지시: 목표 개수 상향 (6+0.6R→8+0.7R, 상한 24→28)
+function applesGoalForRound(R) { return R === 1 ? 6 : Math.min(28, 8 + Math.floor(R * 0.7)); }   // 🍽️ 2026-08-06 지시: 목표 개수 상향 (6+0.6R→8+0.7R, 상한 24→28)
 // 🪨 2R부터 등장. R2=2개 → R30에 22개 상한. 🎉 축제 라운드는 30% 감소, 👑 R100은 다시 절반
 function targetRockCount(R) {
-  let n = Math.min(22, Math.round(1.5 + (R - 1) * 0.7));
+  let n = Math.min(14, Math.round(1.5 + (R - 1) * 0.45));
   if (festivalRound) n = Math.round(n * 0.7);
   if (R >= 100) n = Math.ceil(n / 2);
   return n;
@@ -1821,6 +1999,7 @@ function targetRockCount(R) {
 let eatCombo = 0;        // 연속으로 먹은 사과 수
 let eatComboT = 0;       // 콤보 유지 남은 시간(초)
 const COMBO_WINDOW = 2.5;// 규칙: 2.5초 안에 다음 사과! (빨리 연속으로 먹어야 콤보)
+function comboWindow(){return boostRun.combo?4:COMBO_WINDOW;}
 function comboMult() { return Math.min(5, 1 + Math.floor(eatCombo / 2)); } // x1~x5 (2연속마다 ↑)
 let doorPhase = false;   // 🚪 (구) 안전 이동 단계 — 더는 사용 안 함
 let gateReady = false;   // 🏯 광화문 완성·정착 → 게임 진행 중 들어갈 수 있는 상태
@@ -2174,7 +2353,7 @@ function update(dt) {
   if (cut < path.length) path.length = cut;
 
   // 시간 감소
-  const drain = 1.0 + Math.min(0.6, snakeLen * 0.008);
+  const drain = rdDrain; // 실제 적용값을 나라별 시간 설정과 일치시킨다.
   timeLeft -= drain * dt;
   if (timeLeft <= 0) { timeLeft = 0; die('time'); return; }
 
@@ -2199,7 +2378,7 @@ function update(dt) {
   // 사과 먹기 (관대하게 - 살짝만 스쳐도 먹힘 → 편하게 플레이)
   for (let i = apples.length - 1; i >= 0; i--) {
     const a = apples[i];
-    const er = a.type === 'golden' ? 18 : 15;
+    const er = a.type === 'golden' ? 14 : 12;
     if (Math.hypot(headX - a.x, headY - a.y) < HEAD_R + er + 3) { eatApple(a, i); break; }
   }
 
@@ -2338,9 +2517,9 @@ function showCombo(text) {
   const el = document.getElementById('comboMsg');
   el.textContent = text;
   el.style.opacity = '1';
-  el.style.transform = 'translateX(-50%) scale(1.25)';
+  el.style.transform = 'none';
   if (comboTimer) clearTimeout(comboTimer);
-  comboTimer = setTimeout(() => { el.style.opacity = '0'; el.style.transform = 'translateX(-50%) scale(0.5)'; }, 750);
+  comboTimer = setTimeout(() => { el.style.opacity = '0'; el.style.transform = 'none'; }, 750);
 }
 
 function updateHUD() {
@@ -2393,10 +2572,12 @@ let lastRoundBonus = 0;
 function roundClear() {
   if (gateFly || gateReady) return; // 이미 완성 연출 중이거나 완성된 가게가 열려 있음(중복 완성 방지)
   // 🎁 라운드 클리어 보너스: 라운드×100 + 남은 시간×10
+  if(roundRecorded)return;
   const clearBonus = round * 100;
   const timeBonus = Math.floor(timeLeft * 10);
   lastRoundBonus = clearBonus + timeBonus;
   addScore(lastRoundBonus, false);
+  recordCountry(round);
   // 💰 라운드 보상은 여기 한 곳에서만 — round×5 (08-08 통일: gateComplete의 round×5와 이중지급되던 +15 제거)
   const roundCoins = round * 5;
   addCoins(roundCoins);
@@ -2432,11 +2613,11 @@ function gateComplete() {
   gateToX = gateSite.x;   gateToY = gateSite.y;
   stopBGM();              // 🎵 BGM 멈추고
   sfxGateComplete();      // 🎵 팡파레!
-  flashT = 0.18;   // ✨ 번쩍
-  discoT = 0.0001; discoBeatT = 0.7;   // 🪩 싸이키 조명 ON (팡파레 뒤부터 비트)
+  flashT = 0;   // 완성은 짧은 팡파레로 알림
+  discoT = 0; discoBeatT = 0;   // 🪩 싸이키 조명 ON (팡파레 뒤부터 비트)
   showCombo(curShop().icon + ' ' + curShop().name + ' 완성! +' + lastRoundBonus + '점');
   // 화려한 폭죽
-  for (let i = 0; i < 55; i++) particles.push({ x: gateSite.x, y: gateSite.y, vx:(Math.random()-0.5)*13, vy:-Math.random()*10-2, life:48, max:48, color: i%3===0?'#FFD700':(i%3===1?'#FF1493':'#8BC34A'), size:Math.random()*4+2 });
+  for (let i = 0; i < 16; i++) particles.push({ x: gateSite.x, y: gateSite.y, vx:(Math.random()-0.5)*13, vy:-Math.random()*10-2, life:48, max:48, color: i%3===0?'#FFD700':(i%3===1?'#FF1493':'#8BC34A'), size:Math.random()*4+2 });
 }
 
 function updateGateFly(dt) {
@@ -2458,7 +2639,7 @@ function updateGateFly(dt) {
     gateReady = true;
     timeLeft = Math.max(timeLeft, 8);   // 가게까지 갈 최소 시간 보장
     // 🎵 음악은 여기서 켜지 않는다 — 라운드를 마치면 정지, 다음 라운드 시작(wipe)에서 다시 켠다 (2026-08-07 지시)
-    showCombo(curShop().icon + ' ' + curShop().name + '으로 들어가세요! ⏱️');
+    showCombo('🏠 완성된 건물로 들어가세요!'); // 실제 입장 충돌 판정으로 라운드 종료
   }
 }
 // 🏪 완성 연출: 제자리에서 오히려 더 크게 부풀어 그 크기로 유지 (이동·축소 없음)
@@ -2481,7 +2662,7 @@ function openDoor() {
   // 돌이 다 모여 가게 완성 → 비우기(다음 라운드까지 깔끔)
   obstacles = [];
   stopBGM();                            // 🎵 라운드 마치면 음악 정지 (2026-08-07 지시)
-  discoT = 0.0001; discoBeatT = 0.7;    // 🪩 싸이키 조명 ON
+  discoT = 0; discoBeatT = 0;    // 🪩 싸이키 조명 ON
   sfxDoorOpen();
   showCombo(curShop().icon + ' ' + curShop().name + ' 완성! +' + lastRoundBonus + '점 · 들어가세요!');
 }
@@ -2518,6 +2699,7 @@ function updateDoorPhase(dt) {
 }
 
 function enterDoor() {
+  if(!door || travelPending)return;
   const nextR = round + 1;
   const carry = Math.max(START_LEN, Math.floor(snakeLen * 0.5));
   // 입장 효과
@@ -2529,15 +2711,12 @@ function enterDoor() {
   placedGates.push({ shop: curShop() });
   doorPhase = false; gateReady = false; door = null;
   discoT = 0;   // 🪩 문으로 들어갔다 — 조명 끄기
-  // 🎁 3라운드 클리어마다 보너스 게임 (R3·R6·R9…) — 세계여행 패널은 보너스가 끝난 뒤에
-  if (round % 3 === 0) { startBonus(nextR, carry); return; }
-  // 🎬 커튼 전환 시작(아래→위 상승) — 실제 라운드 교체는 커튼이 화면을 다 덮는 순간(update의 wipe 블록)에서
-  wipeNextR = nextR; wipeCarry = carry; wipeY = H; wipeSwitched = false;
-  wipeHoldMax = 3.8; wipeHold = wipeHoldMax;   // 🗺️ 지도 3.8초 감상 (2026-08-03 +2초 연장)
+  showTravelArrival(nextR, carry);
 }
 
 // 🎁 보너스 게임 시작 — 필드를 비우고 사과를 쏟아붓는다
 function startBonus(nextR, carry) {
+  trackGame("bonus_start",{country:round});
   pendingNextR = nextR; pendingCarry = carry;
   bonusMode = true;
   bonusIdx = round < 3 ? 1 : Math.floor(round / 3) + 1;   // 개막 먹방=1번째(빈 마당), R3 문=2번째(지형 시작)…
@@ -2579,12 +2758,14 @@ function ensureBonusApples() {
 }
 // 🎁 보너스 종료 → 코인 정산 → 세계여행 패널로
 function endBonus(crashed) {
+  if(!bonusMode)return;
+  trackGame("bonus_end",{country:round,food:bonusEaten,seconds:Math.floor(bonusT)});
   bonusMode = false; bonusIntroT = 0; bonusDeadT = 0;
   stopBGM();                           // 🎵 수노 곡 정지 — 다음 라운드는 전환 패널에서 신스 곡으로 다시 켜진다
   let earned;
   // 💰 2026-08-30 코인 인플레 조정: 100판 실측 판당 694코인 유입 -> 최고급 스킨(1,500)을 2판에 사버렸다.
   //    상한 450 -> 250으로 낮춰 판당 ~390코인. 스킨 하나에 1~4판이 걸려 수집 재미가 산다.
-  if (bonusEaten >= BONUS_GOAL) earned = Math.min(250, 120 + (bonusEaten - BONUS_GOAL) * 4);   // 잭팟 + 초과분
+  if (bonusEaten >= BONUS_GOAL) earned = Math.min(250, BONUS_GOAL * 3 + (bonusEaten - BONUS_GOAL) * 4);   // 잭팟 + 초과분
   else earned = bonusEaten * 3;                                                  // 위로금 (5->3, 상한 조정에 맞춤)
   if (earned > 0) addCoins(earned);
   // 🐍 보너스에서 키운 꼬리의 절반을 다음 라운드로 이월 — 보너스 성과가 본게임으로 이어진다
@@ -2688,7 +2869,7 @@ function updateBonus(dt) {
   // 🍎 먹기
   for (let i = apples.length - 1; i >= 0; i--) {
     const a = apples[i];
-    const er = a.type === 'golden' ? 18 : 15;
+    const er = a.type === 'golden' ? 14 : 12;
     if (Math.hypot(headX - a.x, headY - a.y) < HEAD_R + er + 3) {
       apples.splice(i, 1);
       bonusEaten++; applesEaten++; stats.apples++;
@@ -2774,7 +2955,7 @@ function bonusRock(x, y) {
   if (Math.hypot(x - cx, y - cy) < 110) return;                 // 시작 즉사 방지
   if (x < field.x + 30 || x > field.x + field.w - 30 ||
       y < field.y + 30 || y > field.y + field.h - 30) return;   // 벽에 너무 붙이지 않기
-  obstacles.push({ x: x, y: y, r: 14 });
+  obstacles.push({ x: x, y: y, r: 10 });
 }
 function buildBonusArena(idx) {
   if (idx <= 1) return;                                          // 1번째 = 빈 마당 (입문)
@@ -2823,7 +3004,15 @@ function spawnBonusPredator() {
 
 function die(cause) {
   if (dead) return;
-  dead = true; shake = 16;
+  if(boostRun.shield && ['wall','obstacle','predator'].includes(cause)){
+    boostRun.shield=false;graceT=2;
+    const margin=HEAD_R+20;headX=Math.max(field.x+margin,Math.min(field.x+field.w-margin,headX));headY=Math.max(field.y+margin,Math.min(field.y+field.h-margin,headY));
+    const dx=field.x+field.w/2-headX,dy=field.y+field.h/2-headY;
+    if(Math.abs(dx)>Math.abs(dy)){dirX=dx>=0?1:-1;dirY=0;}else{dirX=0;dirY=dy>=0?1:-1;}
+    pendingDir=null;showCombo('🛡️ 충돌 방어! 2초 보호');trackGame('shield_used',{country:round,cause:cause});return;
+  }
+  dead = true; shake = 16; deathCause=cause;
+  trackGame("death",{country:round,cause:cause,score:score});
   sfxCrash();
   haptic([60, 50, 120]); // 📳 충돌 진동
   spawnParticles(headX, headY, '#FF4500', 30);
@@ -2840,6 +3029,10 @@ let reviveOfferTimer = null;
 let adFailMsg = '';        // 📺 광고를 못 봐서 부활 실패한 사유 — 최종 게임오버 화면에 안내한다
 function showReviveOffer() {
   if (!dead) return;                       // 그 사이 부활했으면 띄우지 않는다
+  const coinBtn=document.getElementById('coinOfferBtn');
+  const cost=reviveInv>0?0:REVIVE_COIN_COST[Math.min(coinReviveCount,REVIVE_COIN_COST.length-1)];
+  const adLeft=adReviveCount<AD_REVIVE_MAX;   // 📺 2026-09-13 서연: 광고 기회 남으면 광고 먼저(코인·부활권 잠금)
+  if(coinBtn){coinBtn.disabled=adLeft||coinReviveCount>=MAX_REVIVE || coins<cost;coinBtn.textContent=adLeft?'📺 먼저 광고로 부활하세요':(reviveInv>0?'💖 부활권으로 현재 진행 유지':'🪙 '+cost+'코인 · 현재 진행 유지 (보유 '+coins+')');}
   let remain = 5;
   const el = document.getElementById('reviveOffer');
   const cd = document.getElementById('reviveCountdown');
@@ -3060,9 +3253,41 @@ function emojiSprite(icon) {
   return sp;
 }
 
+let depthView=true;
+try{depthView=localStorage.getItem('snake_depth_view')!=='off';}catch(e){}
+function depthActive(){return depthView && round===1 && !bonusMode;}
+function refreshDepthButton(){const b=document.getElementById('depthViewBtn');if(b){b.textContent='첫 나라 입체 표현 '+(depthView?'ON':'OFF')+' · 눌러 비교';b.setAttribute('aria-pressed',String(depthView));}}
+function toggleDepthView(){depthView=!depthView;try{localStorage.setItem('snake_depth_view',depthView?'on':'off');}catch(e){}refreshDepthButton();}
+// 색상별 구체 이미지를 캐시하여 프레임마다 그라디언트를 만들지 않는다.
+const depthBeads=new Map();
+function depthBead(col){
+ if(depthBeads.has(col))return depthBeads.get(col);
+ const cv=document.createElement('canvas');cv.width=cv.height=64;const c=cv.getContext('2d');
+ const g=c.createRadialGradient(22,18,2,32,32,29);
+ g.addColorStop(0,'#ffffff');g.addColorStop(0.25,lighten(col,35));g.addColorStop(0.63,col);g.addColorStop(1,'#183b32');
+ c.fillStyle=g;c.beginPath();c.arc(32,32,29,0,Math.PI*2);c.fill();
+ c.fillStyle='rgba(255,255,255,.65)';c.beginPath();c.ellipse(23,18,9,4,-0.5,0,Math.PI*2);c.fill();
+ if(depthBeads.size>=64)depthBeads.delete(depthBeads.keys().next().value);
+ depthBeads.set(col,cv);return cv;
+}
+function drawDepthBase(){
+ if(!depthActive())return;
+ ctx.save();
+ // 건물 아래 받침대만 그리며 이동 영역과 충돌 경계는 바꾸지 않는다.
+ const x=gateSite.x,y=gateSite.y+34;
+ ctx.fillStyle='rgba(12,40,35,.24)';ctx.beginPath();ctx.ellipse(x+7,y+12,70,20,0,0,Math.PI*2);ctx.fill();
+ ctx.fillStyle='#7b9a82';ctx.beginPath();ctx.ellipse(x,y+6,64,19,0,0,Math.PI*2);ctx.fill();
+ ctx.fillStyle='#e0e7bf';ctx.beginPath();ctx.ellipse(x,y,64,19,0,0,Math.PI*2);ctx.fill();
+ ctx.strokeStyle='rgba(255,255,255,.8)';ctx.lineWidth=2;ctx.stroke();ctx.restore();
+}
 function drawApple(a) {
   ctx.save();
   ctx.translate(a.x, a.y);
+  if(depthActive()){
+    ctx.fillStyle='rgba(12,40,35,.25)';ctx.beginPath();ctx.ellipse(4,12,15,5,0,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle=a.type==='golden'?'#c99a20':'#82928c';ctx.beginPath();ctx.ellipse(0,8,17,6,0,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle=a.type==='golden'?'#fff1a6':'#f4f7e6';ctx.beginPath();ctx.ellipse(0,5,17,6,0,0,Math.PI*2);ctx.fill();
+  }
   const bob = Math.sin(a.t * 3) * 2;
   ctx.translate(0, bob);
 
@@ -3082,7 +3307,7 @@ function drawApple(a) {
   }
 
   // 🏪 먹이 = 이번 라운드 가게 품목 그 자체(원 배경 없이 그림만). 효과 구분은 뒤쪽 후광 색으로.
-  const r = a.type === 'golden' ? 17 : 15;
+  const r = a.type === 'golden' ? 13 : 11;
   let glow = null;
   if (a.type === 'golden') glow = '#FFD700';
   else if (a.type === 'blue') glow = '#42A5F5';
@@ -3290,6 +3515,7 @@ function drawSnake() {
   if (pts.length < 2) pts.push(getPointAtDist(total + 1));
 
   ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  if(depthActive()){ctx.save();ctx.translate(4,7);ctx.strokeStyle='rgba(14,43,34,.25)';ctx.lineWidth=BODY_R*2+3;strokePath(pts);ctx.restore();}
 
   // ✨ 파워뱀: 몸 전체를 감싸는 금빛 후광 (블러 없이 겹쳐 그려 가볍게)
   if (powered) {
@@ -3326,9 +3552,14 @@ function drawSnake() {
         ctx.fillStyle = 'rgba(0,0,0,0.30)';
         ctx.beginPath(); ctx.arc(p.x, p.y, r + 2.2, 0, Math.PI * 2); ctx.fill();
       }
-      // 구슬 본체
-      ctx.fillStyle = col;
-      ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, Math.PI * 2); ctx.fill();
+      // 첫 나라 입체 시안: 충돌 중심은 그대로 두고 구체 음영만 교체한다.
+      if(depthActive()){
+        const shade=skin.rainbow?hslColor(Math.floor(i/4)*4,pts.length):col;
+        ctx.drawImage(depthBead(shade),p.x-r*1.1,p.y-r*1.1,r*2.2,r*2.2);
+      }else{
+        ctx.fillStyle = col;
+        ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, Math.PI * 2); ctx.fill();
+      }
       if (detail) {   // 광택
         ctx.fillStyle = 'rgba(255,255,255,0.38)';
         ctx.beginPath(); ctx.arc(p.x - r * 0.3, p.y - r * 0.34, r * 0.42, 0, Math.PI * 2); ctx.fill();
@@ -3611,7 +3842,7 @@ function drawGwanghwamun(cx, cy, scale, alpha, noGlow) {
   ctx.fillStyle = 'rgba(0,0,0,0.18)';
   ctx.beginPath(); ctx.ellipse(0, 48, 52, 10, 0, 0, Math.PI*2); ctx.fill();
   // 랜드마크 본체 (대형 스프라이트)
-  ctx.drawImage(emojiSprite(curShop().icon), -60, -72, 120, 120);
+  ctx.drawImage(emojiSprite(curShop().icon), -42, -50, 84, 84);
   // 🚪 입구 아치 (들어갈 문)
   ctx.fillStyle = 'rgba(62,39,35,0.85)';
   ctx.beginPath(); ctx.arc(0, 34, 13, Math.PI, 0); ctx.rect(-13, 34, 26, 14); ctx.fill();
@@ -3634,7 +3865,7 @@ function drawGateConstruction() {
   ctx.translate(x, gateSite.y);
   // ① 흑백 밑그림 — 처음부터 '무슨 랜드마크를 짓는지' 실루엣으로 보여준다 (2026-08-03: 가게→상징물)
   const lmSp2 = emojiSprite(shop.icon);
-  const SZ = 120, TOP = -72, BOT = 48, HGT = BOT - TOP;
+  const SZ = 84, TOP = -50, BOT = 34, HGT = BOT - TOP;
   ctx.save();
   ctx.globalAlpha = 0.30;
   ctx.drawImage(graySprite(shop.icon), -SZ / 2, TOP, SZ, SZ);   // 캐시된 회색 실루엣 (매 프레임 filter 금지)
@@ -3695,6 +3926,7 @@ function render() {
   const vL = cam.x - 40, vR = cam.x + W + 40, vT = cam.y - 40, vB = cam.y + H + 40;
   function vis(x, y, m) { m = m || 40; return x > vL - m && x < vR + m && y > vT - m && y < vB + m; }
   for (const tn of tunnels) { drawTunnel(tn.a, tn); drawTunnel(tn.b, tn); }
+  drawDepthBase();
   drawTown();   // 🏘️ 위쪽에 정돈해 늘어놓은 '내 마을'
   if (!gateFly && !gateReady) drawGateConstruction();   // 🏯 지어지는 광화문 (완성 전)
   // 🚪 들어갈 광화문 강조 (완성·정착 후, 게임 진행 중)
@@ -3826,32 +4058,11 @@ function render() {
     ctx.textAlign = 'left';
   }
   drawStick();   // 🕹️ 가상 조이스틱
-  // 🔥 콤보 미터 (크게, 타이머 바와 함께 → 확실히 보이게)
-  if (eatCombo >= 2) {
-    const mult = comboMult();
-    const frac = Math.max(0, Math.min(1, eatComboT / COMBO_WINDOW));
-    const pulse = 1 + Math.sin(performance.now() / 110) * (0.04 + mult * 0.015);
-    const col = mult >= 4 ? '#FF1744' : (mult >= 3 ? '#FF6D00' : '#FFB300');
-    const label = '🔥 ' + eatCombo + '연속  x' + mult;
-    ctx.save();
-    ctx.translate(W / 2, 138 + safeIn.top);
-    ctx.scale(pulse, pulse);
-    ctx.font = 'bold 24px sans-serif'; ctx.textAlign = 'center';
-    const tw = Math.max(160, ctx.measureText(label).width + 34);
-    // 알약 배경
-    ctx.fillStyle = 'rgba(0,0,0,0.5)';
-    roundRect(-tw/2, -22, tw, 40, 20); ctx.fill();
-    // 남은 시간 바(줄어듦)
-    ctx.fillStyle = col;
-    roundRect(-tw/2, -22, tw * frac, 40, 20); ctx.fill();
-    // 외곽 + 글자
-    ctx.strokeStyle = col; ctx.lineWidth = 2.5;
-    roundRect(-tw/2, -22, tw, 40, 20); ctx.stroke();
-    ctx.fillStyle = '#fff';
-    ctx.strokeStyle = 'rgba(0,0,0,0.5)'; ctx.lineWidth = 4;
-    ctx.strokeText(label, 0, 6); ctx.fillText(label, 0, 6);
-    ctx.textAlign = 'left';
-    ctx.restore();
+  // 플레이 영역 밖 고정 정보줄: 확대·깜빡임 없이 연속 수와 남은 시간만 표시.
+  if(eatCombo>=2 && running && !dead && !bonusMode){
+    ctx.save();ctx.font='bold 12px sans-serif';ctx.textAlign='left';ctx.fillStyle='#ffe082';
+    ctx.fillText(eatCombo+'연속 ×'+comboMult(),10,107+safeIn.top);
+    ctx.fillStyle='#ffb300';ctx.fillRect(10,111+safeIn.top,Math.min(90,W*.25)*Math.max(0,eatComboT/comboWindow()),2);ctx.restore();
   }
   // 🪩 싸이키 조명 — 가게가 완성된 자리를 중심으로 빛줄기가 돈다 (그라디언트 없이 가볍게)
   if (discoT > 0) {
@@ -4116,59 +4327,43 @@ function loop(t) {
 //=========================================
 // 게임 시작/종료
 //=========================================
-function startGame() {
-  // 🛒 상점에서 고른 부스터를 이번 판으로 이관 — reset()이 startRound(1)을 즉시 부르므로 반드시 그 전에
-  boostRun = { time: boostPick.time, power: boostPick.power, apple: boostPick.apple };
-  boostPick = { time: false, power: false, apple: false };
-  boostPaid = { time: 0, power: 0, apple: 0 };
-  reset();
-  if (typeof renderBoosters === 'function') renderBoosters();
-  reviveCount = 0; coinReviveCount = 0; graceT = 0;
-  countdownT = 3; lastCountInt = -1;   // 🔢 3·2·1 카운트다운
-  // 🍜 개막 먹방 타임 (2026-08-17 지시: 첫 먹방을 1라운드 앞에)
-  //    시작 → 먹방 오프닝 → 폭식 → 결과 화면 → '세계여행 출발' 지도 → 1라운드.
-  //    구 시작 인트로 지도는 먹방 뒤의 출발 지도가 대체한다.
-  wipeY = null; wipeSwitched = false;
-  runStartCoins = coins;               // 💰 이번 판 코인 시작값
-  document.getElementById('startScreen').style.display = 'none';
-  document.getElementById('gameOver').style.display = 'none';
-  const rs = document.getElementById('rankScreen'); if (rs) rs.style.display = 'none';
-  document.getElementById('roundClear').style.display = 'none';
-  document.getElementById('gameClear').style.display = 'none';
-  document.getElementById('pauseScreen').style.display = 'none';
-  document.getElementById('pauseBtn').style.display = 'flex';
-  running = true;
-  sfxStart();
-  startBonus(1, snakeLen);   // 🍜 개막 먹방 — 내부에서 먹방 전용 BGM(수노)까지 켠다
+function startGame(startAt) {
+  if(adShowing)return;
+  startAt=Number.isInteger(startAt)?Math.max(1,Math.min(100,startAt)):1;
+  runComboBest=0;runComboTarget=Math.min(12,Math.max(3,(Number(stats.bestCombo)||0)+1));
+  runStartRound=startAt;runActive=true;firstFoodSeen=false;scoreCoinsSettled=0;resultRecorded=false;deathCause='';
+  travelPending=null;document.getElementById('travelComplete').style.display='none';
+  boostRun = { time:boostPick.time, power:boostPick.power, apple:boostPick.apple,shield:boostPick.shield,combo:boostPick.combo };
+  boostPick = { time:false,power:false,apple:false,shield:false,combo:false };boostPaid={time:0,power:0,apple:0,shield:0,combo:0};
+  reset(startAt);renderBoosters();reviveCount=0;coinReviveCount=0;graceT=0;
+  countdownT=2;lastCountInt=-1;wipeY=null;wipeSwitched=false;runStartCoins=coins;
+  ['startScreen','gameOver','rankScreen','roundClear','gameClear','pauseScreen'].forEach(hideEl);
+  document.getElementById('pauseBtn').style.display='flex';
+  document.getElementById('coachHint').style.display=startAt<=3?'block':'none';
+  running=true;sfxStart();startBGM();
+  trackGame('run_start',{country:startAt,stamps:Object.keys(journey.stamps).length});
 }
-// 🧪 테스트 하네스 전용 — 개막 먹방을 건너뛰고 구(舊) 시작 흐름(출발 지도 → 카운트다운 → R1)을 재현한다.
-//    본게임 회귀 하네스들이 startGame 직후 이걸 불러 기존 시나리오를 그대로 돌린다. UI에서는 호출되지 않는다.
-window.__skipOpeningBonus = function () {
-  if (!bonusMode) return;
-  bonusMode = false; bonusIntroT = 0; bonusDeadT = 0; bonusResultUp = false;
-  const el = document.getElementById('bonusResult'); if (el) el.style.display = 'none';
-  stopBGM();
-  startRound(1, START_LEN);
-  countdownT = 3; lastCountInt = -1;
-  wipeNextR = 1; wipeCarry = 0; wipeSwitched = true; wipeY = 0;
-  wipeHoldMax = 3.0; wipeHold = 3.0;
-};
+// Compatibility hook for older offline regression harnesses; opening bonus is now optional after travel.
+window.__skipOpeningBonus = function () {};
 
 let goMyEntry = null; // 게임오버 시 내 엔트리 (미리보기/저장 후)
 let reviveCount = 0;       // 💖 이번 판 총 부활 횟수 (통계용)
 let coinReviveCount = 0;   // 💰 코인·부활권 부활 횟수 (0~MAX_REVIVE) — 광고 부활과 별도 한도
 function gameOver() {
+  updatePersonalChallenge();
   running = false;
   stopBGM(); // 🎵 배경음악 정지
   const finalScore = score;       // 💯 누적 점수
   const finalRound = round;
   // 🏅 통계 갱신 + 저장 + 업적 + 코인 저장
-  stats.plays++;
+  if(!resultRecorded){stats.plays++;resultRecorded=true;}
+  trackGame("run_result",{country:round,score:score,start_country:runStartRound});
   if (finalRound > stats.bestRound) stats.bestRound = finalRound;
   saveStats();
   // 💰 점수 정산 — 지시서는 10%였으나 실측상 판당 600코인이 들어와 코인경제가 붕괴(부활 1,000이 2판이면 조달).
   //    3%·상한 300으로 낮춰 '스킨 수집은 되고, 코인부활은 여전히 사치재'인 균형을 유지한다.
-  const scoreCoins = Math.min(300, Math.floor(finalScore * 0.03));
+  const totalScoreCoins = Math.min(300, Math.floor(finalScore * 0.03));
+  const scoreCoins = Math.max(0,totalScoreCoins-scoreCoinsSettled);scoreCoinsSettled=Math.max(scoreCoinsSettled,totalScoreCoins);
   if (scoreCoins > 0) addCoins(scoreCoins);
   const newAch = checkAchievements();   // 새 업적 → 코인 보상
   saveCoins();
@@ -4190,15 +4385,21 @@ function gameOver() {
   const reviveAdBtn = document.getElementById('reviveAdBtn');
   const reviveBtn = document.getElementById('reviveBtn');
   const canRevive = coinReviveCount < MAX_REVIVE && finalRound >= 1;
-  if (reviveAdBtn) reviveAdBtn.style.display = 'none';
-  if (reviveBtn) {
-    const rCost = reviveInv > 0 ? 0 : REVIVE_COIN_COST[Math.min(coinReviveCount, REVIVE_COIN_COST.length - 1)];   // 💖 부활권 보유 시 무료 표기
-    if (canRevive && coins >= rCost) {
-      reviveBtn.style.display = 'inline-block';
-      reviveBtn.textContent = reviveInv > 0
-        ? '💖 부활권 사용 (보유 ' + reviveInv + ')'
-        : '💰 코인으로 부활 (' + rCost + ')';
-    } else reviveBtn.style.display = 'none';
+  const adLeftGo = adReviveCount < AD_REVIVE_MAX && !adFailMsg;   // 📺 2026-09-13 서연: 광고 기회 남고 광고실패가 아니면 광고 먼저
+  if (adLeftGo) {
+    if (reviveBtn) reviveBtn.style.display = 'none';
+    if (reviveAdBtn) { reviveAdBtn.style.display = 'inline-block'; reviveAdBtn.textContent = '🎬 광고 보고 이어하기 (남은 ' + (AD_REVIVE_MAX - adReviveCount) + '회)'; }
+  } else {
+    if (reviveAdBtn) reviveAdBtn.style.display = 'none';
+    if (reviveBtn) {
+      const rCost = reviveInv > 0 ? 0 : REVIVE_COIN_COST[Math.min(coinReviveCount, REVIVE_COIN_COST.length - 1)];   // 💖 부활권 보유 시 무료 표기
+      if (canRevive && coins >= rCost) {
+        reviveBtn.style.display = 'inline-block';
+        reviveBtn.textContent = reviveInv > 0
+          ? '💖 진행 유지 · 부활권 (보유 ' + reviveInv + ')'
+          : '💰 점수·진행 유지 (' + rCost + ')';
+      } else reviveBtn.style.display = 'none';
+    }
   }
   // 새 업적 알림
   const achMsg = document.getElementById('goAchMsg');
@@ -4223,6 +4424,7 @@ function gameOver() {
   else if (finalScore >= 300) tier = '🐛 중급자! 좋아요!';
   else tier = '🥚 다시 도전!';
   document.getElementById('rankText').textContent = tier;
+  const reason=document.getElementById('deathReason');if(reason)reason.textContent=({time:'시간이 다 됐어요. 음식을 먹으면 시간이 늘어나요.',wall:'벽에 닿았어요. 조금 일찍 방향을 바꿔보세요.',obstacle:'돌에 닿았어요. 피하거나 더블탭 파워를 써보세요.',predator:'천적에게 잡혔어요. 방향을 바꾸거나 파워로 피하세요.'})[deathCause] || '한 번 더 도전해보세요.';
 
   const qualifies = qualifiesForLeaderboard(finalScore);
   // 내 엔트리(미저장) 미리보기
@@ -4257,7 +4459,9 @@ function resumeGame() {
 }
 function togglePause() { if (paused) resumeGame(); else pauseGame(); }
 function quitToStart() {
-  paused = false; running = false; dead = false;
+  if(adShowing)return;
+  paused = false; running = false; dead = false;runActive=false;
+  hideEl("coachHint");refreshJourney();
   stopBGM();
   clearAdTrialSkin();   // 📺 체험 스킨 원복
   document.getElementById('pauseScreen').style.display = 'none';
@@ -4267,7 +4471,9 @@ function quitToStart() {
 }
 // 🔄 게임오버/클리어 후 "다시 도전" → 시작화면(난이도 다시 선택)으로 복귀
 function backToStartFromResult() {
-  paused = false; running = false; dead = false;
+  if(adShowing)return;
+  paused = false; running = false; dead = false;runActive=false;
+  hideEl("coachHint");refreshJourney();
   stopBGM();
   clearAdTrialSkin();   // 📺 체험 스킨 원복 (게임오버 후 홈 복귀)
   document.getElementById('gameOver').style.display = 'none';
@@ -4289,54 +4495,35 @@ document.addEventListener('visibilitychange', function() {
 let adShowing = false;
 let adTrialSkin = null;   // 📺 광고 체험 스킨 { id, prev } — 저장 안 함, 판 종료 시 원복
 // onFail: 광고를 못 봤을 때(중도 닫기·로드 실패). 호출부가 흐름을 되돌릴 수 있어야 화면이 멈추지 않는다
-function showRewardAd(onReward, onFail) {
-  if (adShowing) { if (typeof onFail === 'function') onFail(); return; }
-  // 📺 앱인토스 실 광고 SDK 우선 (래핑 프로젝트의 src/main.js가 window.__tossAd를 심는다).
-  //    토스 앱/샌드박스에서만 지원되므로 브라우저에선 아래 모의 광고로 자동 폴백
-  const bridge = window.__tossAd;
-  if (bridge && bridge.isReady && bridge.isReady()) {
-    adShowing = true;
-    const wasBgmT = bgmPlaying;
-    stopBGM();
-    bridge.show(function(earned) {
-      adShowing = false;
-      lastT = performance.now();      // dt 점프 방지
-      if (wasBgmT) startBGM();
-      if (earned) { if (typeof onReward === 'function') onReward(); }
-      else if (typeof onFail === 'function') onFail();
-    });
-    return;
+function showRewardAd(onReward,onFail,placement) {
+  placement=placement||'reward';
+  if(adShowing){if(typeof onFail==='function')onFail();return;}
+  trackGame('ad_request',{placement:placement});
+  const bridge=window.__tossAd;
+  if(bridge && bridge.isReady && bridge.isReady()) {
+    adShowing=true;const wasBgm=bgmPlaying;stopBGM();let settled=false;
+    const watchdog=setTimeout(()=>finish(false),180000);
+    function finish(earned){
+      if(settled)return;settled=true;clearTimeout(watchdog);adShowing=false;lastT=performance.now();
+      trackGame(earned?'ad_reward':'ad_failure',{placement:placement});
+      if(earned){if(typeof onReward==='function')onReward();}else if(typeof onFail==='function')onFail();
+      if(wasBgm && running && !dead && !paused)startBGM();
+    }
+    try{bridge.show(finish);}catch(e){finish(false);}return;
   }
-  // ⛔ 토스 앱 안인데 광고만 아직 준비되지 않은 경우 — 모의 광고로 보상을 주면 안 된다(심사 반려 사유).
-  //    다시 로드를 걸고 실패로 처리한다. 모의 광고는 '토스 밖(브라우저 테스트)'에서만 쓴다.
-  if (bridge && bridge.isSupportedEnv && bridge.isSupportedEnv()) {
-    try { if (bridge.reload) bridge.reload(); } catch (e) {}
-    if (typeof onFail === 'function') onFail();
-    return;
+  // Only offline test harnesses explicitly opt in. No fake ads in shipped games or standalone play.
+  if(window.__SNAKE_TEST_ADS===true && window.__SNAKE_TOSS_BUILD__!==true && !(bridge && bridge.isSupportedEnv && bridge.isSupportedEnv())){
+    adShowing=true;setTimeout(()=>{adShowing=false;if(typeof onReward==='function')onReward();},3000);return;
   }
-  adShowing = true;
-  const wasBgm = bgmPlaying;
-  stopBGM();
-  const ov = document.getElementById('adOverlay');
-  const cd = document.getElementById('adCountdown');
-  let remain = 3;
-  if (cd) cd.textContent = remain;
-  if (ov) ov.style.display = 'flex';
-  const timer = setInterval(function() {
-    remain--;
-    if (remain > 0) { if (cd) cd.textContent = remain; return; }
-    clearInterval(timer);
-    if (ov) ov.style.display = 'none';
-    adShowing = false;
-    lastT = performance.now();      // dt 점프 방지 (resumeGame 패턴)
-    if (wasBgm) startBGM();
-    if (typeof onReward === 'function') onReward();
-  }, 1000);
+  try{if(bridge && bridge.reload)bridge.reload();}catch(e){}
+  trackGame('ad_unavailable',{placement:placement});
+  showCombo('광고를 준비하지 못했어요. 무료로 계속할 수 있어요.');
+  if(typeof onFail==='function')onFail();
 }
 // 📺 체험 스킨 원복 (게임오버 후 새 판/홈 복귀 시)
 function clearAdTrialSkin() {
   if (!adTrialSkin) return;
-  selectedSkin = isUnlocked(adTrialSkin.prev) ? adTrialSkin.prev : 'green';
+  selectedSkin = isUnlocked(adTrialSkin.prev) ? adTrialSkin.prev : 'default';
   document.querySelectorAll('.skinOption').forEach(o => o.classList.toggle('selected', o.dataset.skin === selectedSkin));
   adTrialSkin = null;
 }
@@ -4353,7 +4540,7 @@ function reviveByAd() {
       doRevive();
     },
     function () {                       // ❌ 실패·중도이탈 → 안내 후 최종 게임오버
-      adFailMsg = '📺 광고를 끝까지 보지 않아 부활하지 못했어요';
+      adFailMsg = '광고를 불러오거나 완료하지 못했어요. 무료로 다시 도전할 수 있어요.';
       hideReviveOffer();
       gameOver();
     }
@@ -4361,7 +4548,8 @@ function reviveByAd() {
 }
 // 💰 코인 부활 — 부활권 보유 시 티켓 먼저, 없으면 전 회차 1000 고정
 function reviveByCoin() {
-  if (coinReviveCount >= MAX_REVIVE || !dead) return;
+  if(adShowing)return;
+  if (adReviveCount < AD_REVIVE_MAX || coinReviveCount >= MAX_REVIVE || !dead) return;   // 📺 2026-09-13 서연: 광고 기회 남으면 코인·부활권 차단
   if (reviveInv > 0) {                        // 💖 상점에서 사둔 부활권 우선 사용
     reviveInv--; saveInv(); coinReviveCount++;
     doRevive();
@@ -4375,6 +4563,7 @@ function reviveByCoin() {
   showCombo('💰 -' + cost + ' 코인 부활!');   // 차감이 눈에 보이게
 }
 function doRevive() {   // 실제 부활 처리 (코인/광고 공통)
+  hideReviveOffer();
   reviveCount++;
   dead = false; running = true; paused = false;
   // 머리를 벽 안쪽으로 살짝 들여놓고 주변 위험 제거
@@ -4492,7 +4681,7 @@ function renderStartTopRankings() {
 }
 function saveLbEntry(name, sc, rnd) {
   name = (name || '').trim().slice(0, 8) || '익명';
-  const entry = { name, score: sc, round: rnd, skin: selectedSkin, date: todayStr() };   // 🇰🇷 랭킹 날짜도 KST
+  const entry = { name, score: sc, round: rnd, skin: selectedSkin, date: todayStr(), startCountry:runStartRound };   // 🇰🇷 랭킹 날짜도 KST
   leaderboard.push(entry);
   leaderboard.sort((a, b) => b.score - a.score);
   leaderboard = leaderboard.slice(0, 10);
@@ -4516,6 +4705,7 @@ function saveAndContinue() {
 //=========================================
 // 🛒 시작 부스터 상점 (스킨 상점과 별개 — 판마다 소비되는 코인 싱크)
 function renderBoosters() {
+  savePreparation();
   const el = document.getElementById('boosterShop');
   if (!el) return;
   el.innerHTML = '';
@@ -4599,6 +4789,13 @@ function renderItemShop() {
   const box = document.getElementById('itemShop');
   if (!box) return;
   box.innerHTML = '';
+  for(const key of Object.keys(BOOSTERS)){
+    const b=BOOSTERS[key],card=document.createElement('div');card.className='shopCard';
+    const desc={time:'다음 판 첫 나라 제한시간 +3초',power:'다음 판 첫 나라를 파워 상태로 시작',apple:'다음 판 음식 등장 수 2배',shield:'다음 판 충돌 1회 방어 +2초 보호. 시간 초과는 제외',combo:'다음 판 콤보 연결 여유 2.5초 → 4초'}[key];
+    const info=document.createElement('div');info.className='shopInfo';info.textContent=b.icon+' '+b.name.replace(/<br>/g,' ')+' · '+desc;
+    const btn=document.createElement('button');btn.className='shopBtn buy';btn.textContent=boostPick[key]?'선택됨 · 취소/환불':boosterCost(key)+'코인 · 다음 판 장착';
+    btn.addEventListener('click',()=>{buyBooster(key);renderShop();});card.appendChild(info);card.appendChild(btn);box.appendChild(card);
+  }
   const items = [
     { icon: '⚡', name: '파워 +1', desc: '더블탭 파워 1개 추가 (계속 보유)', cost: POWER_BUY_COST,
       own: function () { return powerInv; }, buy: function () { powerInv++; saveInv(); } },
@@ -4657,7 +4854,7 @@ function renderShop() {
     if (on)            { btn.className = 'shopBtn on';   btn.textContent = '착용 중'; }
     else if (owned)    { btn.className = 'shopBtn wear'; btn.textContent = '착용하기'; }
     else if (coins >= cost) { btn.className = 'shopBtn buy';  btn.innerHTML = '구매하기<br>🪙 ' + cost; }
-    else               { btn.className = 'shopBtn poor'; btn.innerHTML = '🪙 ' + cost + ' 필요'; btn.disabled = true; }
+    else               { btn.className = 'shopBtn trial'; btn.innerHTML = '🎬 광고로 체험<br>이번 판만'; }
     const act = function (ev) { ev.preventDefault(); shopAction(id); };
     if (!btn.disabled) { btn.addEventListener('click', act); btn.addEventListener('touchstart', act, { passive: false }); }
     card.appendChild(pv); card.appendChild(info); card.appendChild(btn);
@@ -4671,6 +4868,8 @@ function equipSkin(id) {
   renderShop();
 }
 function shopAction(id) {
+  if(adShowing || !SKINS[id])return;
+  trackGame('skin_interest',{skin:id});
   if (isUnlocked(id)) {                 // 보유 중 → 착용
     if (selectedSkin === id) return;
     equipSkin(id);
@@ -4684,7 +4883,7 @@ function shopAction(id) {
     tone(200, 0.15, 'sawtooth', 0.2, 100);
     showConfirm('코인이 부족해요! 📺 광고 보고 이번 판만 장착해볼까요?', function () {
       showRewardAd(function () {
-        adTrialSkin = { id: id, prev: selectedSkin };
+        adTrialSkin = { id:id, prev:adTrialSkin ? adTrialSkin.prev : selectedSkin };
         selectedSkin = id;              // 저장하지 않음 — 판 종료 시 원복
         renderShop();
         if (typeof showCombo === 'function') showCombo('📺 체험 장착! 이번 판만 사용');
@@ -4720,7 +4919,6 @@ function bindBtn(id, fn) {
   const b = document.getElementById(id);
   if (!b) return;
   b.addEventListener('click', function(e){ e.preventDefault(); fn(); });
-  b.addEventListener('touchstart', function(e){ e.preventDefault(); fn(); }, {passive:false});
 }
 // ❓ 확인 모달 (네이티브 confirm() 대체 — 인앱 웹뷰에서 alert/confirm이 막히거나 깨지는 경우 대비)
 let _confirmYesCb = null;
@@ -4737,29 +4935,36 @@ bindBtn('confirmYesBtn', function(){ const cb = _confirmYesCb; hideConfirm(); if
 bindBtn('confirmNoBtn', hideConfirm);
 // 시작 버튼: 첫 플레이면 튜토리얼 먼저
 function onStartPressed() {
-  let done = false;
-  try { done = localStorage.getItem('snake_tutorial_done') === '1'; } catch(e) {}
-  if (!done) {
-    document.getElementById('tutorial').style.display = 'flex';
-  } else {
-    startGame();
-  }
+  try{localStorage.setItem('snake_tutorial_done','1');}catch(e){}
+  beginJourney();
 }
 bindBtn('startBtn', onStartPressed);
+refreshDepthButton();
+bindBtn('depthViewBtn',toggleDepthView);
+bindBtn('depthTryBtn',()=>startGame(1));
+bindBtn('passportBtn',()=>{refreshJourney();document.getElementById('passportScreen').style.display='flex';});
+bindBtn('passportCloseBtn',()=>hideEl('passportScreen'));
+bindBtn('travelNextBtn',()=>proceedTravel(false));
+bindBtn('travelBonusBtn',()=>proceedTravel(true));
+bindBtn('travelHomeBtn',finishTravelToday);
+bindBtn('travelExtraBtn',claimTravelExtra);
 
-bindBtn('restartBtn', backToStartFromResult);
+bindBtn('restartBtn', retryCountry);
+bindBtn('quickRetryBtn', retryCountry);
+bindBtn('resultHomeBtn', backToStartFromResult);
 bindBtn('saveNameBtn', saveAndContinue);
 bindBtn('clearRestartBtn', backToStartFromResult);
 bindBtn('howToBtn', function() { document.getElementById('tutorial').style.display = 'flex'; });
 bindBtn('tutorialOkBtn', function() {
   try { localStorage.setItem('snake_tutorial_done', '1'); } catch(e) {}
   document.getElementById('tutorial').style.display = 'none';
-  startGame();
+  refreshJourney();
 });
 bindBtn('shareBtn', shareScore);
 bindBtn('reviveAdBtn', reviveByAd);
 // 📺 부활 도전 모달 버튼 (2026-08-05)
 bindBtn('reviveAdOfferBtn', reviveByAd);
+bindBtn('coinOfferBtn',reviveByCoin);
 bindBtn('reviveGiveUpBtn', function(){ hideReviveOffer(); gameOver(); });
 bindBtn('reviveBtn', reviveByCoin);
 // (2026-08-03: "광고 보고 점수 2배 재시작" 버튼 제거 — 게임오버 화면이 너무 복잡하다는 피드백. 광고 훅은 부활+부스터 2곳으로 압축)
@@ -4860,7 +5065,9 @@ function checkDailyReward() {
   let info = '💰 <b>코인 +' + coinReward + '</b><br>⏱️ 다음 게임 <b>시작 시간 +' + pendingBonus.toFixed(1) + '초</b>!';
   if (dailyStreak % 7 === 0) info += '<br>🌶️ 7일 보너스: 파워로 시작!';
   document.getElementById('dailyRewardInfo').innerHTML = info;
-  document.getElementById('dailyReward').style.display = 'flex';
+  trackGame('daily_reward',{coins:coinReward,streak:dailyStreak});
+  // Inline attendance reward avoids blocking the first trip.
+  document.getElementById('streakBox').textContent='🔥 '+dailyStreak+'일 연속 · 오늘 코인 +'+coinReward+' 받음';
 }
 
 //=========================================
@@ -4956,6 +5163,8 @@ function isShown(id) {
 }
 function hideEl(id) { const el = document.getElementById(id); if (el) el.style.display = 'none'; }
 window.__onBackPressed = function () {
+  if(adShowing)return true;
+  if(isShown('travelComplete')){finishTravelToday();return true;}
   // 1) ⚖️ 등급 표시 화면은 법정 노출(3초)이라 뒤로가기로 건너뛸 수 없다
   if (isShown('ratingScreen')) return true;
   // 1.5) 🎁 보너스 결과 화면 → [계속]과 동일 처리
@@ -4967,7 +5176,7 @@ window.__onBackPressed = function () {
     return true;
   }
   // 3) 서브 화면이 떠 있으면 그것부터 닫는다 (위에 있는 것 우선)
-  const layers = ['confirmScreen', 'shopScreen', 'settingsScreen', 'achScreen', 'rankScreen', 'tutorial', 'dailyReward'];
+  const layers = ['confirmScreen','passportScreen', 'shopScreen', 'settingsScreen', 'achScreen', 'rankScreen', 'tutorial', 'dailyReward'];
   for (const id of layers) {
     if (isShown(id)) { hideEl(id); haptic(10); return true; }
   }
@@ -5122,6 +5331,8 @@ updateCoinUI();      // 💰 코인 표시
 renderBoosters();    // 🛒 시작 부스터 상점
 checkDailyReward(); // 🎁 일일 출석 보상 체크
 renderMissions();    // 🎯 오늘의 미션
+refreshJourney();
+trackGame("game_ready",{stamps:Object.keys(journey.stamps).length});
 lastT = performance.now();
 requestAnimationFrame(loop);
 
